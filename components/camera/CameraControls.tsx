@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import Svg, { Circle } from "react-native-svg";
 
 interface CameraControlsProps {
   onTakePicture: () => void;
@@ -17,6 +18,7 @@ interface CameraControlsProps {
   onToggleFlash: () => void;
   isRecording: boolean;
   flashMode: FlashMode;
+  recordingProgress: number;
 }
 
 export default function CameraControls({
@@ -27,40 +29,48 @@ export default function CameraControls({
   onToggleFlash,
   isRecording,
   flashMode,
+  recordingProgress,
 }: CameraControlsProps) {
   const [pressAnimation] = React.useState(new Animated.Value(1));
+  const [isLongPressing, setIsLongPressing] = React.useState(false);
 
   const handleCapturePress = () => {
     if (isRecording) {
-      console.log("Stop recording");
       onStopRecording();
-    } else {
+    } else if (!isLongPressing) {
+      // Only take picture if it wasn't a long press
       onTakePicture();
     }
   };
 
   const handleCaptureLongPress = () => {
     if (!isRecording) {
+      setIsLongPressing(true);
       // Animate button press
-      Animated.sequence([
-        Animated.timing(pressAnimation, {
-          toValue: 1.2,
-          duration: 100,
-          useNativeDriver: true,
-        }),
-      ]).start();
+      Animated.timing(pressAnimation, {
+        toValue: 1.2,
+        duration: 100,
+        useNativeDriver: true,
+      }).start();
       onStartRecording();
     }
   };
 
-  const handleCaptureRelease = () => {
-    if (isRecording) {
+  const handlePressIn = () => {
+    // Reset long press flag when starting a new press
+    setIsLongPressing(false);
+  };
+
+  const handlePressOut = () => {
+    // Only stop recording if we were actually recording and long pressing
+    if (isRecording && isLongPressing) {
       Animated.timing(pressAnimation, {
         toValue: 1,
         duration: 100,
         useNativeDriver: true,
       }).start();
-      onStopRecording();
+      // onStopRecording();
+      setIsLongPressing(false);
     }
   };
 
@@ -76,6 +86,11 @@ export default function CameraControls({
     }
   };
 
+  // Calculate circle properties for progress
+  const radius = 35;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference * (1 - recordingProgress);
+
   return (
     <View style={styles.controlsContainer}>
       {/* Top Controls */}
@@ -88,33 +103,85 @@ export default function CameraControls({
       {/* Bottom Controls */}
       <View style={styles.bottomControls}>
         {/* Gallery/Stories placeholder */}
-        <TouchableOpacity style={styles.galleryButton}>
+        <View style={styles.galleryButton}>
+          {/* <TouchableOpacity style={styles.galleryButton}>
           <View style={styles.galleryThumbnail}>
             <Ionicons name="images" size={20} color="white" />
           </View>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
+        </View>
 
         {/* Capture Button */}
         <View style={styles.captureButtonContainer}>
-          <TouchableOpacity
-            style={styles.captureButtonOuter}
-            onPress={handleCapturePress}
-            onLongPress={handleCaptureLongPress}
-            onPressOut={handleCaptureRelease}
-            delayLongPress={200}
-          >
-            <Animated.View
-              style={[
-                styles.captureButtonInner,
-                {
-                  transform: [{ scale: pressAnimation }],
-                  backgroundColor: isRecording ? "#ff4444" : "white",
-                },
-              ]}
+          <View style={styles.captureButtonWrapper}>
+            {/* Progress Circle - only show when recording */}
+            {isRecording && (
+              <Svg width="80" height="80" style={styles.progressCircle}>
+                {/* Background circle */}
+                <Circle
+                  cx="40"
+                  cy="40"
+                  r={radius}
+                  stroke="rgba(255,255,255,0.3)"
+                  strokeWidth="3"
+                  fill="none"
+                />
+                {/* Progress circle */}
+                <Circle
+                  cx="40"
+                  cy="40"
+                  r={radius}
+                  stroke="#ff4444"
+                  strokeWidth="3"
+                  fill="none"
+                  strokeDasharray={circumference}
+                  strokeDashoffset={strokeDashoffset}
+                  strokeLinecap="round"
+                  transform="rotate(-90 40 40)"
+                />
+              </Svg>
+            )}
+
+            <TouchableOpacity
+              style={styles.captureButtonOuter}
+              onPressIn={handlePressIn}
+              onPress={handleCapturePress}
+              onLongPress={handleCaptureLongPress}
+              onPressOut={handlePressOut}
+              delayLongPress={200}
+              activeOpacity={0.8}
             >
-              {isRecording && <View style={styles.recordingIndicator} />}
-            </Animated.View>
-          </TouchableOpacity>
+              <Animated.View
+                style={[
+                  styles.captureButtonInner,
+                  {
+                    transform: [{ scale: pressAnimation }],
+                    backgroundColor: isRecording ? "#ff4444" : "white",
+                  },
+                ]}
+              >
+                {/* {isRecording && <View style={styles.recordingIndicator} />} */}
+                {isRecording && (
+                  <Svg width="65" height="65">
+                    <Circle
+                      cx="32.5"
+                      cy="32.5"
+                      r="30"
+                      stroke="#ff4444"
+                      strokeWidth="4"
+                      fill="transparent"
+                      strokeDasharray={2 * Math.PI * 30}
+                      strokeDashoffset={
+                        2 * Math.PI * 30 * (1 - recordingProgress)
+                      }
+                      strokeLinecap="round"
+                      transform="rotate(-90 32.5 32.5)"
+                    />
+                  </Svg>
+                )}
+              </Animated.View>
+            </TouchableOpacity>
+          </View>
 
           {/* Hold for video hint */}
           {!isRecording && (
@@ -179,6 +246,18 @@ const styles = StyleSheet.create({
   },
   captureButtonContainer: {
     alignItems: "center",
+  },
+  captureButtonWrapper: {
+    position: "relative",
+    width: 80,
+    height: 80,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  progressCircle: {
+    position: "absolute",
+    top: 0,
+    left: 0,
   },
   captureButtonOuter: {
     width: 80,

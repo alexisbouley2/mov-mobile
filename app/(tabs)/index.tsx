@@ -1,11 +1,11 @@
+import CameraControls from "@/components/camera/CameraControls";
+import CameraOverlay from "@/components/camera/CameraOverlay";
+import MediaPreview from "@/components/camera/MediaPreview";
 import type { CameraView as CameraViewType } from "expo-camera";
 import { CameraType, CameraView, useCameraPermissions } from "expo-camera";
 import React, { useEffect, useRef, useState } from "react";
 import { Dimensions, StatusBar, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import CameraControls from "../../components/camera/CameraControls";
-import CameraOverlay from "../../components/camera/CameraOverlay";
-import MediaPreview from "../../components/camera/MediaPreview";
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
@@ -17,11 +17,13 @@ export default function CameraScreen() {
   const [capturedMedia, setCapturedMedia] = useState<string | null>(null);
   const [mediaType, setMediaType] = useState<"photo" | "video" | null>(null);
   const [recordingDuration, setRecordingDuration] = useState(0);
+  const [recordingProgress, setRecordingProgress] = useState(0);
 
   const cameraRef = useRef<CameraViewType | null>(null);
   const recordingTimer = useRef<ReturnType<typeof setInterval> | null>(null);
   const recordingPromise = useRef<Promise<any> | null>(null);
   const isStoppingRef = useRef(false);
+  const recordingRef = useRef(false); // NEW: mirrors isRecording immediately
 
   useEffect(() => {
     if (!permission) {
@@ -32,7 +34,11 @@ export default function CameraScreen() {
   useEffect(() => {
     if (isRecording) {
       recordingTimer.current = setInterval(() => {
-        setRecordingDuration((prev) => prev + 1);
+        setRecordingDuration((prev) => {
+          const newDuration = prev + 1;
+          setRecordingProgress(Math.min(newDuration / 60, 1)); // Progress from 0 to 1 over 60 seconds
+          return newDuration;
+        });
       }, 1000);
     } else {
       if (recordingTimer.current) {
@@ -40,6 +46,7 @@ export default function CameraScreen() {
         recordingTimer.current = null;
       }
       setRecordingDuration(0);
+      setRecordingProgress(0);
     }
 
     return () => {
@@ -67,75 +74,60 @@ export default function CameraScreen() {
   const startRecording = async () => {
     if (cameraRef.current && !isRecording && !isStoppingRef.current) {
       try {
-        console.log("Starting recording...");
-        console.log("5");
         setIsRecording(true);
+        recordingRef.current = true;
         isStoppingRef.current = false;
 
+        // Manual timeout to stop recording after 60s
+        setTimeout(() => {
+          if (recordingRef.current && !isStoppingRef.current) {
+            stopRecording();
+          }
+        }, 60000);
+
         // Start recording and store the promise
-        recordingPromise.current = cameraRef.current.recordAsync({
-          maxDuration: 2, // 60 seconds max like Snapchat
-        });
+        recordingPromise.current = cameraRef.current.recordAsync();
 
         const video = await recordingPromise.current;
 
-        console.log("Recording finished naturally, video:", video);
-
-        // Only set media if recording completed naturally (not stopped manually)
-        if (video?.uri && !isStoppingRef.current) {
+        if (video?.uri) {
           setCapturedMedia(video.uri);
           setMediaType("video");
         }
+
+        // Clean up state after natural completion
+        recordingPromise.current = null;
+        isStoppingRef.current = false;
+        setIsRecording(false);
+        recordingRef.current = false;
       } catch (error) {
         console.error("Error recording video:", error);
-        // If there's an error and we haven't manually stopped, the video might still be valid
-        if (error?.uri && !isStoppingRef.current) {
-          setCapturedMedia(error.uri);
-          setMediaType("video");
-        }
-      } finally {
-        // Only clean up if we haven't already done it in stopRecording
-        if (!isStoppingRef.current) {
-          console.log("Cleaning up recording state naturally");
-          recordingPromise.current = null;
-          setIsRecording(false);
-        } else {
-          console.log("Skipping cleanup - already handled by stopRecording");
-        }
+        recordingPromise.current = null;
+        isStoppingRef.current = false;
+        setIsRecording(false);
+        recordingRef.current = false;
       }
     }
   };
 
   const stopRecording = async () => {
-    console.log(
-      "stopRecording called, isRecording:",
-      isRecording,
-      "isStoppingRef:",
-      isStoppingRef.current
-    );
-
-    if (cameraRef.current && isRecording && !isStoppingRef.current) {
-      console.log("Stopping recording...");
+    if (cameraRef.current && recordingRef.current && !isStoppingRef.current) {
       isStoppingRef.current = true;
 
       try {
         await cameraRef.current.stopRecording();
-        console.log("Recording stopped successfully");
-
-        // Force cleanup immediately after stopping
-        console.log("Force cleaning up state after stop");
+        // Cleanup
         recordingPromise.current = null;
         isStoppingRef.current = false;
         setIsRecording(false);
+        recordingRef.current = false;
       } catch (error) {
         console.error("Error stopping recording:", error);
-        // Force cleanup on error
         recordingPromise.current = null;
         isStoppingRef.current = false;
         setIsRecording(false);
+        recordingRef.current = false;
       }
-    } else {
-      console.log("Stop recording ignored - not in recording state");
     }
   };
 
@@ -163,15 +155,8 @@ export default function CameraScreen() {
     setMediaType(null);
   };
 
-  if (!permission) {
-    // Camera permissions are still loading
-    return <View style={styles.container} />;
-  }
-
-  if (!permission.granted) {
-    // Camera permissions are not granted yet
-    return <View style={styles.container} />;
-  }
+  if (!permission) return <View style={styles.container} />;
+  if (!permission.granted) return <View style={styles.container} />;
 
   if (capturedMedia) {
     return (
@@ -179,10 +164,7 @@ export default function CameraScreen() {
         mediaUri={capturedMedia}
         mediaType={mediaType!}
         onDismiss={dismissPreview}
-        onSave={() => {
-          // Handle save logic here
-          dismissPreview();
-        }}
+        onSave={() => dismissPreview()}
       />
     );
   }
@@ -191,28 +173,27 @@ export default function CameraScreen() {
     <SafeAreaView style={styles.container} edges={["top"]}>
       <View style={styles.cameraWrapper}>
         <StatusBar hidden />
-
         <CameraView
           ref={cameraRef}
           style={styles.camera}
           facing={cameraType}
           flash={flashMode}
-        >
-          <CameraOverlay
-            isRecording={isRecording}
-            recordingDuration={recordingDuration}
-          />
-
-          <CameraControls
-            onTakePicture={takePicture}
-            onStartRecording={startRecording}
-            onStopRecording={stopRecording}
-            onToggleCamera={toggleCameraType}
-            onToggleFlash={toggleFlash}
-            isRecording={isRecording}
-            flashMode={flashMode}
-          />
-        </CameraView>
+          enableTorch={isRecording && flashMode === "on"}
+        />
+        <CameraOverlay
+          isRecording={isRecording}
+          recordingDuration={recordingDuration}
+        />
+        <CameraControls
+          onTakePicture={takePicture}
+          onStartRecording={startRecording}
+          onStopRecording={stopRecording}
+          onToggleCamera={toggleCameraType}
+          onToggleFlash={toggleFlash}
+          isRecording={isRecording}
+          flashMode={flashMode}
+          recordingProgress={recordingProgress}
+        />
       </View>
     </SafeAreaView>
   );
@@ -230,6 +211,6 @@ const styles = StyleSheet.create({
   },
   cameraWrapper: {
     flex: 1,
-    marginBottom: 80, // TODO: set this value into a constant, Adjust to stop before the tab bar (or use `paddingBottom` dynamically)
+    marginBottom: 80, // Adjust to fit above tab bar
   },
 });
