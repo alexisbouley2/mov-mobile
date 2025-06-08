@@ -1,80 +1,182 @@
-import { Image } from "expo-image";
-import { Platform, StyleSheet } from "react-native";
+import type { CameraView as CameraViewType } from "expo-camera";
+import { CameraType, CameraView, useCameraPermissions } from "expo-camera";
+import React, { useEffect, useRef, useState } from "react";
+import { Dimensions, StatusBar, StyleSheet, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import CameraControls from "../../components/camera/CameraControls";
+import CameraOverlay from "../../components/camera/CameraOverlay";
+import MediaPreview from "../../components/camera/MediaPreview";
 
-import { HelloWave } from "@/components/HelloWave";
-import ParallaxScrollView from "@/components/ParallaxScrollView";
-import { ThemedText } from "@/components/ThemedText";
-import { ThemedView } from "@/components/ThemedView";
+const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
-export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: "#A1CEDC", dark: "#1D3D47" }}
-      headerImage={
-        <Image
-          source={require("@/assets/images/partial-react-logo.png")}
-          style={styles.reactLogo}
-        />
+export default function CameraScreen() {
+  const [permission, requestPermission] = useCameraPermissions();
+  const [cameraType, setCameraType] = useState<CameraType>("back");
+  const [flashMode, setFlashMode] = useState<"off" | "on" | "auto">("off");
+  const [isRecording, setIsRecording] = useState(false);
+  const [capturedMedia, setCapturedMedia] = useState<string | null>(null);
+  const [mediaType, setMediaType] = useState<"photo" | "video" | null>(null);
+  const [recordingDuration, setRecordingDuration] = useState(0);
+
+  const cameraRef = useRef<CameraViewType | null>(null);
+  const recordingTimer = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    if (!permission) {
+      requestPermission();
+    }
+  }, [permission, requestPermission]);
+
+  useEffect(() => {
+    if (isRecording) {
+      recordingTimer.current = setInterval(() => {
+        setRecordingDuration((prev) => prev + 1);
+      }, 1000);
+    } else {
+      if (recordingTimer.current) {
+        clearInterval(recordingTimer.current);
+        recordingTimer.current = null;
       }
-    >
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit{" "}
-          <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText>{" "}
-          to see changes. Press{" "}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: "cmd + d",
-              android: "cmd + m",
-              web: "F12",
-            })}
-          </ThemedText>{" "}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">
-            npm run reset-project
-          </ThemedText>{" "}
-          to get a fresh <ThemedText type="defaultSemiBold">app</ThemedText>{" "}
-          directory. This will move the current{" "}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{" "}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+      setRecordingDuration(0);
+    }
+
+    return () => {
+      if (recordingTimer.current) {
+        clearInterval(recordingTimer.current);
+      }
+    };
+  }, [isRecording]);
+
+  const takePicture = async () => {
+    if (cameraRef.current) {
+      try {
+        const photo = await cameraRef.current.takePictureAsync({
+          quality: 0.8,
+          base64: false,
+        });
+        setCapturedMedia(photo.uri);
+        setMediaType("photo");
+      } catch (error) {
+        console.error("Error taking picture:", error);
+      }
+    }
+  };
+
+  const startRecording = async () => {
+    if (cameraRef.current && !isRecording) {
+      try {
+        setIsRecording(true);
+        const video = await cameraRef.current.recordAsync({
+          maxDuration: 60, // 60 seconds max like Snapchat
+        });
+        setCapturedMedia(video?.uri ?? null);
+        setMediaType("video");
+        setIsRecording(false);
+      } catch (error) {
+        console.error("Error recording video:", error);
+        setIsRecording(false);
+      }
+    }
+  };
+
+  const stopRecording = () => {
+    if (cameraRef.current && isRecording) {
+      console.log("here 1");
+      cameraRef.current.stopRecording();
+    }
+  };
+
+  const toggleCameraType = () => {
+    setCameraType((current) => (current === "back" ? "front" : "back"));
+  };
+
+  const toggleFlash = () => {
+    setFlashMode((current) => {
+      switch (current) {
+        case "off":
+          return "on";
+        case "on":
+          return "auto";
+        case "auto":
+          return "off";
+        default:
+          return "off";
+      }
+    });
+  };
+
+  const dismissPreview = () => {
+    setCapturedMedia(null);
+    setMediaType(null);
+  };
+
+  if (!permission) {
+    // Camera permissions are still loading
+    return <View style={styles.container} />;
+  }
+
+  if (!permission.granted) {
+    // Camera permissions are not granted yet
+    return <View style={styles.container} />;
+  }
+
+  if (capturedMedia) {
+    return (
+      <MediaPreview
+        mediaUri={capturedMedia}
+        mediaType={mediaType!}
+        onDismiss={dismissPreview}
+        onSave={() => {
+          // Handle save logic here
+          dismissPreview();
+        }}
+      />
+    );
+  }
+
+  return (
+    <SafeAreaView style={styles.container} edges={["top"]}>
+      <View style={styles.cameraWrapper}>
+        <StatusBar hidden />
+
+        <CameraView
+          ref={cameraRef}
+          style={styles.camera}
+          facing={cameraType}
+          flash={flashMode}
+        >
+          <CameraOverlay
+            isRecording={isRecording}
+            recordingDuration={recordingDuration}
+          />
+
+          <CameraControls
+            onTakePicture={takePicture}
+            onStartRecording={startRecording}
+            onStopRecording={stopRecording}
+            onToggleCamera={toggleCameraType}
+            onToggleFlash={toggleFlash}
+            isRecording={isRecording}
+            flashMode={flashMode}
+          />
+        </CameraView>
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
+  container: {
+    flex: 1,
+    backgroundColor: "black",
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  camera: {
+    flex: 1,
+    width: screenWidth,
+    height: screenHeight,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: "absolute",
+  cameraWrapper: {
+    flex: 1,
+    marginBottom: 80, // TODO: set this value into a constant, Adjust to stop before the tab bar (or use `paddingBottom` dynamically)
   },
 });
