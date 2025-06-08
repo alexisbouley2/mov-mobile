@@ -20,6 +20,8 @@ export default function CameraScreen() {
 
   const cameraRef = useRef<CameraViewType | null>(null);
   const recordingTimer = useRef<ReturnType<typeof setInterval> | null>(null);
+  const recordingPromise = useRef<Promise<any> | null>(null);
+  const isStoppingRef = useRef(false);
 
   useEffect(() => {
     if (!permission) {
@@ -63,26 +65,77 @@ export default function CameraScreen() {
   };
 
   const startRecording = async () => {
-    if (cameraRef.current && !isRecording) {
+    if (cameraRef.current && !isRecording && !isStoppingRef.current) {
       try {
+        console.log("Starting recording...");
+        console.log("5");
         setIsRecording(true);
-        const video = await cameraRef.current.recordAsync({
-          maxDuration: 60, // 60 seconds max like Snapchat
+        isStoppingRef.current = false;
+
+        // Start recording and store the promise
+        recordingPromise.current = cameraRef.current.recordAsync({
+          maxDuration: 2, // 60 seconds max like Snapchat
         });
-        setCapturedMedia(video?.uri ?? null);
-        setMediaType("video");
-        setIsRecording(false);
+
+        const video = await recordingPromise.current;
+
+        console.log("Recording finished naturally, video:", video);
+
+        // Only set media if recording completed naturally (not stopped manually)
+        if (video?.uri && !isStoppingRef.current) {
+          setCapturedMedia(video.uri);
+          setMediaType("video");
+        }
       } catch (error) {
         console.error("Error recording video:", error);
-        setIsRecording(false);
+        // If there's an error and we haven't manually stopped, the video might still be valid
+        if (error?.uri && !isStoppingRef.current) {
+          setCapturedMedia(error.uri);
+          setMediaType("video");
+        }
+      } finally {
+        // Only clean up if we haven't already done it in stopRecording
+        if (!isStoppingRef.current) {
+          console.log("Cleaning up recording state naturally");
+          recordingPromise.current = null;
+          setIsRecording(false);
+        } else {
+          console.log("Skipping cleanup - already handled by stopRecording");
+        }
       }
     }
   };
 
-  const stopRecording = () => {
-    if (cameraRef.current && isRecording) {
-      console.log("here 1");
-      cameraRef.current.stopRecording();
+  const stopRecording = async () => {
+    console.log(
+      "stopRecording called, isRecording:",
+      isRecording,
+      "isStoppingRef:",
+      isStoppingRef.current
+    );
+
+    if (cameraRef.current && isRecording && !isStoppingRef.current) {
+      console.log("Stopping recording...");
+      isStoppingRef.current = true;
+
+      try {
+        await cameraRef.current.stopRecording();
+        console.log("Recording stopped successfully");
+
+        // Force cleanup immediately after stopping
+        console.log("Force cleaning up state after stop");
+        recordingPromise.current = null;
+        isStoppingRef.current = false;
+        setIsRecording(false);
+      } catch (error) {
+        console.error("Error stopping recording:", error);
+        // Force cleanup on error
+        recordingPromise.current = null;
+        isStoppingRef.current = false;
+        setIsRecording(false);
+      }
+    } else {
+      console.log("Stop recording ignored - not in recording state");
     }
   };
 
