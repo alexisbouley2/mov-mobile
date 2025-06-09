@@ -78,8 +78,6 @@ export default function CameraControls({
     switch (flashMode) {
       case "on":
         return "flash";
-      case "auto":
-        return "flash-outline";
       case "off":
       default:
         return "flash-off";
@@ -190,8 +188,11 @@ export default function CameraControls({
         </View>
 
         {/* Camera Flip Button */}
+
         <TouchableOpacity style={styles.flipButton} onPress={onToggleCamera}>
-          <Ionicons name="camera-reverse" size={32} color="white" />
+          {!isRecording && (
+            <Ionicons name="camera-reverse" size={32} color="white" />
+          )}
         </TouchableOpacity>
       </View>
     </View>
