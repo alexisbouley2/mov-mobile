@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { ResizeMode, Video } from "expo-av";
-import React, { useState } from "react";
+import React from "react";
 import {
   Dimensions,
   Image,
@@ -27,12 +27,6 @@ export default function MediaPreview({
   onDismiss,
   onSave,
 }: MediaPreviewProps) {
-  const [isPlaying, setIsPlaying] = useState(false);
-
-  const handlePlayPause = () => {
-    setIsPlaying(!isPlaying);
-  };
-
   return (
     <View style={styles.container}>
       <StatusBar hidden />
@@ -45,17 +39,10 @@ export default function MediaPreview({
           <Video
             source={{ uri: mediaUri }}
             style={styles.media}
-            shouldPlay={isPlaying}
+            shouldPlay={true}
             isLooping
             resizeMode={ResizeMode.COVER}
           />
-        )}
-
-        {/* Video Play Button */}
-        {mediaType === "video" && !isPlaying && (
-          <TouchableOpacity style={styles.playButton} onPress={handlePlayPause}>
-            <Ionicons name="play" size={50} color="white" />
-          </TouchableOpacity>
         )}
       </View>
 

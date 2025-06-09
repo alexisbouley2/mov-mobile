@@ -16,6 +16,7 @@ interface CameraControlsProps {
   onStopRecording: () => void;
   onToggleCamera: () => void;
   onToggleFlash: () => void;
+  onOpenGallery: () => void;
   isRecording: boolean;
   flashMode: FlashMode;
   recordingProgress: number;
@@ -27,6 +28,7 @@ export default function CameraControls({
   onStopRecording,
   onToggleCamera,
   onToggleFlash,
+  onOpenGallery,
   isRecording,
   flashMode,
   recordingProgress,
@@ -106,6 +108,16 @@ export default function CameraControls({
             <Ionicons name="images" size={20} color="white" />
           </View>
         </TouchableOpacity> */}
+          <TouchableOpacity
+            style={styles.galleryButton}
+            onPress={onOpenGallery}
+          >
+            {!isRecording && (
+              <View style={styles.galleryThumbnail}>
+                <Ionicons name="images" size={20} color="white" />
+              </View>
+            )}
+          </TouchableOpacity>
         </View>
 
         {/* Capture Button */}

@@ -8,6 +8,7 @@ import {
   useCameraPermissions,
   useMicrophonePermissions,
 } from "expo-camera";
+import * as ImagePicker from "expo-image-picker";
 import * as MediaLibrary from "expo-media-library";
 import React, { useEffect, useRef, useState } from "react";
 import { Dimensions, StatusBar, StyleSheet, View } from "react-native";
@@ -152,6 +153,34 @@ export default function CameraScreen() {
 
   const recordingProgress = recordingDuration / 60; // Progress from 0 to 1
 
+  const pickMediaFromLibrary = async () => {
+    const permissionResult =
+      await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permissionResult.granted) {
+      alert("Permission to access media library is required!");
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.All,
+      allowsEditing: false,
+      quality: 1,
+      videoMaxDuration: 60,
+    });
+
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      const asset = result.assets[0];
+
+      if (asset.type === "video" && asset.duration && asset.duration > 60000) {
+        alert("Only videos shorter than 60 seconds are allowed.");
+        return;
+      }
+
+      setCapturedMedia(asset.uri);
+      setMediaType(asset.type === "video" ? "video" : "photo");
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
       <View style={styles.cameraWrapper}>
@@ -174,6 +203,7 @@ export default function CameraScreen() {
           onStopRecording={stopRecording}
           onToggleCamera={toggleCameraType}
           onToggleFlash={toggleFlash}
+          onOpenGallery={pickMediaFromLibrary}
           isRecording={isRecording}
           flashMode={flashMode}
           recordingProgress={recordingProgress}
