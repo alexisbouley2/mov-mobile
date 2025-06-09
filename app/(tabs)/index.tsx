@@ -26,10 +26,12 @@ export default function CameraScreen() {
   const [cameraType, setCameraType] = useState<CameraType>("back");
   const [flashMode, setFlashMode] = useState<"off" | "on">("off");
   const [isRecording, setIsRecording] = useState(false);
+  const [recordingDuration, setRecordingDuration] = useState(0);
   const [mediaType, setMediaType] = useState<"photo" | "video" | null>(null);
   const [capturedMedia, setCapturedMedia] = useState<string | null>(null);
 
   const cameraRef = useRef<CameraViewType>(null);
+  const recordingTimer = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -47,6 +49,35 @@ export default function CameraScreen() {
       requestMicrophonePermission();
     }
   }, [cameraPermission, microphonePermission]);
+
+  // Timer effect for recording
+  useEffect(() => {
+    if (isRecording) {
+      recordingTimer.current = setInterval(() => {
+        setRecordingDuration((prev) => {
+          const newDuration = prev + 1;
+          // Auto-stop at 60 seconds
+          if (newDuration >= 60) {
+            stopRecording();
+            return 60;
+          }
+          return newDuration;
+        });
+      }, 1000);
+    } else {
+      if (recordingTimer.current) {
+        clearInterval(recordingTimer.current);
+        recordingTimer.current = null;
+      }
+      setRecordingDuration(0);
+    }
+
+    return () => {
+      if (recordingTimer.current) {
+        clearInterval(recordingTimer.current);
+      }
+    };
+  }, [isRecording]);
 
   const takePicture = async () => {
     if (!cameraRef.current) return;
@@ -119,6 +150,8 @@ export default function CameraScreen() {
     );
   }
 
+  const recordingProgress = recordingDuration / 60; // Progress from 0 to 1
+
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
       <View style={styles.cameraWrapper}>
@@ -131,7 +164,10 @@ export default function CameraScreen() {
           enableTorch={isRecording && flashMode === "on"} // torch for video
           mode="video"
         />
-        <CameraOverlay isRecording={isRecording} recordingDuration={0} />
+        <CameraOverlay
+          isRecording={isRecording}
+          recordingDuration={recordingDuration}
+        />
         <CameraControls
           onTakePicture={takePicture}
           onStartRecording={startRecording}
@@ -140,7 +176,7 @@ export default function CameraScreen() {
           onToggleFlash={toggleFlash}
           isRecording={isRecording}
           flashMode={flashMode}
-          recordingProgress={0}
+          recordingProgress={recordingProgress}
         />
       </View>
     </SafeAreaView>

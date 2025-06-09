@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import { Video } from "expo-av";
+import { ResizeMode, Video } from "expo-av";
 import React, { useState } from "react";
 import {
   Dimensions,
@@ -47,7 +47,7 @@ export default function MediaPreview({
             style={styles.media}
             shouldPlay={isPlaying}
             isLooping
-            // resizeMode="cover"
+            resizeMode={ResizeMode.COVER}
           />
         )}
 

@@ -69,7 +69,6 @@ export default function CameraControls({
         duration: 100,
         useNativeDriver: true,
       }).start();
-      // onStopRecording();
       setIsLongPressing(false);
     }
   };
@@ -85,7 +84,7 @@ export default function CameraControls({
   };
 
   // Calculate circle properties for progress
-  const radius = 35;
+  const radius = 42; // Increased radius for better visibility
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference * (1 - recordingProgress);
 
@@ -114,28 +113,28 @@ export default function CameraControls({
           <View style={styles.captureButtonWrapper}>
             {/* Progress Circle - only show when recording */}
             {isRecording && (
-              <Svg width="80" height="80" style={styles.progressCircle}>
+              <Svg width="94" height="94" style={styles.progressCircle}>
                 {/* Background circle */}
                 <Circle
-                  cx="40"
-                  cy="40"
+                  cx="47"
+                  cy="47"
                   r={radius}
-                  stroke="rgba(255,255,255,0.3)"
-                  strokeWidth="3"
+                  stroke="rgba(255,255,255,0.2)"
+                  strokeWidth="5"
                   fill="none"
                 />
                 {/* Progress circle */}
                 <Circle
-                  cx="40"
-                  cy="40"
+                  cx="47"
+                  cy="47"
                   r={radius}
-                  stroke="#ff4444"
-                  strokeWidth="3"
+                  stroke="#ff3333"
+                  strokeWidth="5"
                   fill="none"
                   strokeDasharray={circumference}
                   strokeDashoffset={strokeDashoffset}
                   strokeLinecap="round"
-                  transform="rotate(-90 40 40)"
+                  transform="rotate(-90 47 47)"
                 />
               </Svg>
             )}
@@ -154,28 +153,15 @@ export default function CameraControls({
                   styles.captureButtonInner,
                   {
                     transform: [{ scale: pressAnimation }],
-                    backgroundColor: isRecording ? "#ff4444" : "white",
+                    backgroundColor: isRecording ? "#ff3333" : "white",
                   },
                 ]}
               >
-                {/* {isRecording && <View style={styles.recordingIndicator} />} */}
-                {isRecording && (
-                  <Svg width="65" height="65">
-                    <Circle
-                      cx="32.5"
-                      cy="32.5"
-                      r="30"
-                      stroke="#ff4444"
-                      strokeWidth="4"
-                      fill="transparent"
-                      strokeDasharray={2 * Math.PI * 30}
-                      strokeDashoffset={
-                        2 * Math.PI * 30 * (1 - recordingProgress)
-                      }
-                      strokeLinecap="round"
-                      transform="rotate(-90 32.5 32.5)"
-                    />
-                  </Svg>
+                {/* Show square when recording, circle when not */}
+                {isRecording ? (
+                  <View style={styles.stopSquare} />
+                ) : (
+                  <View style={styles.captureCircle} />
                 )}
               </Animated.View>
             </TouchableOpacity>
@@ -188,7 +174,6 @@ export default function CameraControls({
         </View>
 
         {/* Camera Flip Button */}
-
         <TouchableOpacity style={styles.flipButton} onPress={onToggleCamera}>
           {!isRecording && (
             <Ionicons name="camera-reverse" size={32} color="white" />
@@ -250,8 +235,8 @@ const styles = StyleSheet.create({
   },
   captureButtonWrapper: {
     position: "relative",
-    width: 80,
-    height: 80,
+    width: 94,
+    height: 94,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -276,11 +261,17 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  recordingIndicator: {
+  captureCircle: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: "white",
+  },
+  stopSquare: {
     width: 24,
     height: 24,
-    borderRadius: 4,
     backgroundColor: "white",
+    borderRadius: 3,
   },
   captureHint: {
     color: "white",
