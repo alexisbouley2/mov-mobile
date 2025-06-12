@@ -26,8 +26,8 @@ export default function CameraScreen() {
   const [capturedMedia, setCapturedMedia] = useState<string | null>(null);
 
   const cameraRef = useRef<CameraViewType>(null);
-  const recordingTimer = useRef<ReturnType<typeof setInterval> | null>(null);
   const recordingStartTime = useRef<number | null>(null);
+  const rafId = useRef<number | null>(null);
 
   useEffect(() => {
     if (!cameraPermission?.granted) {
@@ -44,14 +44,21 @@ export default function CameraScreen() {
     setIsRecording(true);
     recordingStartTime.current = Date.now();
 
-    recordingTimer.current = setInterval(() => {
+    const updateProgress = () => {
       if (!recordingStartTime.current) return;
+
       const elapsed = (Date.now() - recordingStartTime.current) / 1000;
       setRecordingDuration(elapsed);
+
       if (elapsed >= MAX_VIDEO_DURATION) {
         stopRecording();
+        return;
       }
-    }, 20); // smoother updates every 50ms
+
+      rafId.current = requestAnimationFrame(updateProgress);
+    };
+
+    rafId.current = requestAnimationFrame(updateProgress);
 
     try {
       const video = await cameraRef.current.recordAsync({
@@ -67,10 +74,12 @@ export default function CameraScreen() {
   const stopRecording = () => {
     if (!cameraRef.current) return;
     setIsRecording(false);
-    if (recordingTimer.current) {
-      clearInterval(recordingTimer.current);
-      recordingTimer.current = null;
+
+    if (rafId.current) {
+      cancelAnimationFrame(rafId.current);
+      rafId.current = null;
     }
+
     recordingStartTime.current = null;
     cameraRef.current.stopRecording();
   };
@@ -112,7 +121,6 @@ export default function CameraScreen() {
   }
 
   const recordingProgress = Math.min(recordingDuration / MAX_VIDEO_DURATION, 1);
-  console.log("recordingProgress", recordingProgress);
 
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
