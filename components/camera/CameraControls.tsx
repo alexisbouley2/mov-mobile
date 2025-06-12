@@ -1,14 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import { FlashMode } from "expo-camera";
 import React from "react";
-import {
-  Animated,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
-import Svg, { Circle } from "react-native-svg";
+import { StyleSheet, TouchableOpacity, View } from "react-native";
+import Svg, { Circle, Path } from "react-native-svg";
 
 interface CameraControlsProps {
   onStartRecording: () => void;
@@ -29,8 +23,6 @@ export default function CameraControls({
   flashMode,
   recordingProgress,
 }: CameraControlsProps) {
-  const [pressAnimation] = React.useState(new Animated.Value(1));
-
   const getFlashIcon = () => {
     switch (flashMode) {
       case "on":
@@ -41,10 +33,38 @@ export default function CameraControls({
     }
   };
 
-  // Calculate circle properties for progress
-  const radius = 42; // Increased radius for better visibility
-  const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = circumference * (1 - recordingProgress);
+  // Calculate camembert (pie slice) for progress
+  const outerRadius = 42;
+  const centerX = 47;
+  const centerY = 47;
+
+  // Calculate angle in radians (0 to 2π)
+  const angle = recordingProgress * 2 * Math.PI;
+
+  // Create SVG path for the pie slice (camembert)
+  const createPieSlicePath = (
+    centerX: number,
+    centerY: number,
+    radius: number,
+    angle: number
+  ) => {
+    if (angle === 0) return "";
+
+    const startX = centerX;
+    const startY = centerY - radius;
+    const endX = centerX + radius * Math.sin(angle);
+    const endY = centerY - radius * Math.cos(angle);
+    const largeArcFlag = angle > Math.PI ? 1 : 0;
+
+    return `M ${centerX} ${centerY} L ${startX} ${startY} A ${radius} ${radius} 0 ${largeArcFlag} 1 ${endX} ${endY} Z`;
+  };
+
+  const pieSlicePath = createPieSlicePath(
+    centerX,
+    centerY,
+    outerRadius - 2.5,
+    angle
+  );
 
   return (
     <View style={styles.controlsContainer}>
@@ -65,66 +85,33 @@ export default function CameraControls({
         {/* Capture Button */}
         <View style={styles.captureButtonContainer}>
           <View style={styles.captureButtonWrapper}>
-            {/* Progress Circle - only show when recording */}
-            {isRecording && (
+            {/* Base White Circle */}
+            <Svg width="94" height="94" style={styles.progressCircle}>
+              <Circle
+                cx="47"
+                cy="47"
+                r={outerRadius}
+                stroke="white"
+                strokeWidth="5"
+                fill="none"
+              />
+            </Svg>
+
+            {/* Red Camembert (pie slice) inside the circle when recording */}
+            {isRecording && recordingProgress > 0 && (
               <Svg width="94" height="94" style={styles.progressCircle}>
-                {/* Background circle */}
-                <Circle
-                  cx="47"
-                  cy="47"
-                  r={radius}
-                  stroke="rgba(255,255,255,0.2)"
-                  strokeWidth="5"
-                  fill="none"
-                />
-                {/* Progress circle */}
-                <Circle
-                  cx="47"
-                  cy="47"
-                  r={radius}
-                  stroke="#ff3333"
-                  strokeWidth="5"
-                  fill="none"
-                  strokeDasharray={circumference}
-                  strokeDashoffset={strokeDashoffset}
-                  strokeLinecap="round"
-                  transform="rotate(-90 47 47)"
-                />
+                <Path d={pieSlicePath} fill="#ff3333" />
               </Svg>
             )}
 
+            {/* The touchable area */}
             <TouchableOpacity
               style={styles.captureButtonOuter}
-              onPressIn={() => {
-                onStartRecording();
-              }}
-              onPressOut={() => {
-                onStopRecording();
-              }}
+              onPressIn={onStartRecording}
+              onPressOut={onStopRecording}
               activeOpacity={0.8}
-            >
-              <Animated.View
-                style={[
-                  styles.captureButtonInner,
-                  {
-                    transform: [{ scale: pressAnimation }],
-                    backgroundColor: isRecording ? "#ff3333" : "white",
-                  },
-                ]}
-              >
-                {isRecording ? (
-                  <View style={styles.stopSquare} />
-                ) : (
-                  <View style={styles.captureCircle} />
-                )}
-              </Animated.View>
-            </TouchableOpacity>
+            />
           </View>
-
-          {/* Hold for video hint */}
-          {!isRecording && (
-            <Text style={styles.captureHint}>Hold for video</Text>
-          )}
         </View>
 
         {/* Camera Toggle Flash Button */}
@@ -155,8 +142,6 @@ const styles = StyleSheet.create({
   topButton: {
     width: 44,
     height: 44,
-    borderRadius: 22,
-    backgroundColor: "rgba(0, 0, 0, 0.3)",
     justifyContent: "center",
     alignItems: "center",
     marginLeft: 15,
@@ -172,15 +157,12 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
   },
-  galleryThumbnail: {
+
+  flashButton: {
     width: 44,
     height: 44,
-    borderRadius: 8,
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
     justifyContent: "center",
     alignItems: "center",
-    borderWidth: 2,
-    borderColor: "white",
   },
   captureButtonContainer: {
     alignItems: "center",
@@ -198,43 +180,11 @@ const styles = StyleSheet.create({
     left: 0,
   },
   captureButtonOuter: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: "rgba(255, 255, 255, 0.3)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  captureButtonInner: {
-    width: 65,
-    height: 65,
-    borderRadius: 32.5,
-    backgroundColor: "white",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  captureCircle: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: "white",
-  },
-  stopSquare: {
-    width: 24,
-    height: 24,
-    backgroundColor: "white",
-    borderRadius: 3,
-  },
-  captureHint: {
-    color: "white",
-    fontSize: 12,
-    marginTop: 8,
-    opacity: 0.8,
-  },
-  flashButton: {
-    width: 44,
-    height: 44,
-    justifyContent: "center",
-    alignItems: "center",
+    width: 94,
+    height: 94,
+    borderRadius: 47,
+    position: "absolute",
+    top: 0,
+    left: 0,
   },
 });
