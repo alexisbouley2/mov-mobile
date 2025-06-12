@@ -12,6 +12,8 @@ import {
   View,
 } from "react-native";
 
+import EditableTextOverlay from "@/components/camera/EditableTextOverlay";
+
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
 interface MediaPreviewProps {
@@ -27,6 +29,9 @@ export default function MediaPreview({
   onDismiss,
   onSave,
 }: MediaPreviewProps) {
+  const [isEditingText, setIsEditingText] = React.useState(false);
+  const [overlayText, setOverlayText] = React.useState("");
+
   return (
     <View style={styles.container}>
       <StatusBar hidden />
@@ -45,6 +50,10 @@ export default function MediaPreview({
           />
         )}
       </View>
+
+      {isEditingText && (
+        <EditableTextOverlay text={overlayText} setText={setOverlayText} />
+      )}
 
       {/* Top Controls */}
       <SafeAreaView style={styles.topControls}>
@@ -74,6 +83,17 @@ export default function MediaPreview({
           {/* Crop Button */}
           <TouchableOpacity style={styles.actionButton}>
             <Ionicons name="crop" size={28} color="white" />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.actionButton}
+            onPress={() => setIsEditingText((prev) => !prev)}
+          >
+            <Ionicons
+              name="text"
+              size={28}
+              color={isEditingText ? "#0096ff" : "white"}
+            />
           </TouchableOpacity>
         </View>
 
