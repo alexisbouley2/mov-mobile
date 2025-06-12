@@ -3,7 +3,6 @@ import { ResizeMode, Video } from "expo-av";
 import React from "react";
 import {
   Dimensions,
-  Image,
   SafeAreaView,
   StatusBar,
   StyleSheet,
@@ -18,14 +17,12 @@ const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
 interface MediaPreviewProps {
   mediaUri: string;
-  mediaType: "photo" | "video";
   onDismiss: () => void;
   onSave: () => void;
 }
 
 export default function MediaPreview({
   mediaUri,
-  mediaType,
   onDismiss,
   onSave,
 }: MediaPreviewProps) {
@@ -38,17 +35,13 @@ export default function MediaPreview({
 
       {/* Media Display */}
       <View style={styles.mediaContainer}>
-        {mediaType === "photo" ? (
-          <Image source={{ uri: mediaUri }} style={styles.media} />
-        ) : (
-          <Video
-            source={{ uri: mediaUri }}
-            style={styles.media}
-            shouldPlay={true}
-            isLooping
-            resizeMode={ResizeMode.COVER}
-          />
-        )}
+        <Video
+          source={{ uri: mediaUri }}
+          style={styles.media}
+          shouldPlay={true}
+          isLooping
+          resizeMode={ResizeMode.COVER}
+        />
       </View>
 
       {isEditingText && (

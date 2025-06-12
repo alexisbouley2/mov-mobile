@@ -11,24 +11,20 @@ import {
 import Svg, { Circle } from "react-native-svg";
 
 interface CameraControlsProps {
-  onTakePicture: () => void;
   onStartRecording: () => void;
   onStopRecording: () => void;
   onToggleCamera: () => void;
   onToggleFlash: () => void;
-  onOpenGallery: () => void;
   isRecording: boolean;
   flashMode: FlashMode;
   recordingProgress: number;
 }
 
 export default function CameraControls({
-  onTakePicture,
   onStartRecording,
   onStopRecording,
   onToggleCamera,
   onToggleFlash,
-  onOpenGallery,
   isRecording,
   flashMode,
   recordingProgress,
@@ -39,9 +35,6 @@ export default function CameraControls({
   const handleCapturePress = () => {
     if (isRecording) {
       onStopRecording();
-    } else if (!isLongPressing) {
-      // Only take picture if it wasn't a long press
-      onTakePicture();
     }
   };
 
@@ -93,29 +86,15 @@ export default function CameraControls({
   return (
     <View style={styles.controlsContainer}>
       {/* Top Controls */}
-      <View style={styles.topControls}>
-        <TouchableOpacity style={styles.topButton} onPress={onToggleFlash}>
-          <Ionicons name={getFlashIcon()} size={28} color="white" />
-        </TouchableOpacity>
-      </View>
+      <View style={styles.topControls}></View>
 
       {/* Bottom Controls */}
       <View style={styles.bottomControls}>
-        {/* Gallery/Stories placeholder */}
-        <View style={styles.galleryButton}>
-          {/* <TouchableOpacity style={styles.galleryButton}>
-          <View style={styles.galleryThumbnail}>
-            <Ionicons name="images" size={20} color="white" />
-          </View>
-        </TouchableOpacity> */}
-          <TouchableOpacity
-            style={styles.galleryButton}
-            onPress={onOpenGallery}
-          >
+        {/* Toggle Camera Button */}
+        <View style={styles.toggleCameraButton}>
+          <TouchableOpacity style={styles.topButton} onPress={onToggleCamera}>
             {!isRecording && (
-              <View style={styles.galleryThumbnail}>
-                <Ionicons name="images" size={20} color="white" />
-              </View>
+              <Ionicons name="camera-reverse" size={32} color="white" />
             )}
           </TouchableOpacity>
         </View>
@@ -185,11 +164,9 @@ export default function CameraControls({
           )}
         </View>
 
-        {/* Camera Flip Button */}
-        <TouchableOpacity style={styles.flipButton} onPress={onToggleCamera}>
-          {!isRecording && (
-            <Ionicons name="camera-reverse" size={32} color="white" />
-          )}
+        {/* Camera Toggle Flash Button */}
+        <TouchableOpacity style={styles.flashButton} onPress={onToggleFlash}>
+          <Ionicons name={getFlashIcon()} size={28} color="white" />
         </TouchableOpacity>
       </View>
     </View>
@@ -228,7 +205,7 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
     paddingHorizontal: 30,
   },
-  galleryButton: {
+  toggleCameraButton: {
     width: 44,
     height: 44,
   },
@@ -291,7 +268,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
     opacity: 0.8,
   },
-  flipButton: {
+  flashButton: {
     width: 44,
     height: 44,
     justifyContent: "center",

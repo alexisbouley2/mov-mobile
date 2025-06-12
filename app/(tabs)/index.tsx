@@ -8,8 +8,6 @@ import {
   useCameraPermissions,
   useMicrophonePermissions,
 } from "expo-camera";
-import * as ImagePicker from "expo-image-picker";
-import * as MediaLibrary from "expo-media-library";
 import React, { useEffect, useRef, useState } from "react";
 import { Dimensions, StatusBar, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -17,30 +15,19 @@ import { SafeAreaView } from "react-native-safe-area-context";
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
 export default function CameraScreen() {
+  const MAX_VIDEO_DURATION: number = 6;
   const [cameraPermission, requestCameraPermission] = useCameraPermissions();
   const [microphonePermission, requestMicrophonePermission] =
     useMicrophonePermissions();
-  const [hasMediaLibraryPermission, setHasMediaLibraryPermission] = useState<
-    boolean | undefined
-  >();
 
   const [cameraType, setCameraType] = useState<CameraType>("back");
   const [flashMode, setFlashMode] = useState<"off" | "on">("off");
   const [isRecording, setIsRecording] = useState(false);
   const [recordingDuration, setRecordingDuration] = useState(0);
-  const [mediaType, setMediaType] = useState<"photo" | "video" | null>(null);
   const [capturedMedia, setCapturedMedia] = useState<string | null>(null);
 
   const cameraRef = useRef<CameraViewType>(null);
   const recordingTimer = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  useEffect(() => {
-    (async () => {
-      const mediaLibraryPermission =
-        await MediaLibrary.requestPermissionsAsync();
-      setHasMediaLibraryPermission(mediaLibraryPermission.status === "granted");
-    })();
-  }, []);
 
   useEffect(() => {
     if (!cameraPermission?.granted) {
@@ -57,10 +44,9 @@ export default function CameraScreen() {
       recordingTimer.current = setInterval(() => {
         setRecordingDuration((prev) => {
           const newDuration = prev + 1;
-          // Auto-stop at 60 seconds
-          if (newDuration >= 60) {
+          if (newDuration >= MAX_VIDEO_DURATION) {
             stopRecording();
-            return 60;
+            return 6;
           }
           return newDuration;
         });
@@ -80,28 +66,15 @@ export default function CameraScreen() {
     };
   }, [isRecording]);
 
-  const takePicture = async () => {
-    if (!cameraRef.current) return;
-    try {
-      const photo = await cameraRef.current.takePictureAsync({
-        quality: 0.8,
-      });
-      setCapturedMedia(photo.uri);
-      setMediaType("photo");
-    } catch (err) {
-      console.error("Error taking picture:", err);
-    }
-  };
-
   const startRecording = async () => {
     if (!cameraRef.current) return;
     setIsRecording(true);
     try {
-      const video = await cameraRef.current.recordAsync({ maxDuration: 60 });
+      const video = await cameraRef.current.recordAsync({
+        maxDuration: MAX_VIDEO_DURATION,
+      });
       setCapturedMedia(video?.uri || null);
-      setMediaType("video");
-    } catch (err) {
-      console.error("Recording failed:", err);
+    } catch {
     } finally {
       setIsRecording(false);
     }
@@ -114,7 +87,7 @@ export default function CameraScreen() {
   };
 
   const toggleCameraType = () => {
-    if (isRecording) return; // Prevent flipping camera during recording
+    if (isRecording) return; // TODO: check undo it, Prevent flipping camera during recording
     setCameraType((current) => (current === "back" ? "front" : "back"));
   };
 
@@ -133,7 +106,6 @@ export default function CameraScreen() {
 
   const dismissPreview = () => {
     setCapturedMedia(null);
-    setMediaType(null);
   };
 
   if (!cameraPermission || !microphonePermission)
@@ -144,42 +116,13 @@ export default function CameraScreen() {
     return (
       <MediaPreview
         mediaUri={capturedMedia}
-        mediaType={mediaType!}
         onDismiss={dismissPreview}
         onSave={dismissPreview}
       />
     );
   }
 
-  const recordingProgress = recordingDuration / 60; // Progress from 0 to 1
-
-  const pickMediaFromLibrary = async () => {
-    const permissionResult =
-      await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permissionResult.granted) {
-      alert("Permission to access media library is required!");
-      return;
-    }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.All,
-      allowsEditing: false,
-      quality: 1,
-      videoMaxDuration: 60,
-    });
-
-    if (!result.canceled && result.assets && result.assets.length > 0) {
-      const asset = result.assets[0];
-
-      if (asset.type === "video" && asset.duration && asset.duration > 60000) {
-        alert("Only videos shorter than 60 seconds are allowed.");
-        return;
-      }
-
-      setCapturedMedia(asset.uri);
-      setMediaType(asset.type === "video" ? "video" : "photo");
-    }
-  };
+  const recordingProgress = recordingDuration / MAX_VIDEO_DURATION;
 
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
@@ -193,17 +136,16 @@ export default function CameraScreen() {
           enableTorch={isRecording && flashMode === "on"} // torch for video
           mode="video"
         />
-        <CameraOverlay
+
+        <CameraOverlay //TODO: how to better do the recording dot
           isRecording={isRecording}
           recordingDuration={recordingDuration}
         />
         <CameraControls
-          onTakePicture={takePicture}
           onStartRecording={startRecording}
           onStopRecording={stopRecording}
           onToggleCamera={toggleCameraType}
           onToggleFlash={toggleFlash}
-          onOpenGallery={pickMediaFromLibrary}
           isRecording={isRecording}
           flashMode={flashMode}
           recordingProgress={recordingProgress}
