@@ -30,43 +30,6 @@ export default function CameraControls({
   recordingProgress,
 }: CameraControlsProps) {
   const [pressAnimation] = React.useState(new Animated.Value(1));
-  const [isLongPressing, setIsLongPressing] = React.useState(false);
-
-  const handleCapturePress = () => {
-    if (isRecording) {
-      onStopRecording();
-    }
-  };
-
-  const handleCaptureLongPress = () => {
-    if (!isRecording) {
-      setIsLongPressing(true);
-      // Animate button press
-      Animated.timing(pressAnimation, {
-        toValue: 1.2,
-        duration: 100,
-        useNativeDriver: true,
-      }).start();
-      onStartRecording();
-    }
-  };
-
-  const handlePressIn = () => {
-    // Reset long press flag when starting a new press
-    setIsLongPressing(false);
-  };
-
-  const handlePressOut = () => {
-    // Only stop recording if we were actually recording and long pressing
-    if (isRecording && isLongPressing) {
-      Animated.timing(pressAnimation, {
-        toValue: 1,
-        duration: 100,
-        useNativeDriver: true,
-      }).start();
-      setIsLongPressing(false);
-    }
-  };
 
   const getFlashIcon = () => {
     switch (flashMode) {
@@ -132,11 +95,12 @@ export default function CameraControls({
 
             <TouchableOpacity
               style={styles.captureButtonOuter}
-              onPressIn={handlePressIn}
-              onPress={handleCapturePress}
-              onLongPress={handleCaptureLongPress}
-              onPressOut={handlePressOut}
-              delayLongPress={200}
+              onPressIn={() => {
+                onStartRecording();
+              }}
+              onPressOut={() => {
+                onStopRecording();
+              }}
               activeOpacity={0.8}
             >
               <Animated.View
@@ -148,7 +112,6 @@ export default function CameraControls({
                   },
                 ]}
               >
-                {/* Show square when recording, circle when not */}
                 {isRecording ? (
                   <View style={styles.stopSquare} />
                 ) : (

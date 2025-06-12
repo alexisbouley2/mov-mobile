@@ -1,5 +1,4 @@
 import CameraControls from "@/components/camera/CameraControls";
-import CameraOverlay from "@/components/camera/CameraOverlay";
 import MediaPreview from "@/components/camera/MediaPreview";
 import type { CameraView as CameraViewType } from "expo-camera";
 import {
@@ -28,6 +27,7 @@ export default function CameraScreen() {
 
   const cameraRef = useRef<CameraViewType>(null);
   const recordingTimer = useRef<ReturnType<typeof setInterval> | null>(null);
+  const recordingStartTime = useRef<number | null>(null);
 
   useEffect(() => {
     if (!cameraPermission?.granted) {
@@ -38,37 +38,21 @@ export default function CameraScreen() {
     }
   }, [cameraPermission, microphonePermission]);
 
-  // Timer effect for recording
-  useEffect(() => {
-    if (isRecording) {
-      recordingTimer.current = setInterval(() => {
-        setRecordingDuration((prev) => {
-          const newDuration = prev + 1;
-          if (newDuration >= MAX_VIDEO_DURATION) {
-            stopRecording();
-            return 6;
-          }
-          return newDuration;
-        });
-      }, 1000);
-    } else {
-      if (recordingTimer.current) {
-        clearInterval(recordingTimer.current);
-        recordingTimer.current = null;
-      }
-      setRecordingDuration(0);
-    }
-
-    return () => {
-      if (recordingTimer.current) {
-        clearInterval(recordingTimer.current);
-      }
-    };
-  }, [isRecording]);
-
   const startRecording = async () => {
     if (!cameraRef.current) return;
+
     setIsRecording(true);
+    recordingStartTime.current = Date.now();
+
+    recordingTimer.current = setInterval(() => {
+      if (!recordingStartTime.current) return;
+      const elapsed = (Date.now() - recordingStartTime.current) / 1000;
+      setRecordingDuration(elapsed);
+      if (elapsed >= MAX_VIDEO_DURATION) {
+        stopRecording();
+      }
+    }, 20); // smoother updates every 50ms
+
     try {
       const video = await cameraRef.current.recordAsync({
         maxDuration: MAX_VIDEO_DURATION,
@@ -83,6 +67,11 @@ export default function CameraScreen() {
   const stopRecording = () => {
     if (!cameraRef.current) return;
     setIsRecording(false);
+    if (recordingTimer.current) {
+      clearInterval(recordingTimer.current);
+      recordingTimer.current = null;
+    }
+    recordingStartTime.current = null;
     cameraRef.current.stopRecording();
   };
 
@@ -122,7 +111,8 @@ export default function CameraScreen() {
     );
   }
 
-  const recordingProgress = recordingDuration / MAX_VIDEO_DURATION;
+  const recordingProgress = Math.min(recordingDuration / MAX_VIDEO_DURATION, 1);
+  console.log("recordingProgress", recordingProgress);
 
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
@@ -137,10 +127,6 @@ export default function CameraScreen() {
           mode="video"
         />
 
-        <CameraOverlay //TODO: how to better do the recording dot
-          isRecording={isRecording}
-          recordingDuration={recordingDuration}
-        />
         <CameraControls
           onStartRecording={startRecording}
           onStopRecording={stopRecording}
