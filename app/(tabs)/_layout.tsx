@@ -31,7 +31,7 @@ export default function TabLayout() {
         name="events"
         options={{
           title: "Events",
-          tabBarIcon: ({ color }) => (
+          tabBarIcon: ({ color }: { color: string }) => (
             <IconSymbol size={28} name="paperplane.fill" color={color} />
           ),
         }}
@@ -41,7 +41,7 @@ export default function TabLayout() {
         name="index"
         options={{
           title: "Pov",
-          tabBarIcon: ({ color }) => (
+          tabBarIcon: ({ color }: { color: string }) => (
             <IconSymbol size={28} name="house.fill" color={color} />
           ),
         }}
@@ -51,7 +51,7 @@ export default function TabLayout() {
         name="settings"
         options={{
           title: "Settings",
-          tabBarIcon: ({ color }) => (
+          tabBarIcon: ({ color }: { color: string }) => (
             <IconSymbol size={28} name="paperplane.fill" color={color} />
           ),
         }}
