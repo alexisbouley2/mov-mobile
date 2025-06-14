@@ -36,9 +36,7 @@ export default function EventForm({
     <KeyboardAvoidingView
       style={styles.keyboardAvoidingView}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
-      keyboardVerticalOffset={
-        Platform.OS === "ios" ? (mode === "create" ? 0 : 90) : 0
-      }
+      keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
     >
       <ScrollView
         style={styles.scrollView}
