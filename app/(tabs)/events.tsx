@@ -47,6 +47,10 @@ export default function EventsScreen() {
     router.push("/(event)/create");
   };
 
+  const handleEventPress = (eventId: string) => {
+    router.push(`/(event)/${eventId}`);
+  };
+
   const renderEventCard = (
     event: EventType,
     type: "current" | "planned" | "past"
@@ -68,7 +72,11 @@ export default function EventsScreen() {
     }
 
     return (
-      <TouchableOpacity key={event.id} style={styles.eventCard}>
+      <TouchableOpacity
+        key={event.id}
+        style={styles.eventCard}
+        onPress={() => handleEventPress(event.id)}
+      >
         <View style={styles.eventContent}>
           <View style={styles.eventIcon}>
             {event.photo ? (
