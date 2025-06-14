@@ -1,43 +1,82 @@
-// app/(event)/edit/[id].tsx
+// app/(event)/edit/[id].tsx - New edit screen
 import React from "react";
 import {
+  SafeAreaView,
+  StatusBar,
+  StyleSheet,
   View,
   Text,
-  StyleSheet,
-  SafeAreaView,
-  TouchableOpacity,
+  ActivityIndicator,
 } from "react-native";
-import { useLocalSearchParams, useRouter, Stack } from "expo-router";
-import { IconSymbol } from "@/components/ui/IconSymbol";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useAuth } from "@/contexts/AuthContext";
+import { useEditEvent } from "@/hooks/useEditEvent";
+import EventFormHeader from "@/components/event-form/EventFormHeader";
+import EventForm from "@/components/event-form/EventForm";
 
 export default function EditEventScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const { user } = useAuth();
   const router = useRouter();
+  const {
+    formData,
+    loading,
+    initialLoading,
+    error,
+    updateField,
+    handleSubmit,
+  } = useEditEvent(id!, user?.id || "");
 
-  return (
-    <>
-      <Stack.Screen
-        options={{
-          headerShown: false,
-        }}
-      />
+  const handleBack = () => {
+    router.back();
+  };
+
+  const handleEditSuccess = () => {
+    router.back();
+  };
+
+  const onSubmit = () => {
+    handleSubmit(handleEditSuccess);
+  };
+
+  if (initialLoading) {
+    return (
       <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()}>
-            <IconSymbol name="chevron.left" size={24} color="#fff" />
-          </TouchableOpacity>
-          <Text style={styles.title}>Edit Event</Text>
-          <View style={{ width: 24 }} />
-        </View>
-
-        <View style={styles.content}>
-          <Text style={styles.placeholder}>Edit Event Screen for ID: {id}</Text>
-          <Text style={styles.subtext}>
-            This screen will contain the event editing form.
-          </Text>
+        <StatusBar barStyle="light-content" backgroundColor="#000" />
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#fff" />
+          <Text style={styles.loadingText}>Loading event...</Text>
         </View>
       </SafeAreaView>
-    </>
+    );
+  }
+
+  if (error) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <StatusBar barStyle="light-content" backgroundColor="#000" />
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>{error}</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor="#000" />
+
+      <EventFormHeader title="Edit Event" onBack={handleBack} />
+
+      <EventForm
+        formData={formData}
+        loading={loading}
+        onFieldChange={updateField}
+        onSubmit={onSubmit}
+        submitButtonText="Update Event"
+        mode="edit"
+      />
+    </SafeAreaView>
   );
 }
 
@@ -46,35 +85,25 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#000",
   },
-  header: {
-    flexDirection: "row",
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
     alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#333",
   },
-  title: {
-    fontSize: 18,
-    fontWeight: "bold",
+  loadingText: {
     color: "#fff",
+    fontSize: 16,
+    marginTop: 12,
   },
-  content: {
+  errorContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 20,
   },
-  placeholder: {
-    fontSize: 18,
-    color: "#fff",
-    textAlign: "center",
-    marginBottom: 8,
-  },
-  subtext: {
-    fontSize: 14,
-    color: "#888",
+  errorText: {
+    color: "#ff6b6b",
+    fontSize: 16,
     textAlign: "center",
   },
 });
