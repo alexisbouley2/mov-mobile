@@ -175,7 +175,6 @@ export default function EventsScreen() {
           {events.planned.length > 0 && (
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Planned Events</Text>
-              <Text style={styles.sectionSubtitle}>Chloe invited you</Text>
               {events.planned.map((event) => renderEventCard(event, "planned"))}
             </View>
           )}
