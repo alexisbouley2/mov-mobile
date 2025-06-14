@@ -111,13 +111,7 @@ export default function CameraScreen() {
   if (!cameraPermission.granted) return <View style={styles.container} />;
 
   if (capturedMedia) {
-    return (
-      <MediaPreview
-        mediaUri={capturedMedia}
-        onDismiss={dismissPreview}
-        onSave={dismissPreview}
-      />
-    );
+    return <MediaPreview mediaUri={capturedMedia} onDismiss={dismissPreview} />;
   }
 
   const recordingProgress = Math.min(recordingDuration / MAX_VIDEO_DURATION, 1);

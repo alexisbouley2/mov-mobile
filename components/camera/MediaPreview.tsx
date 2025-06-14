@@ -11,24 +11,17 @@ import {
   View,
 } from "react-native";
 
-import EditableTextOverlay from "@/components/camera/EditableTextOverlay";
-
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
 interface MediaPreviewProps {
   mediaUri: string;
   onDismiss: () => void;
-  onSave: () => void;
 }
 
 export default function MediaPreview({
   mediaUri,
   onDismiss,
-  onSave,
 }: MediaPreviewProps) {
-  const [isEditingText, setIsEditingText] = React.useState(false);
-  const [overlayText, setOverlayText] = React.useState("");
-
   return (
     <View style={styles.container}>
       <StatusBar hidden />
@@ -44,10 +37,6 @@ export default function MediaPreview({
         />
       </View>
 
-      {isEditingText && (
-        <EditableTextOverlay text={overlayText} setText={setOverlayText} />
-      )}
-
       {/* Top Controls */}
       <SafeAreaView style={styles.topControls}>
         <TouchableOpacity style={styles.dismissButton} onPress={onDismiss}>
@@ -57,48 +46,11 @@ export default function MediaPreview({
 
       {/* Bottom Controls */}
       <View style={styles.bottomControls}>
-        <View style={styles.actionsContainer}>
-          {/* Download/Save Button */}
-          <TouchableOpacity style={styles.actionButton} onPress={onSave}>
-            <Ionicons name="download" size={28} color="white" />
-          </TouchableOpacity>
-
-          {/* Add Text Button */}
-          <TouchableOpacity style={styles.actionButton}>
-            <Ionicons name="text" size={28} color="white" />
-          </TouchableOpacity>
-
-          {/* Add Sticker Button */}
-          <TouchableOpacity style={styles.actionButton}>
-            <Ionicons name="happy" size={28} color="white" />
-          </TouchableOpacity>
-
-          {/* Crop Button */}
-          <TouchableOpacity style={styles.actionButton}>
-            <Ionicons name="crop" size={28} color="white" />
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={() => setIsEditingText((prev) => !prev)}
-          >
-            <Ionicons
-              name="text"
-              size={28}
-              color={isEditingText ? "#0096ff" : "white"}
-            />
-          </TouchableOpacity>
-        </View>
-
         {/* Send Button */}
         <View style={styles.sendContainer}>
           <TouchableOpacity style={styles.sendButton}>
             <Text style={styles.sendButtonText}>Send To</Text>
             <Ionicons name="arrow-forward" size={20} color="white" />
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.storyButton}>
-            <Text style={styles.storyButtonText}>My Story</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -119,18 +71,6 @@ const styles = StyleSheet.create({
   media: {
     width: screenWidth,
     height: screenHeight,
-  },
-  playButton: {
-    position: "absolute",
-    top: "50%",
-    left: "50%",
-    transform: [{ translateX: -25 }, { translateY: -25 }],
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    justifyContent: "center",
-    alignItems: "center",
   },
   topControls: {
     position: "absolute",
@@ -158,20 +98,7 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
     paddingHorizontal: 20,
   },
-  actionsContainer: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    alignItems: "center",
-    marginBottom: 30,
-  },
-  actionButton: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
+
   sendContainer: {
     alignItems: "center",
   },
@@ -189,18 +116,5 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     marginRight: 8,
-  },
-  storyButton: {
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
-    paddingHorizontal: 30,
-    paddingVertical: 12,
-    borderRadius: 25,
-    borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.3)",
-  },
-  storyButtonText: {
-    color: "white",
-    fontSize: 16,
-    fontWeight: "500",
   },
 });
