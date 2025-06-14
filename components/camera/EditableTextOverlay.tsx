@@ -4,7 +4,7 @@ import { Animated, PanResponder, StyleSheet, TextInput } from "react-native";
 
 interface EditableTextOverlayProps {
   text: string;
-  setText: (value: string) => void;
+  setText: (_value: string) => void;
 }
 
 export default function EditableTextOverlay({

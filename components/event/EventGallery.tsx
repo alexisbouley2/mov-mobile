@@ -9,8 +9,8 @@ interface EventGalleryProps {
 }
 
 export default function EventGallery({
-  eventId,
-  userId,
+  // eventId,
+  // userId,
   eventDate,
 }: EventGalleryProps) {
   const [activeTab, setActiveTab] = useState<"all" | "you">("all");
