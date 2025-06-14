@@ -1,4 +1,4 @@
-// app/(event)/[id].tsx
+// app/(event)/[id].tsx - Fixed version with automatic refresh
 import React from "react";
 import {
   View,
@@ -9,7 +9,8 @@ import {
   StatusBar,
   ActivityIndicator,
 } from "react-native";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
+import { useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEventDetail } from "@/hooks/useEventDetail";
 import EventHeader from "@/components/event/EventHeader";
@@ -24,9 +25,27 @@ export default function EventDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { user } = useAuth();
-  const { event, loading, error, toggleParticipation } = useEventDetail(id!);
+  const {
+    event,
+    loading,
+    refreshing,
+    error,
+    toggleParticipation,
+    refetch,
+    hasInitialData,
+  } = useEventDetail(id!);
 
-  if (loading) {
+  // Force refetch when screen comes into focus (e.g., returning from edit screen)
+  useFocusEffect(
+    useCallback(() => {
+      // Only refetch if we have initial data (prevents infinite loops)
+      if (hasInitialData) {
+        refetch();
+      }
+    }, [hasInitialData, refetch])
+  );
+
+  if (loading && !hasInitialData) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#fff" />
@@ -85,6 +104,13 @@ export default function EventDetailScreen() {
           />
         </View>
       </ScrollView>
+
+      {/* Show a subtle loading indicator when refetching */}
+      {refreshing && (
+        <View style={styles.refetchingIndicator}>
+          <ActivityIndicator size="small" color="#fff" />
+        </View>
+      )}
     </SafeAreaView>
   );
 }
@@ -116,5 +142,13 @@ const styles = StyleSheet.create({
     color: "#ff6b6b",
     fontSize: 16,
     textAlign: "center",
+  },
+  refetchingIndicator: {
+    position: "absolute",
+    top: 60,
+    right: 20,
+    backgroundColor: "rgba(0, 0, 0, 0.7)",
+    padding: 8,
+    borderRadius: 20,
   },
 });

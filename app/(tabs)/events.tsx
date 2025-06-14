@@ -1,4 +1,4 @@
-// app/(tabs)/events.tsx - Refactored main screen
+// app/(tabs)/events.tsx - Fixed version with automatic refresh
 import React from "react";
 import {
   SafeAreaView,
@@ -9,7 +9,8 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from "react-native";
-import { useRouter } from "expo-router";
+import { useRouter, useFocusEffect } from "expo-router";
+import { useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEvents } from "@/hooks/useEvents";
 import EventsHeader from "@/components/events/EventsHeader";
@@ -18,7 +19,18 @@ import EventsContent from "@/components/events/EventsContent";
 export default function EventsScreen() {
   const router = useRouter();
   const { user } = useAuth();
-  const { events, loading, error, refetch } = useEvents(user?.id || "");
+  const { events, loading, refreshing, error, refetch, hasInitialData } =
+    useEvents(user?.id || "");
+
+  // Refetch events when returning to this screen
+  useFocusEffect(
+    useCallback(() => {
+      // Only refetch if we have initial data (prevents infinite loops)
+      if (hasInitialData) {
+        refetch();
+      }
+    }, [hasInitialData, refetch])
+  );
 
   const handleCreateEvent = () => {
     router.push("/(event)/create");
@@ -28,7 +40,7 @@ export default function EventsScreen() {
     router.push(`/(event)/${eventId}`);
   };
 
-  if (loading) {
+  if (loading && !hasInitialData) {
     return (
       <SafeAreaView style={styles.container}>
         <StatusBar barStyle="light-content" backgroundColor="#000" />
@@ -60,6 +72,13 @@ export default function EventsScreen() {
       <EventsHeader onCreateEvent={handleCreateEvent} />
 
       <EventsContent events={events} onEventPress={handleEventPress} />
+
+      {/* Show subtle loading indicator when refreshing */}
+      {refreshing && (
+        <View style={styles.refreshingIndicator}>
+          <ActivityIndicator size="small" color="#fff" />
+        </View>
+      )}
     </SafeAreaView>
   );
 }
@@ -96,5 +115,13 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 16,
     fontWeight: "bold",
+  },
+  refreshingIndicator: {
+    position: "absolute",
+    top: 60,
+    right: 20,
+    backgroundColor: "rgba(0, 0, 0, 0.7)",
+    padding: 8,
+    borderRadius: 20,
   },
 });

@@ -1,5 +1,5 @@
 // hooks/useEvents.ts
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 export interface User {
   id: string;
@@ -44,43 +44,60 @@ export const useEvents = (userId: string) => {
     past: [],
   });
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [hasInitialData, setHasInitialData] = useState(false);
 
-  const fetchUserEvents = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch(`${API_BASE_URL}/events/user/${userId}`);
+  const fetchUserEvents = useCallback(
+    async (isRefresh = false) => {
+      try {
+        if (isRefresh) {
+          setRefreshing(true);
+        } else {
+          setLoading(true);
+        }
 
-      if (!response.ok) {
-        throw new Error("Failed to fetch events");
+        const response = await fetch(`${API_BASE_URL}/events/user/${userId}`);
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch events");
+        }
+
+        const data = await response.json();
+
+        setEvents(data);
+        setError(null);
+        setHasInitialData(true);
+      } catch (err) {
+        console.log("err", err);
+        setError(err instanceof Error ? err.message : "An error occurred");
+      } finally {
+        if (isRefresh) {
+          setRefreshing(false);
+        } else {
+          setLoading(false);
+        }
       }
-
-      const data = await response.json();
-
-      setEvents(data);
-      setError(null);
-    } catch (err) {
-      console.log("err", err);
-      setError(err instanceof Error ? err.message : "An error occurred");
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+    [userId]
+  );
 
   useEffect(() => {
     if (userId) {
-      fetchUserEvents();
+      fetchUserEvents(false);
     }
-  }, [userId]);
+  }, [fetchUserEvents]);
 
-  const refetch = () => {
-    fetchUserEvents();
-  };
+  const refetch = useCallback(() => {
+    fetchUserEvents(true);
+  }, [fetchUserEvents]);
 
   return {
     events,
     loading,
+    refreshing,
     error,
     refetch,
+    hasInitialData,
   };
 };

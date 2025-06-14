@@ -1,5 +1,5 @@
 // hooks/useEventDetail.ts
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 export interface User {
   id: string;
@@ -35,28 +35,42 @@ const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3000";
 export function useEventDetail(eventId: string) {
   const [event, setEvent] = useState<EventDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [hasInitialData, setHasInitialData] = useState(false);
 
-  const fetchEvent = async () => {
-    try {
-      setLoading(true);
-      setError(null);
+  const fetchEvent = useCallback(
+    async (isRefresh = false) => {
+      try {
+        if (isRefresh) {
+          setRefreshing(true);
+        } else {
+          setLoading(true);
+        }
+        setError(null);
 
-      const response = await fetch(`${API_BASE_URL}/events/${eventId}`);
+        const response = await fetch(`${API_BASE_URL}/events/${eventId}`);
 
-      if (!response.ok) {
-        throw new Error("Failed to fetch event");
+        if (!response.ok) {
+          throw new Error("Failed to fetch event");
+        }
+
+        const data = await response.json();
+        setEvent(data);
+        setHasInitialData(true);
+      } catch (err) {
+        console.error("Error fetching event:", err);
+        setError(err instanceof Error ? err.message : "Failed to fetch event");
+      } finally {
+        if (isRefresh) {
+          setRefreshing(false);
+        } else {
+          setLoading(false);
+        }
       }
-
-      const data = await response.json();
-      setEvent(data);
-    } catch (err) {
-      console.error("Error fetching event:", err);
-      setError(err instanceof Error ? err.message : "Failed to fetch event");
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+    [eventId]
+  );
 
   const toggleParticipation = async (userId: string) => {
     if (!event) return;
@@ -81,7 +95,7 @@ export function useEventDetail(eventId: string) {
       }
 
       // Refetch the event data to get updated participants
-      await fetchEvent();
+      await fetchEvent(true);
     } catch (err) {
       console.error("Error toggling participation:", err);
       setError(
@@ -90,17 +104,23 @@ export function useEventDetail(eventId: string) {
     }
   };
 
+  const refetch = useCallback(() => {
+    fetchEvent(true);
+  }, [fetchEvent]);
+
   useEffect(() => {
     if (eventId) {
-      fetchEvent();
+      fetchEvent(false);
     }
-  }, [eventId]);
+  }, [fetchEvent]);
 
   return {
     event,
     loading,
+    refreshing,
     error,
-    refetch: fetchEvent,
+    refetch,
     toggleParticipation,
+    hasInitialData,
   };
 }
