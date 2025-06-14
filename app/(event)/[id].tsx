@@ -9,7 +9,7 @@ import {
   StatusBar,
   ActivityIndicator,
 } from "react-native";
-import { useLocalSearchParams, useRouter, Stack } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEventDetail } from "@/hooks/useEventDetail";
 import EventHeader from "@/components/event/EventHeader";
@@ -48,51 +48,44 @@ export default function EventDetailScreen() {
   const isParticipant = event.participants?.some((p) => p.userId === user?.id);
 
   return (
-    <>
-      <Stack.Screen
-        options={{
-          headerShown: false,
-        }}
-      />
-      <SafeAreaView style={styles.container}>
-        <StatusBar barStyle="light-content" backgroundColor="#000" />
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor="#000" />
 
-        <ScrollView
-          style={styles.scrollView}
-          showsVerticalScrollIndicator={false}
-        >
-          <EventHeader event={event} onBack={() => router.back()} />
+      <ScrollView
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+      >
+        <EventHeader event={event} onBack={() => router.back()} />
 
-          <View style={styles.content}>
-            <EventActions
-              isAdmin={isAdmin}
-              isParticipant={isParticipant}
-              onUpdate={() => router.push(`/(event)/edit/${id}`)}
-              onParticipate={() => toggleParticipation(user?.id || "")}
-              onInvite={() => {
-                /* TODO: Implement invite */
-              }}
-            />
+        <View style={styles.content}>
+          <EventActions
+            isAdmin={isAdmin}
+            isParticipant={isParticipant}
+            onUpdate={() => router.push(`/(event)/edit/${id}`)}
+            onParticipate={() => toggleParticipation(user?.id || "")}
+            onInvite={() => {
+              /* TODO: Implement invite */
+            }}
+          />
 
-            {event.location && <EventLocation location={event.location} />}
+          {event.location && <EventLocation location={event.location} />}
 
-            {event.information && (
-              <EventInformation information={event.information} />
-            )}
+          {event.information && (
+            <EventInformation information={event.information} />
+          )}
 
-            <EventParticipants participants={event.participants || []} />
+          <EventParticipants participants={event.participants || []} />
 
-            <EventChat />
+          <EventChat />
 
-            <EventGallery
-              eventId={event.id}
-              userId={user?.id || ""}
-              eventDate={new Date(event.date)}
-            />
-          </View>
-        </ScrollView>
-      </SafeAreaView>
-    </>
+          <EventGallery
+            eventId={event.id}
+            userId={user?.id || ""}
+            eventDate={new Date(event.date)}
+          />
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
