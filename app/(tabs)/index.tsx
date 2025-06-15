@@ -10,11 +10,13 @@ import {
 import React, { useEffect, useRef, useState } from "react";
 import { Dimensions, StatusBar, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useAuth } from "@/contexts/AuthContext";
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
 export default function CameraScreen() {
   const MAX_VIDEO_DURATION: number = 6;
+  const { user } = useAuth();
   const [cameraPermission, requestCameraPermission] = useCameraPermissions();
   const [microphonePermission, requestMicrophonePermission] =
     useMicrophonePermissions();
@@ -111,7 +113,13 @@ export default function CameraScreen() {
   if (!cameraPermission.granted) return <View style={styles.container} />;
 
   if (capturedMedia) {
-    return <MediaPreview mediaUri={capturedMedia} onDismiss={dismissPreview} />;
+    return (
+      <MediaPreview
+        mediaUri={capturedMedia}
+        onDismiss={dismissPreview}
+        userId={user?.id || ""}
+      />
+    );
   }
 
   const recordingProgress = Math.min(recordingDuration / MAX_VIDEO_DURATION, 1);
