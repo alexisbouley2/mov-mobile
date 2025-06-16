@@ -1,6 +1,6 @@
-// components/event/EventGallery.tsx
 import React, { useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import EventVideoFeed from "./EventVideoFeed";
 
 interface EventGalleryProps {
   eventId: string;
@@ -9,30 +9,27 @@ interface EventGalleryProps {
 }
 
 export default function EventGallery({
-  // eventId,
-  // userId,
+  eventId,
+  userId,
   eventDate,
 }: EventGalleryProps) {
   const [activeTab, setActiveTab] = useState<"all" | "you">("all");
 
-  const isEventInFuture = eventDate > new Date();
-
-  if (isEventInFuture) {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.title}>Gallery</Text>
-        <View style={styles.waitingContainer}>
-          <Text style={styles.waitingText}>Wait for the event to start</Text>
-        </View>
-      </View>
-    );
-  }
+  // Check if event is in the past (allow uploads)
+  const isEventPast = new Date() > eventDate;
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Gallery</Text>
+      <View style={styles.header}>
+        <Text style={styles.title}>Gallery</Text>
+        {isEventPast && (
+          <Text style={styles.subtitle}>
+            Share your memories from this event
+          </Text>
+        )}
+      </View>
 
-      {/* Tab Selector */}
+      {/* Tab Navigation */}
       <View style={styles.tabContainer}>
         <TouchableOpacity
           style={[styles.tab, activeTab === "all" && styles.activeTab]}
@@ -47,6 +44,7 @@ export default function EventGallery({
             All
           </Text>
         </TouchableOpacity>
+
         <TouchableOpacity
           style={[styles.tab, activeTab === "you" && styles.activeTab]}
           onPress={() => setActiveTab("you")}
@@ -62,49 +60,48 @@ export default function EventGallery({
         </TouchableOpacity>
       </View>
 
-      {/* Gallery Content */}
-      <View style={styles.galleryContent}>
-        {activeTab === "all" ? (
-          <View style={styles.placeholderContainer}>
-            <Text style={styles.placeholderText}>
-              All videos will appear here
-            </Text>
-          </View>
-        ) : (
-          <View style={styles.placeholderContainer}>
-            <Text style={styles.placeholderText}>
-              Your videos will appear here
-            </Text>
-          </View>
-        )}
-      </View>
+      {/* Video Feed - Now takes remaining space */}
+      <EventVideoFeed
+        eventId={eventId}
+        userId={userId}
+        filterByUser={activeTab === "you"}
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 24,
+    backgroundColor: "#000",
+    // Remove flex: 1 to let parent control height
+  },
+  header: {
+    paddingHorizontal: 20,
+    paddingBottom: 20,
   },
   title: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: "bold",
     color: "#fff",
-    marginBottom: 16,
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: "#666",
   },
   tabContainer: {
     flexDirection: "row",
-    backgroundColor: "#1a1a1a",
-    borderRadius: 8,
+    backgroundColor: "#111",
+    marginHorizontal: 20,
+    borderRadius: 25,
     padding: 4,
-    marginBottom: 16,
+    marginBottom: 20,
   },
   tab: {
     flex: 1,
     paddingVertical: 12,
-    paddingHorizontal: 16,
     alignItems: "center",
-    borderRadius: 6,
+    borderRadius: 20,
   },
   activeTab: {
     backgroundColor: "#fff",
@@ -112,36 +109,9 @@ const styles = StyleSheet.create({
   tabText: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#888",
+    color: "#666",
   },
   activeTabText: {
     color: "#000",
-  },
-  galleryContent: {
-    minHeight: 200,
-  },
-  placeholderContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#1a1a1a",
-    borderRadius: 12,
-    padding: 40,
-  },
-  placeholderText: {
-    color: "#888",
-    fontSize: 16,
-    textAlign: "center",
-  },
-  waitingContainer: {
-    backgroundColor: "#1a1a1a",
-    borderRadius: 12,
-    padding: 40,
-    alignItems: "center",
-  },
-  waitingText: {
-    color: "#888",
-    fontSize: 16,
-    textAlign: "center",
   },
 });

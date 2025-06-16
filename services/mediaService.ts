@@ -1,8 +1,15 @@
 import * as FileSystem from "expo-file-system";
+import { ThumbnailGenerator } from "./ThumbnailGenerator";
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3000";
 
 interface PresignedUrlResponse {
+  uploadUrl: string;
+  fileName: string;
+  expiresIn: number;
+}
+
+interface ThumbnailUploadResponse {
   uploadUrl: string;
   fileName: string;
   expiresIn: number;
@@ -13,8 +20,8 @@ interface UploadConfirmResponse {
   video: {
     id: string;
     storagePath: string;
+    thumbnailPath: string;
     userId: string;
-    eventId: string;
     createdAt: string;
   };
   message: string;
@@ -22,13 +29,27 @@ interface UploadConfirmResponse {
 
 export class MediaService {
   /**
-   * Step 1: Demander une presigned URL au backend
+   * Generate thumbnail from video file with smart extraction
    */
-  static async getUploadUrl(userId: string): Promise<PresignedUrlResponse> {
-    try {
-      console.log("Requesting presigned URL from backend...");
+  static async generateThumbnail(videoUri: string): Promise<string> {
+    return ThumbnailGenerator.generateThumbnail(videoUri, {
+      quality: 0.8, // Good balance between quality and file size
+    });
+  }
 
-      const response = await fetch(`${API_BASE_URL}/videos/upload-url`, {
+  /**
+   * Step 1: Get upload URLs for both video and thumbnail
+   */
+  static async getUploadUrls(userId: string): Promise<{
+    video: PresignedUrlResponse;
+    thumbnail: ThumbnailUploadResponse;
+  }> {
+    try {
+      console.log("userId", userId);
+      console.log("Requesting presigned URLs from backend...");
+
+      // Get video upload URL
+      const videoResponse = await fetch(`${API_BASE_URL}/videos/upload-url`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -39,58 +60,87 @@ export class MediaService {
         }),
       });
 
-      if (!response.ok) {
-        const errorText = await response.text();
+      if (!videoResponse.ok) {
+        const errorText = await videoResponse.text();
         throw new Error(
-          `Failed to get upload URL: ${response.status} - ${errorText}`
+          `Failed to get video upload URL: ${videoResponse.status} - ${errorText}`
         );
       }
 
-      const data = await response.json();
-      console.log("Received presigned URL:", data.fileName);
+      const videoData = await videoResponse.json();
 
-      return data;
+      // Get thumbnail upload URL
+      const thumbnailResponse = await fetch(
+        `${API_BASE_URL}/videos/thumbnail-url`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            userId,
+            contentType: "image/jpeg",
+          }),
+        }
+      );
+
+      if (!thumbnailResponse.ok) {
+        const errorText = await thumbnailResponse.text();
+        throw new Error(
+          `Failed to get thumbnail upload URL: ${thumbnailResponse.status} - ${errorText}`
+        );
+      }
+
+      const thumbnailData = await thumbnailResponse.json();
+
+      console.log("Received presigned URLs for video and thumbnail");
+
+      return {
+        video: videoData,
+        thumbnail: thumbnailData,
+      };
     } catch (error) {
-      console.error("Error getting upload URL:", error);
+      console.error("Error getting upload URLs:", error);
       throw error;
     }
   }
 
   /**
-   * Step 2: Upload direct vers Cloudflare R2 avec presigned URL
+   * Step 2: Upload file to R2 with presigned URL
    */
   static async uploadToR2(
-    videoUri: string,
+    fileUri: string,
     uploadUrl: string,
+    contentType: string,
     onProgress?: (_progress: number) => void
   ): Promise<void> {
     try {
-      console.log("Starting direct upload to R2...");
+      console.log(`Starting upload to R2: ${contentType}`);
 
-      // Vérifier que le fichier existe
-      const fileInfo = await FileSystem.getInfoAsync(videoUri);
+      // Check if file exists
+      const fileInfo = await FileSystem.getInfoAsync(fileUri);
       if (!fileInfo.exists) {
-        throw new Error("Video file does not exist");
+        throw new Error("File does not exist");
       }
 
       console.log("File info:", {
         exists: fileInfo.exists,
         size: fileInfo.size,
-        uri: videoUri,
+        uri: fileUri,
       });
 
-      // Lire le fichier comme blob
-      const response = await fetch(videoUri);
+      // Read file as blob
+      const response = await fetch(fileUri);
       const blob = await response.blob();
 
       console.log("File blob created, size:", blob.size);
 
-      // Upload direct vers R2
+      // Upload to R2
       const uploadResponse = await fetch(uploadUrl, {
         method: "PUT",
         body: blob,
         headers: {
-          "Content-Type": "video/mp4",
+          "Content-Type": contentType,
         },
       });
 
@@ -103,10 +153,8 @@ export class MediaService {
         );
       }
 
-      // Simuler le progrès pour l'instant (100% quand terminé)
       onProgress?.(100);
-
-      console.log("Upload to R2 successful!");
+      console.log(`Upload to R2 successful for ${contentType}!`);
     } catch (error) {
       console.error("Error uploading to R2:", error);
       throw error;
@@ -114,10 +162,11 @@ export class MediaService {
   }
 
   /**
-   * Step 3: Confirmer l'upload au backend (sauver en base)
+   * Step 3: Confirm upload with both video and thumbnail paths
    */
   static async confirmUpload(
-    fileName: string,
+    videoFileName: string,
+    thumbnailFileName: string,
     userId: string
   ): Promise<UploadConfirmResponse> {
     try {
@@ -129,7 +178,8 @@ export class MediaService {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          fileName,
+          fileName: videoFileName,
+          thumbnailFileName,
           userId,
         }),
       });
@@ -152,7 +202,7 @@ export class MediaService {
   }
 
   /**
-   * Méthode principale qui orchestre tout le flow
+   * Main upload method that handles both video and thumbnail
    */
   static async uploadVideo(
     videoUri: string,
@@ -160,26 +210,53 @@ export class MediaService {
     onProgress?: (_progress: number) => void
   ): Promise<UploadConfirmResponse> {
     try {
-      console.log("=== Starting video upload flow ===");
+      console.log("=== Starting video upload flow with thumbnail ===");
 
-      // Step 1: Demander presigned URL
+      // Step 1: Generate thumbnail
+      onProgress?.(5);
+      const thumbnailUri = await this.generateThumbnail(videoUri);
+
+      // Step 2: Get presigned URLs for both video and thumbnail
       onProgress?.(10);
-      const { uploadUrl, fileName } = await this.getUploadUrl(userId);
+      const { video: videoUpload, thumbnail: thumbnailUpload } =
+        await this.getUploadUrls(userId);
 
-      // Step 2: Upload direct vers R2
+      // Step 3: Upload video to R2
       onProgress?.(20);
-      await this.uploadToR2(videoUri, uploadUrl, (r2Progress) => {
-        // Mapper le progrès R2 (20% -> 80%)
-        const mappedProgress = 20 + r2Progress * 0.6;
-        onProgress?.(mappedProgress);
-      });
+      await this.uploadToR2(
+        videoUri,
+        videoUpload.uploadUrl,
+        "video/mp4",
+        (progress) => {
+          // Map video progress to 20% -> 60%
+          const mappedProgress = 20 + progress * 0.4;
+          onProgress?.(mappedProgress);
+        }
+      );
 
-      // Step 3: Confirmer au backend
+      // Step 4: Upload thumbnail to R2
+      onProgress?.(60);
+      await this.uploadToR2(
+        thumbnailUri,
+        thumbnailUpload.uploadUrl,
+        "image/jpeg",
+        (progress) => {
+          // Map thumbnail progress to 60% -> 80%
+          const mappedProgress = 60 + progress * 0.2;
+          onProgress?.(mappedProgress);
+        }
+      );
+
+      // Step 5: Confirm upload with backend
       onProgress?.(90);
-      const result = await this.confirmUpload(fileName, userId);
+      const result = await this.confirmUpload(
+        videoUpload.fileName,
+        thumbnailUpload.fileName,
+        userId
+      );
 
       onProgress?.(100);
-      console.log("=== Video upload flow completed ===");
+      console.log("=== Video upload flow with thumbnail completed ===");
 
       return result;
     } catch (error) {
