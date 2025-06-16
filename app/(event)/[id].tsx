@@ -1,13 +1,13 @@
-// app/(event)/[id].tsx - Fixed version with automatic refresh
+// app/(event)/[id].tsx - Fixed version with no VirtualizedList nesting
 import React from "react";
 import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   SafeAreaView,
   StatusBar,
   ActivityIndicator,
+  FlatList,
 } from "react-native";
 import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
 import { useCallback } from "react";
@@ -66,44 +66,103 @@ export default function EventDetailScreen() {
   const isAdmin = event.adminId === user?.id;
   const isParticipant = event.participants?.some((p) => p.userId === user?.id);
 
+  // Create data array for FlatList to avoid VirtualizedList nesting
+  const renderData = [
+    { type: "header", data: event },
+    { type: "actions", data: { isAdmin, isParticipant } },
+    ...(event.location ? [{ type: "location", data: event.location }] : []),
+    ...(event.information
+      ? [{ type: "information", data: event.information }]
+      : []),
+    { type: "participants", data: event.participants || [] },
+    { type: "chat", data: null },
+    {
+      type: "gallery",
+      data: {
+        eventId: event.id,
+        userId: user?.id || "",
+        eventDate: new Date(event.date),
+      },
+    },
+  ];
+
+  const renderItem = ({ item }: { item: any }) => {
+    switch (item.type) {
+      case "header":
+        return <EventHeader event={item.data} onBack={() => router.back()} />;
+
+      case "actions":
+        return (
+          <View style={styles.content}>
+            <EventActions
+              isAdmin={item.data.isAdmin}
+              isParticipant={item.data.isParticipant}
+              onUpdate={() => router.push(`/(event)/edit/${id}`)}
+              onParticipate={() => toggleParticipation(user?.id || "")}
+              onInvite={() => {
+                /* TODO: Implement invite */
+              }}
+            />
+          </View>
+        );
+
+      case "location":
+        return (
+          <View style={styles.content}>
+            <EventLocation location={item.data} />
+          </View>
+        );
+
+      case "information":
+        return (
+          <View style={styles.content}>
+            <EventInformation information={item.data} />
+          </View>
+        );
+
+      case "participants":
+        return (
+          <View style={styles.content}>
+            <EventParticipants participants={item.data} />
+          </View>
+        );
+
+      case "chat":
+        return (
+          <View style={styles.content}>
+            <EventChat />
+          </View>
+        );
+
+      case "gallery":
+        return (
+          <View style={styles.content}>
+            <EventGallery
+              eventId={item.data.eventId}
+              userId={item.data.userId}
+              eventDate={item.data.eventDate}
+            />
+          </View>
+        );
+
+      default:
+        return null;
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#000" />
 
-      <ScrollView
-        style={styles.scrollView}
+      <FlatList
+        data={renderData}
+        renderItem={renderItem}
+        keyExtractor={(item, index) => `${item.type}-${index}`}
         showsVerticalScrollIndicator={false}
-      >
-        <EventHeader event={event} onBack={() => router.back()} />
-
-        <View style={styles.content}>
-          <EventActions
-            isAdmin={isAdmin}
-            isParticipant={isParticipant}
-            onUpdate={() => router.push(`/(event)/edit/${id}`)}
-            onParticipate={() => toggleParticipation(user?.id || "")}
-            onInvite={() => {
-              /* TODO: Implement invite */
-            }}
-          />
-
-          {event.location && <EventLocation location={event.location} />}
-
-          {event.information && (
-            <EventInformation information={event.information} />
-          )}
-
-          <EventParticipants participants={event.participants || []} />
-
-          <EventChat />
-
-          <EventGallery
-            eventId={event.id}
-            userId={user?.id || ""}
-            eventDate={new Date(event.date)}
-          />
-        </View>
-      </ScrollView>
+        contentContainerStyle={styles.flatListContent}
+        refreshing={refreshing}
+        onRefresh={refetch}
+      />
 
       {/* Show a subtle loading indicator when refetching */}
       {refreshing && (
@@ -120,8 +179,8 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#000",
   },
-  scrollView: {
-    flex: 1,
+  flatListContent: {
+    flexGrow: 1,
   },
   content: {
     padding: 20,

@@ -60,12 +60,14 @@ export default function EventGallery({
         </TouchableOpacity>
       </View>
 
-      {/* Video Feed - Now takes remaining space */}
-      <EventVideoFeed
-        eventId={eventId}
-        userId={userId}
-        filterByUser={activeTab === "you"}
-      />
+      {/* Video Feed - Fixed height to prevent VirtualizedList nesting issues */}
+      <View style={styles.videoFeedContainer}>
+        <EventVideoFeed
+          eventId={eventId}
+          userId={userId}
+          filterByUser={activeTab === "you"}
+        />
+      </View>
     </View>
   );
 }
@@ -73,7 +75,6 @@ export default function EventGallery({
 const styles = StyleSheet.create({
   container: {
     backgroundColor: "#000",
-    // Remove flex: 1 to let parent control height
   },
   header: {
     paddingHorizontal: 20,
@@ -113,5 +114,9 @@ const styles = StyleSheet.create({
   },
   activeTabText: {
     color: "#000",
+  },
+  videoFeedContainer: {
+    height: 400, // Fixed height to prevent nesting issues
+    marginHorizontal: -20, // Offset parent padding
   },
 });

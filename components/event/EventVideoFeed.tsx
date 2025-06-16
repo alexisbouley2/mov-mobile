@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   FlatList,
@@ -8,8 +8,8 @@ import {
   Text,
   TouchableOpacity,
 } from "react-native";
-import { Video, ResizeMode } from "expo-av";
 import { Image } from "expo-image";
+import VideoViewerModal from "./VideoViewerModal";
 
 const { width } = Dimensions.get("window");
 const ITEM_SIZE = (width - 40 - 20) / 3; // 3 columns with padding
@@ -55,11 +55,10 @@ export default function EventVideoFeed({
   const [hasMore, setHasMore] = useState(true);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [playingVideo, setPlayingVideo] = useState<string | null>(null);
-  const [loadingVideos, setLoadingVideos] = useState<Set<string>>(new Set());
 
-  const videoRefs = useRef<{ [key: string]: Video }>({});
-  const videoLoadedStatus = useRef<{ [key: string]: boolean }>({});
+  // Modal state
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedVideoIndex, setSelectedVideoIndex] = useState(0);
 
   const fetchVideos = async (cursor?: string, isRefresh = false) => {
     try {
@@ -121,137 +120,39 @@ export default function EventVideoFeed({
     fetchVideos(undefined, true);
   };
 
-  const handleVideoPress = async (videoItem: VideoItem) => {
-    try {
-      // Stop any currently playing video
-      if (playingVideo && videoRefs.current[playingVideo]) {
-        try {
-          await videoRefs.current[playingVideo].pauseAsync();
-        } catch (error) {
-          console.log("Could not pause previous video:", error);
-        }
-      }
-
-      if (playingVideo === videoItem.id) {
-        // If same video, just pause
-        setPlayingVideo(null);
-        setLoadingVideos((prev) => {
-          const newSet = new Set(prev);
-          newSet.delete(videoItem.id);
-          return newSet;
-        });
-      } else {
-        // Play new video
-        setPlayingVideo(videoItem.id);
-        setLoadingVideos((prev) => new Set(prev).add(videoItem.id));
-
-        // Wait a bit for the component to mount before trying to play
-        setTimeout(async () => {
-          if (
-            videoRefs.current[videoItem.id] &&
-            videoLoadedStatus.current[videoItem.id]
-          ) {
-            try {
-              await videoRefs.current[videoItem.id].playAsync();
-              setLoadingVideos((prev) => {
-                const newSet = new Set(prev);
-                newSet.delete(videoItem.id);
-                return newSet;
-              });
-            } catch (error) {
-              console.error("Error playing video:", error);
-              setPlayingVideo(null);
-              setLoadingVideos((prev) => {
-                const newSet = new Set(prev);
-                newSet.delete(videoItem.id);
-                return newSet;
-              });
-            }
-          }
-        }, 300); // Give time for video to load
-      }
-    } catch (error) {
-      console.error("Error controlling video playback:", error);
-      setPlayingVideo(null);
-      setLoadingVideos((prev) => {
-        const newSet = new Set(prev);
-        newSet.delete(videoItem.id);
-        return newSet;
-      });
-    }
+  const handleVideoPress = (index: number) => {
+    setSelectedVideoIndex(index);
+    setModalVisible(true);
   };
 
-  const handleVideoLoad = (videoId: string) => {
-    videoLoadedStatus.current[videoId] = true;
-    console.log(`Video ${videoId} loaded successfully`);
-  };
-
-  const handleVideoError = (videoId: string, error: any) => {
-    console.error("Video playback error:", error);
-    videoLoadedStatus.current[videoId] = false;
-    setPlayingVideo(null);
-    setLoadingVideos((prev) => {
-      const newSet = new Set(prev);
-      newSet.delete(videoId);
-      return newSet;
-    });
-  };
-
-  const renderVideoItem = ({ item }: { item: VideoItem }) => {
-    const isPlaying = playingVideo === item.id;
-    const isLoadingVideo = loadingVideos.has(item.id);
-
+  const renderVideoItem = ({
+    item,
+    index,
+  }: {
+    item: VideoItem;
+    index: number;
+  }) => {
     return (
       <TouchableOpacity
         style={styles.videoItem}
-        onPress={() => handleVideoPress(item)}
+        onPress={() => handleVideoPress(index)}
         activeOpacity={0.8}
       >
         <View style={styles.videoContainer}>
-          {isPlaying ? (
-            <Video
-              ref={(ref) => {
-                if (ref) {
-                  videoRefs.current[item.id] = ref;
-                }
-              }}
-              source={{ uri: item.videoUrl }}
-              style={styles.video}
-              shouldPlay={true}
-              isLooping={true}
-              resizeMode={ResizeMode.COVER}
-              onLoad={() => handleVideoLoad(item.id)}
-              onError={(error) => handleVideoError(item.id, error)}
-              onLoadStart={() => {
-                videoLoadedStatus.current[item.id] = false;
-                setLoadingVideos((prev) => new Set(prev).add(item.id));
-              }}
-            />
-          ) : (
-            <Image
-              source={{ uri: item.thumbnailUrl }}
-              style={styles.thumbnail}
-              contentFit="cover"
-              placeholder="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
-              transition={200}
-            />
-          )}
+          <Image
+            source={{ uri: item.thumbnailUrl }}
+            style={styles.thumbnail}
+            contentFit="cover"
+            placeholder="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
+            transition={200}
+          />
 
           {/* Play indicator */}
-          {!isPlaying && !isLoadingVideo && (
-            <View style={styles.playIndicator}>
-              <View style={styles.playButton}>
-                <Text style={styles.playIcon}>▶</Text>
-              </View>
+          <View style={styles.playIndicator}>
+            <View style={styles.playButton}>
+              <Text style={styles.playIcon}>▶</Text>
             </View>
-          )}
-
-          {/* Loading indicator for video */}
-          {isLoadingVideo && (
-            <View style={styles.loadingOverlay}>
-              <ActivityIndicator size="small" color="white" />
-            </View>
-          )}
+          </View>
         </View>
 
         {/* User info */}
@@ -333,8 +234,14 @@ export default function EventVideoFeed({
         ListFooterComponent={renderFooter}
         ListEmptyComponent={renderEmpty}
         showsVerticalScrollIndicator={false}
-        scrollEnabled={true}
-        nestedScrollEnabled={true}
+      />
+
+      {/* Full Screen Video Modal */}
+      <VideoViewerModal
+        visible={modalVisible}
+        videos={videos}
+        initialIndex={selectedVideoIndex}
+        onClose={() => setModalVisible(false)}
       />
     </View>
   );
@@ -347,6 +254,7 @@ const styles = StyleSheet.create({
   },
   grid: {
     padding: 20,
+    paddingBottom: 40, // Extra padding at bottom
   },
   videoItem: {
     width: ITEM_SIZE,
@@ -362,10 +270,6 @@ const styles = StyleSheet.create({
     position: "relative",
   },
   thumbnail: {
-    width: "100%",
-    height: "100%",
-  },
-  video: {
     width: "100%",
     height: "100%",
   },
@@ -390,16 +294,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#000",
     marginLeft: 2,
-  },
-  loadingOverlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.3)",
   },
   userInfo: {
     flexDirection: "row",
