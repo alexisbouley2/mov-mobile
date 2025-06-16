@@ -12,7 +12,9 @@ import { Image } from "expo-image";
 import VideoViewerModal from "./VideoViewerModal";
 
 const { width } = Dimensions.get("window");
-const ITEM_SIZE = (width - 40 - 20) / 3; // 3 columns with padding
+const GRID_PADDING = 10; // Increased padding from screen edges
+const ITEM_SPACING = 6; // Reduced spacing between thumbnails
+const ITEM_SIZE = (width - GRID_PADDING * 2 - ITEM_SPACING * 2) / 3; // 3 columns with proper spacing
 
 interface VideoItem {
   id: string;
@@ -227,6 +229,7 @@ export default function EventVideoFeed({
         keyExtractor={(item) => item.id}
         numColumns={3}
         contentContainerStyle={styles.grid}
+        columnWrapperStyle={styles.row}
         onEndReached={handleLoadMore}
         onEndReachedThreshold={0.1}
         refreshing={refreshing}
@@ -253,13 +256,18 @@ const styles = StyleSheet.create({
     backgroundColor: "#000",
   },
   grid: {
-    padding: 20,
+    padding: GRID_PADDING,
     paddingBottom: 40, // Extra padding at bottom
+  },
+  row: {
+    justifyContent: "space-between",
   },
   videoItem: {
     width: ITEM_SIZE,
-    marginRight: 10,
     marginBottom: 15,
+  },
+  videoItemWithMargin: {
+    marginRight: ITEM_SPACING,
   },
   videoContainer: {
     width: ITEM_SIZE,
