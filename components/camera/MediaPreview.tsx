@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { ResizeMode, Video } from "expo-av";
-import React from "react";
+import React, { useState } from "react";
 import {
   Dimensions,
   SafeAreaView,
@@ -10,9 +10,9 @@ import {
   TouchableOpacity,
   View,
   Alert,
-  ActivityIndicator,
 } from "react-native";
-import { useVideoUpload } from "../../hooks/useVideoUpload";
+import { useRouter } from "expo-router";
+import { jobManager } from "../../services/jobService";
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
@@ -20,40 +20,69 @@ interface MediaPreviewProps {
   mediaUri: string;
   userId: string;
   onDismiss: () => void;
-  onUploadComplete?: () => void;
 }
 
 export default function MediaPreview({
   mediaUri,
   userId,
   onDismiss,
-  onUploadComplete,
 }: MediaPreviewProps) {
-  const { uploadVideo, isUploading, uploadProgress, uploadStep } =
-    useVideoUpload();
+  const router = useRouter();
+  const [jobId, setJobId] = useState<string | null>(null);
 
+  // Handle send button
   const handleSend = async () => {
     try {
-      console.log("=== MediaPreview: Starting upload ===");
+      console.log("=== MediaPreview: Creating job ===");
 
-      const result = await uploadVideo(mediaUri, userId);
-      //TODO remove the await
+      // Create job
+      const newJobId = jobManager.createJob(mediaUri, userId);
+      setJobId(newJobId);
 
-      console.log("=== MediaPreview: Upload completed ===", result);
-      Alert.alert("Success", "Video uploaded successfully!", [
+      // Subscribe to job updates
+      const unsubscribe = jobManager.subscribe(newJobId, (_job) => {});
+
+      // Start upload in background
+      jobManager.startUpload(newJobId).catch((error) => {
+        console.error("Upload failed:", error);
+        Alert.alert("Error", "Failed to upload video. Please try again.");
+      });
+
+      // Navigate to event selection immediately
+      router.push({
+        pathname: "/(event)/select-events",
+        params: { jobId: newJobId },
+      });
+
+      // Clean up subscription when component unmounts
+      return () => unsubscribe();
+    } catch (error) {
+      console.error("=== MediaPreview: Failed to create job ===", error);
+      Alert.alert("Error", "Failed to start upload. Please try again.");
+    }
+  };
+
+  // Handle dismiss with job cleanup
+  const handleDismiss = () => {
+    if (jobId) {
+      Alert.alert("Cancel Upload", "Are you sure? The video will be deleted.", [
+        { text: "Keep Video", style: "cancel" },
         {
-          text: "OK",
-          onPress: () => {
-            onUploadComplete?.();
-            onDismiss();
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await jobManager.cancelJob(jobId);
+              onDismiss();
+            } catch (error) {
+              console.error("Failed to cancel job:", error);
+              onDismiss();
+            }
           },
         },
       ]);
-    } catch (error) {
-      console.error("=== MediaPreview: Upload failed ===", error);
-      Alert.alert("Error", "Failed to upload video. Please try again.", [
-        { text: "OK" },
-      ]);
+    } else {
+      onDismiss();
     }
   };
 
@@ -72,22 +101,9 @@ export default function MediaPreview({
         />
       </View>
 
-      {/* Loading Overlay with detailed progress */}
-      {isUploading && (
-        <View style={styles.loadingOverlay}>
-          <ActivityIndicator size="large" color="white" />
-          <Text style={styles.loadingText}>{Math.round(uploadProgress)}%</Text>
-          <Text style={styles.loadingStepText}>{uploadStep}</Text>
-        </View>
-      )}
-
       {/* Top Controls */}
       <SafeAreaView style={styles.topControls}>
-        <TouchableOpacity
-          style={styles.dismissButton}
-          onPress={onDismiss}
-          disabled={isUploading}
-        >
+        <TouchableOpacity style={styles.dismissButton} onPress={handleDismiss}>
           <Ionicons name="close" size={32} color="white" />
         </TouchableOpacity>
       </SafeAreaView>
@@ -95,20 +111,9 @@ export default function MediaPreview({
       {/* Bottom Controls */}
       <View style={styles.bottomControls}>
         <View style={styles.sendContainer}>
-          <TouchableOpacity
-            style={[
-              styles.sendButton,
-              isUploading && styles.sendButtonDisabled,
-            ]}
-            onPress={handleSend}
-            disabled={isUploading}
-          >
-            <Text style={styles.sendButtonText}>
-              {isUploading ? "Uploading..." : "Send To Event"}
-            </Text>
-            {!isUploading && (
-              <Ionicons name="arrow-forward" size={20} color="white" />
-            )}
+          <TouchableOpacity style={styles.sendButton} onPress={handleSend}>
+            <Text style={styles.sendButtonText}>Send To Event</Text>
+            <Ionicons name="arrow-forward" size={20} color="white" />
           </TouchableOpacity>
         </View>
       </View>
@@ -124,6 +129,12 @@ const styles = StyleSheet.create({
   mediaContainer: {
     flex: 1,
     justifyContent: "center",
+  },
+  sendButtonText: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "600",
+    marginRight: 8,
     alignItems: "center",
   },
   media: {
@@ -191,14 +202,5 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     minWidth: 160,
     justifyContent: "center",
-  },
-  sendButtonDisabled: {
-    backgroundColor: "#666",
-  },
-  sendButtonText: {
-    color: "white",
-    fontSize: 16,
-    fontWeight: "600",
-    marginRight: 8,
   },
 });
