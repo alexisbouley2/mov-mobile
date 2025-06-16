@@ -10,6 +10,7 @@ import {
 import React, { useEffect, useRef, useState } from "react";
 import { Dimensions, StatusBar, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useFocusEffect } from "@react-navigation/native";
 import { useAuth } from "@/contexts/AuthContext";
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
@@ -26,6 +27,7 @@ export default function CameraScreen() {
   const [isRecording, setIsRecording] = useState(false);
   const [recordingDuration, setRecordingDuration] = useState(0);
   const [capturedMedia, setCapturedMedia] = useState<string | null>(null);
+  const [isCameraActive, setIsCameraActive] = useState(true);
 
   const cameraRef = useRef<CameraViewType>(null);
   const recordingStartTime = useRef<number | null>(null);
@@ -39,6 +41,33 @@ export default function CameraScreen() {
       requestMicrophonePermission();
     }
   }, [cameraPermission, microphonePermission]);
+
+  // Cleanup when screen loses focus (tab switch)
+  useFocusEffect(
+    React.useCallback(() => {
+      console.log("in use callback");
+      // When screen gains focus, activate camera
+      setIsCameraActive(true);
+
+      return () => {
+        // Use refs to get current values instead of closure
+        if (cameraRef.current) {
+          cameraRef.current.stopRecording();
+        }
+        if (rafId.current) {
+          cancelAnimationFrame(rafId.current);
+          rafId.current = null;
+        }
+        // Reset state
+        setIsRecording(false);
+        setRecordingDuration(0);
+        recordingStartTime.current = null;
+
+        // Deactivate camera when screen loses focus
+        setIsCameraActive(false);
+      };
+    }, [])
+  );
 
   const startRecording = async () => {
     if (!cameraRef.current) return;
@@ -128,14 +157,18 @@ export default function CameraScreen() {
     <SafeAreaView style={styles.container} edges={["top"]}>
       <View style={styles.cameraWrapper}>
         <StatusBar hidden />
-        <CameraView
-          ref={cameraRef}
-          style={styles.camera}
-          facing={cameraType}
-          flash={flashMode}
-          enableTorch={isRecording && flashMode === "on"} // torch for video
-          mode="video"
-        />
+        {isCameraActive ? (
+          <CameraView
+            ref={cameraRef}
+            style={styles.camera}
+            facing={cameraType}
+            flash={flashMode}
+            enableTorch={isRecording && flashMode === "on"} // torch for video
+            mode="video"
+          />
+        ) : (
+          <View style={styles.camera} />
+        )}
 
         <CameraControls
           onStartRecording={startRecording}
