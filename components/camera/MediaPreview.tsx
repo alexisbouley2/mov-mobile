@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { ResizeMode, Video } from "expo-av";
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   Dimensions,
   SafeAreaView,
@@ -29,11 +29,27 @@ export default function MediaPreview({
 }: MediaPreviewProps) {
   const router = useRouter();
   const [jobId, setJobId] = useState<string | null>(null);
+  const videoRef = useRef<Video>(null);
+
+  // Cleanup video when component unmounts
+  useEffect(() => {
+    return () => {
+      if (videoRef.current) {
+        videoRef.current.pauseAsync();
+        videoRef.current.unloadAsync();
+      }
+    };
+  }, []);
 
   // Handle send button
   const handleSend = async () => {
     try {
       console.log("=== MediaPreview: Creating job ===");
+
+      // Stop video before navigating
+      if (videoRef.current) {
+        await videoRef.current.pauseAsync();
+      }
 
       // Create job
       const newJobId = jobManager.createJob(mediaUri, userId);
@@ -63,7 +79,12 @@ export default function MediaPreview({
   };
 
   // Handle dismiss with job cleanup
-  const handleDismiss = () => {
+  const handleDismiss = async () => {
+    // Stop video before dismissing
+    if (videoRef.current) {
+      await videoRef.current.pauseAsync();
+    }
+
     if (jobId) {
       Alert.alert("Cancel Upload", "Are you sure? The video will be deleted.", [
         { text: "Keep Video", style: "cancel" },
@@ -93,6 +114,7 @@ export default function MediaPreview({
       {/* Media Display */}
       <View style={styles.mediaContainer}>
         <Video
+          ref={videoRef}
           source={{ uri: mediaUri }}
           style={styles.media}
           shouldPlay={true}
