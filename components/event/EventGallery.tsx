@@ -60,7 +60,7 @@ export default function EventGallery({
         </TouchableOpacity>
       </View>
 
-      {/* Video Feed - Fixed height to prevent VirtualizedList nesting issues */}
+      {/* Video Feed - Remove fixed height and negative margins */}
       <View style={styles.videoFeedContainer}>
         <EventVideoFeed
           eventId={eventId}
@@ -74,6 +74,7 @@ export default function EventGallery({
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1, // Changed from no flex to flex: 1
     backgroundColor: "#000",
   },
   header: {
@@ -116,7 +117,7 @@ const styles = StyleSheet.create({
     color: "#000",
   },
   videoFeedContainer: {
-    height: 400, // Fixed height to prevent nesting issues
-    marginHorizontal: -20, // Offset parent padding
+    flex: 1, // Changed from fixed height to flex: 1
+    // Removed negative margins
   },
 });

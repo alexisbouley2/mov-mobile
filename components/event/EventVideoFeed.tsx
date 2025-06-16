@@ -12,8 +12,8 @@ import { Image } from "expo-image";
 import VideoViewerModal from "./VideoViewerModal";
 
 const { width } = Dimensions.get("window");
-const GRID_PADDING = 10; // Increased padding from screen edges
-const ITEM_SPACING = 6; // Reduced spacing between thumbnails
+const GRID_PADDING = 15; // Increased padding from screen edges
+const ITEM_SPACING = 10; // Spacing between thumbnails
 const ITEM_SIZE = (width - GRID_PADDING * 2 - ITEM_SPACING * 2) / 3; // 3 columns with proper spacing
 
 interface VideoItem {
@@ -134,9 +134,15 @@ export default function EventVideoFeed({
     item: VideoItem;
     index: number;
   }) => {
+    const isLeftColumn = index % 3 === 0;
+    const isRightColumn = index % 3 === 2;
+
     return (
       <TouchableOpacity
-        style={styles.videoItem}
+        style={[
+          styles.videoItem,
+          !isLeftColumn && !isRightColumn && styles.videoItemCenter,
+        ]}
         onPress={() => handleVideoPress(index)}
         activeOpacity={0.8}
       >
@@ -229,7 +235,6 @@ export default function EventVideoFeed({
         keyExtractor={(item) => item.id}
         numColumns={3}
         contentContainerStyle={styles.grid}
-        columnWrapperStyle={styles.row}
         onEndReached={handleLoadMore}
         onEndReachedThreshold={0.1}
         refreshing={refreshing}
@@ -237,6 +242,8 @@ export default function EventVideoFeed({
         ListFooterComponent={renderFooter}
         ListEmptyComponent={renderEmpty}
         showsVerticalScrollIndicator={false}
+        scrollEnabled={true}
+        nestedScrollEnabled={true}
       />
 
       {/* Full Screen Video Modal */}
@@ -256,18 +263,16 @@ const styles = StyleSheet.create({
     backgroundColor: "#000",
   },
   grid: {
-    padding: GRID_PADDING,
-    paddingBottom: 40, // Extra padding at bottom
-  },
-  row: {
-    justifyContent: "space-between",
+    paddingHorizontal: GRID_PADDING,
+    paddingVertical: 20,
+    paddingBottom: 40,
   },
   videoItem: {
     width: ITEM_SIZE,
     marginBottom: 15,
   },
-  videoItemWithMargin: {
-    marginRight: ITEM_SPACING,
+  videoItemCenter: {
+    marginHorizontal: ITEM_SPACING / 2,
   },
   videoContainer: {
     width: ITEM_SIZE,
