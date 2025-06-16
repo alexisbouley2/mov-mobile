@@ -1,8 +1,8 @@
+// app/(auth)/phone.tsx
 import React, { useState } from "react";
 import {
   View,
   Text,
-  TextInput,
   TouchableOpacity,
   StyleSheet,
   SafeAreaView,
@@ -10,27 +10,29 @@ import {
 } from "react-native";
 import { router } from "expo-router";
 import { useAuth } from "@/contexts/AuthContext";
+import PhoneInput from "@/components/phone/PhoneInput";
+import { PhoneValidationResult } from "@/utils/phoneValidation";
 
 export default function PhoneScreen() {
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [validation, setValidation] = useState<PhoneValidationResult>({
+    isValid: false,
+  });
   const [loading, setLoading] = useState(false);
   const { signInWithOtp } = useAuth();
 
   const handleContinue = async () => {
-    if (!phoneNumber.trim()) {
-      Alert.alert("Error", "Please enter your phone number");
+    if (!validation.isValid || !validation.formattedNumber) {
+      Alert.alert(
+        "Error",
+        validation.error || "Please enter a valid phone number"
+      );
       return;
     }
 
-    // Format phone number (add country code if not present)
-    let formattedPhone = phoneNumber.trim();
-    if (!formattedPhone.startsWith("+")) {
-      formattedPhone = "+33" + formattedPhone.replace(/\D/g, ""); //TODO: French number for now
-    }
-
     setLoading(true);
-    console.log("sign in with otp", formattedPhone);
-    const { error } = await signInWithOtp(formattedPhone);
+    console.log("sign in with otp", validation.formattedNumber);
+    const { error } = await signInWithOtp(validation.formattedNumber);
     setLoading(false);
 
     if (error) {
@@ -38,43 +40,55 @@ export default function PhoneScreen() {
     } else {
       router.push({
         pathname: "/(auth)/verify",
-        params: { phone: formattedPhone },
+        params: { phone: validation.formattedNumber },
       });
     }
   };
+
+  const isButtonEnabled =
+    validation.isValid && phoneNumber.length > 0 && !loading;
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
         <Text style={styles.title}>Enter your phone number</Text>
 
-        <View style={styles.inputContainer}>
-          <View style={styles.countryCode}>
-            <Text style={styles.flag}>🇫🇷</Text>
+        <Text style={styles.subtitle}>
+          We&apos;ll send you a verification code to confirm your number
+        </Text>
+
+        <PhoneInput
+          value={phoneNumber}
+          onChangeText={setPhoneNumber}
+          onValidationChange={setValidation}
+          autoFocus={true}
+        />
+
+        {!validation.isValid && phoneNumber.length > 0 && validation.error && (
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorText}>{validation.error}</Text>
           </View>
-          <TextInput
-            style={styles.input}
-            placeholder="Phone Number"
-            placeholderTextColor="#666"
-            value={phoneNumber}
-            onChangeText={setPhoneNumber}
-            keyboardType="phone-pad"
-            autoFocus
-          />
-        </View>
+        )}
 
         <TouchableOpacity
-          style={[
-            styles.button,
-            (!phoneNumber.trim() || loading) && styles.buttonDisabled,
-          ]}
+          style={[styles.button, !isButtonEnabled && styles.buttonDisabled]}
           onPress={handleContinue}
-          disabled={!phoneNumber.trim() || loading}
+          disabled={!isButtonEnabled}
         >
-          <Text style={styles.buttonText}>
+          <Text
+            style={[
+              styles.buttonText,
+              !isButtonEnabled && styles.buttonTextDisabled,
+            ]}
+          >
             {loading ? "Sending..." : "Continue"}
           </Text>
         </TouchableOpacity>
+
+        <Text style={styles.disclaimer}>
+          By continuing, you agree to receive SMS messages from us. Message and
+          data rates may apply.
+        </Text>
       </View>
     </SafeAreaView>
   );
@@ -88,43 +102,41 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     paddingHorizontal: 32,
-    paddingTop: 100,
+    paddingTop: 80,
   },
   title: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: "bold",
     color: "#fff",
     textAlign: "center",
-    marginBottom: 60,
+    marginBottom: 12,
   },
-  inputContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#1a1a1a",
-    borderRadius: 12,
-    marginBottom: 40,
-    paddingHorizontal: 16,
-  },
-  countryCode: {
-    paddingRight: 12,
-    borderRightWidth: 1,
-    borderRightColor: "#333",
-    marginRight: 12,
-  },
-  flag: {
-    fontSize: 24,
-  },
-  input: {
-    flex: 1,
-    color: "#fff",
+  subtitle: {
     fontSize: 16,
-    paddingVertical: 16,
+    color: "#666",
+    textAlign: "center",
+    marginBottom: 40,
+    lineHeight: 22,
+  },
+  errorContainer: {
+    backgroundColor: "#2d1b1b",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 8,
+    marginBottom: 20,
+    borderLeftWidth: 3,
+    borderLeftColor: "#ff4444",
+  },
+  errorText: {
+    color: "#ff6b6b",
+    fontSize: 14,
   },
   button: {
     backgroundColor: "#fff",
     paddingVertical: 16,
     borderRadius: 25,
     alignItems: "center",
+    marginTop: 20,
   },
   buttonDisabled: {
     backgroundColor: "#333",
@@ -133,5 +145,15 @@ const styles = StyleSheet.create({
     color: "#000",
     fontSize: 16,
     fontWeight: "600",
+  },
+  buttonTextDisabled: {
+    color: "#666",
+  },
+  disclaimer: {
+    color: "#666",
+    fontSize: 12,
+    textAlign: "center",
+    marginTop: 20,
+    lineHeight: 16,
   },
 });
