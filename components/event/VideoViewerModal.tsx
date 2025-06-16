@@ -97,54 +97,56 @@ export default function VideoViewerModal({
 
     return (
       <View style={styles.videoContainer}>
-        {isActive ? (
-          <>
-            <Video
-              ref={videoRef}
-              source={{ uri: item.videoUrl }}
+        <View style={styles.videoWrapper}>
+          {isActive ? (
+            <>
+              <Video
+                ref={videoRef}
+                source={{ uri: item.videoUrl }}
+                style={styles.video}
+                shouldPlay={true}
+                isLooping={true}
+                resizeMode={ResizeMode.CONTAIN}
+                onLoad={handleVideoLoad}
+                onError={handleVideoError}
+                onLoadStart={() => setLoadingVideo(true)}
+              />
+
+              {/* Loading overlay */}
+              {loadingVideo && (
+                <View style={styles.loadingOverlay}>
+                  <ActivityIndicator size="large" color="white" />
+                </View>
+              )}
+            </>
+          ) : (
+            <Image
+              source={{ uri: item.thumbnailUrl }}
               style={styles.video}
-              shouldPlay={true}
-              isLooping={true}
-              resizeMode={ResizeMode.CONTAIN}
-              onLoad={handleVideoLoad}
-              onError={handleVideoError}
-              onLoadStart={() => setLoadingVideo(true)}
+              contentFit="contain"
             />
+          )}
+        </View>
 
-            {/* Loading overlay */}
-            {loadingVideo && (
-              <View style={styles.loadingOverlay}>
-                <ActivityIndicator size="large" color="white" />
-              </View>
-            )}
+        {/* User info overlay - always visible */}
+        <View style={styles.userOverlay}>
+          <View style={styles.userInfo}>
+            <Image
+              source={{
+                uri:
+                  item.user.photo ||
+                  "https://via.placeholder.com/32/666/666.png",
+              }}
+              style={styles.userAvatar}
+              contentFit="cover"
+            />
+            <Text style={styles.username}>{item.user.username}</Text>
+          </View>
 
-            {/* User info overlay */}
-            <View style={styles.userOverlay}>
-              <View style={styles.userInfo}>
-                <Image
-                  source={{
-                    uri:
-                      item.user.photo ||
-                      "https://via.placeholder.com/32/666/666.png",
-                  }}
-                  style={styles.userAvatar}
-                  contentFit="cover"
-                />
-                <Text style={styles.username}>{item.user.username}</Text>
-              </View>
-
-              <Text style={styles.timestamp}>
-                {new Date(item.createdAt).toLocaleDateString()}
-              </Text>
-            </View>
-          </>
-        ) : (
-          <Image
-            source={{ uri: item.thumbnailUrl }}
-            style={styles.video}
-            contentFit="contain"
-          />
-        )}
+          <Text style={styles.timestamp}>
+            {new Date(item.createdAt).toLocaleDateString()}
+          </Text>
+        </View>
       </View>
     );
   };
@@ -184,8 +186,8 @@ export default function VideoViewerModal({
           onViewableItemsChanged={onViewableItemsChanged}
           viewabilityConfig={viewabilityConfig}
           getItemLayout={(data, index) => ({
-            length: height - 100, // Account for header
-            offset: (height - 100) * index,
+            length: height - 60, // Account for header height
+            offset: (height - 60) * index,
             index,
           })}
           initialScrollIndex={initialIndex}
@@ -198,6 +200,9 @@ export default function VideoViewerModal({
               });
             }, 100);
           }}
+          snapToInterval={height - 60}
+          snapToAlignment="start"
+          decelerationRate="fast"
         />
       </SafeAreaView>
     </Modal>
@@ -232,10 +237,17 @@ const styles = StyleSheet.create({
   },
   videoContainer: {
     width: width,
-    height: height - 100, // Account for header
+    height: height - 60, // Account for header
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#000",
+  },
+  videoWrapper: {
+    width: "100%",
+    height: "100%",
+    justifyContent: "center",
+    alignItems: "center",
+    position: "relative",
   },
   video: {
     width: "100%",
@@ -250,6 +262,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "rgba(0, 0, 0, 0.3)",
+    zIndex: 1,
   },
   userOverlay: {
     position: "absolute",
