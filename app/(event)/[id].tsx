@@ -1,4 +1,4 @@
-// app/(event)/[id].tsx - Fixed version with no VirtualizedList nesting
+// Updated app/(event)/[id].tsx - Updated EventDetailScreen with eventId prop
 import React from "react";
 import {
   View,
@@ -75,7 +75,7 @@ export default function EventDetailScreen() {
       ? [{ type: "information", data: event.information }]
       : []),
     { type: "participants", data: event.participants || [] },
-    { type: "chat", data: null },
+    { type: "chat", data: { eventId: event.id } }, // Pass eventId to chat
     {
       type: "gallery",
       data: {
@@ -130,7 +130,7 @@ export default function EventDetailScreen() {
       case "chat":
         return (
           <View style={styles.content}>
-            <EventChat />
+            <EventChat eventId={item.data.eventId} />
           </View>
         );
 
