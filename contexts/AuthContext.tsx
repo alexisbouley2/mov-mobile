@@ -27,6 +27,7 @@ interface AuthContextType {
       photoThumbnailPath: string;
     }
   ) => Promise<{ error: any }>;
+  refreshUserProfile: () => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -38,6 +39,7 @@ const AuthContext = createContext<AuthContextType>({
   signInWithOtp: async () => ({ error: null }),
   verifyOtp: async () => ({ error: null }),
   createUserProfile: async () => ({ error: null }),
+  refreshUserProfile: async () => {},
   signOut: async () => {},
 });
 
@@ -85,15 +87,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (loading) return;
 
     const inAuthGroup = segments[0] === "(auth)";
+    const inProfileGroup = segments[0] === "(profile)";
 
     if (!session && !inAuthGroup) {
       // Redirect to auth if not authenticated
+      console.log("here 1");
       router.replace("/(auth)/welcome");
-    } else if (session && !user && !inAuthGroup) {
+    } else if (session && !user && !inAuthGroup && !inProfileGroup) {
       // User is authenticated but profile not complete
-      router.replace("/(auth)/create-profile");
+      console.log("here 2");
+      router.replace("/(profile)/create-profile");
     } else if (session && user && inAuthGroup) {
       // User is fully authenticated, redirect to main app
+      console.log("here 3");
       router.replace("/(tabs)");
     }
   }, [session, user, loading, segments]);
@@ -139,6 +145,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.error("Error in fetchUserProfile:", error);
       setLoading(false);
+    }
+  };
+
+  const refreshUserProfile = async () => {
+    if (supabaseUser) {
+      await fetchUserProfile(supabaseUser.id);
     }
   };
 
@@ -209,6 +221,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         signInWithOtp,
         verifyOtp,
         createUserProfile,
+        refreshUserProfile,
         signOut,
       }}
     >

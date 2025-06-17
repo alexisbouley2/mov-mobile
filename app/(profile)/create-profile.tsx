@@ -7,11 +7,11 @@ import {
   StyleSheet,
   SafeAreaView,
   Alert,
-  Image,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { useAuth } from "@/contexts/AuthContext";
 import { photoJobManager } from "@/services/photoJobService";
+import AvatarPicker from "@/components/profile/AvatarPicker";
 
 export default function CreateProfileScreen() {
   const [username, setUsername] = useState("");
@@ -160,15 +160,7 @@ export default function CreateProfileScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
-        <TouchableOpacity style={styles.avatarContainer} onPress={pickImage}>
-          {previewImage ? (
-            <Image source={{ uri: previewImage }} style={styles.avatar} />
-          ) : (
-            <View style={styles.avatar}>
-              <Text style={styles.avatarText}>+</Text>
-            </View>
-          )}
-        </TouchableOpacity>
+        <AvatarPicker imageUri={previewImage} onPress={pickImage} />
 
         {loading && uploadProgress > 0 && (
           <View style={styles.progressContainer}>
@@ -230,24 +222,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
     paddingTop: 100,
     alignItems: "center",
-  },
-  avatarContainer: {
-    marginBottom: 20,
-  },
-  avatar: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: "#1a1a1a",
-    borderWidth: 2,
-    borderColor: "#333",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  avatarText: {
-    color: "#666",
-    fontSize: 32,
-    fontWeight: "300",
   },
   progressContainer: {
     width: "100%",

@@ -42,6 +42,7 @@ export default function RootLayout() {
           <Stack.Screen name="(auth)" />
           <Stack.Screen name="(event)" />
           <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="(profile)" />
         </Stack>
         <StatusBar style="auto" />
       </ThemeProvider>
