@@ -1,6 +1,7 @@
 import * as FileSystem from "expo-file-system";
+import { config } from "@/lib/config";
 
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3000";
+const API_BASE_URL = config.EXPO_PUBLIC_API_URL;
 
 export interface UploadUrls {
   urls: Array<{

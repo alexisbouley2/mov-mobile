@@ -4,8 +4,9 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEventForm } from "./useEventForm";
 import { jobManager } from "@/services/jobService";
 import { eventPhotoJobManager } from "@/services/eventPhotoJobService";
+import { config } from "@/lib/config";
 
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3000";
+const API_BASE_URL = config.EXPO_PUBLIC_API_URL;
 
 export function useCreateEvent(userId: string) {
   const router = useRouter();

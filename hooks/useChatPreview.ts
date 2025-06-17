@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
+import { config } from "@/lib/config";
 
 export interface ChatPreview {
   hasChat: boolean;
@@ -28,7 +29,7 @@ export function useChatPreview(eventId: string) {
 
     try {
       const response = await fetch(
-        `${process.env.EXPO_PUBLIC_API_URL}/chat/event/${eventId}/preview/user/${user.id}`,
+        `${config.EXPO_PUBLIC_API_URL}/chat/event/${eventId}/preview/user/${user.id}`,
         {
           headers: {
             "Content-Type": "application/json",

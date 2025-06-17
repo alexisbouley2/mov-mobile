@@ -1,5 +1,6 @@
 // hooks/useEvents.ts
 import { useState, useEffect, useCallback } from "react";
+import { config } from "@/lib/config";
 
 export interface User {
   id: string;
@@ -35,7 +36,7 @@ export interface CategorizedEvents {
   past: Event[];
 }
 
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3000";
+const API_BASE_URL = config.EXPO_PUBLIC_API_URL;
 
 export const useEvents = (userId: string) => {
   const [events, setEvents] = useState<CategorizedEvents>({

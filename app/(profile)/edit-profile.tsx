@@ -13,6 +13,7 @@ import * as ImagePicker from "expo-image-picker";
 import { useAuth } from "@/contexts/AuthContext";
 import { photoJobManager } from "@/services/photoJobService";
 import AvatarPicker from "@/components/profile/AvatarPicker";
+import { config } from "@/lib/config";
 
 export default function EditProfileScreen() {
   const { user, supabaseUser, refreshUserProfile } = useAuth();
@@ -130,8 +131,7 @@ export default function EditProfileScreen() {
       }
 
       // Update user profile
-      const API_BASE_URL =
-        process.env.EXPO_PUBLIC_API_URL || "http://localhost:3000";
+      const API_BASE_URL = config.EXPO_PUBLIC_API_URL;
       const updateData: any = {
         username: username.trim(),
       };

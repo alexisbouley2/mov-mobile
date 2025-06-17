@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { router } from "expo-router";
 import { useAuth } from "@/contexts/AuthContext";
+import { config } from "@/lib/config";
 
 export default function DangerousZoneScreen() {
   const { user, supabaseUser, signOut } = useAuth();
@@ -60,8 +61,7 @@ export default function DangerousZoneScreen() {
     setLoading(true);
 
     try {
-      const API_BASE_URL =
-        process.env.EXPO_PUBLIC_API_URL || "http://localhost:3000";
+      const API_BASE_URL = config.EXPO_PUBLIC_API_URL;
 
       // Delete user from backend (will also clean up photos)
       const response = await fetch(`${API_BASE_URL}/users/${supabaseUser.id}`, {

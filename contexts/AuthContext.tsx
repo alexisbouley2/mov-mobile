@@ -8,6 +8,7 @@ import React, {
 import { router, useSegments } from "expo-router";
 import { supabase } from "@/lib/supabase";
 import { Session, User as SupabaseUser } from "@supabase/supabase-js";
+import { config } from "@/lib/config";
 
 interface User {
   id: string;
@@ -77,12 +78,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // If user has photos, get the URLs from backend
         if (data.photoStoragePath && data.photoThumbnailPath) {
           try {
-            console.log(
-              "process.env.EXPO_PUBLIC_API_URL",
-              process.env.EXPO_PUBLIC_API_URL
-            );
-            const API_BASE_URL =
-              process.env.EXPO_PUBLIC_API_URL || "http://localhost:3000";
+            const API_BASE_URL = config.EXPO_PUBLIC_API_URL;
             const response = await fetch(`${API_BASE_URL}/users/${userId}`);
 
             if (response.ok) {

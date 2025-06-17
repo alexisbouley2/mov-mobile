@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
+import { config } from "@/lib/config";
 
 export interface Message {
   id: string;
@@ -40,7 +41,7 @@ export function useChat(eventId: string) {
 
     try {
       const response = await fetch(
-        `${process.env.EXPO_PUBLIC_API_URL}/chat/event/${eventId}/user/${user.id}`,
+        `${config.EXPO_PUBLIC_API_URL}/chat/event/${eventId}/user/${user.id}`,
         {
           method: "GET",
           headers: {
@@ -72,7 +73,7 @@ export function useChat(eventId: string) {
 
       try {
         const response = await fetch(
-          `${process.env.EXPO_PUBLIC_API_URL}/chat/event/${eventId}/messages/user/${user.id}?page=${pageNum}&limit=30`,
+          `${config.EXPO_PUBLIC_API_URL}/chat/event/${eventId}/messages/user/${user.id}?page=${pageNum}&limit=30`,
           {
             headers: {
               "Content-Type": "application/json",
@@ -115,7 +116,7 @@ export function useChat(eventId: string) {
       setSending(true);
       try {
         const response = await fetch(
-          `${process.env.EXPO_PUBLIC_API_URL}/chat/event/${eventId}/messages/user/${user.id}`,
+          `${config.EXPO_PUBLIC_API_URL}/chat/event/${eventId}/messages/user/${user.id}`,
           {
             method: "POST",
             headers: {

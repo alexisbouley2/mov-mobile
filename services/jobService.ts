@@ -1,4 +1,5 @@
 import { MediaService } from "./mediaService";
+import { config } from "@/lib/config";
 
 export interface UploadJob {
   id: string;
@@ -163,8 +164,7 @@ class JobManager {
    * Delete video from R2
    */
   private async deleteFromR2(fileName: string, userId: string): Promise<void> {
-    const API_BASE_URL =
-      process.env.EXPO_PUBLIC_API_URL || "http://localhost:3000";
+    const API_BASE_URL = config.EXPO_PUBLIC_API_URL;
 
     console.log("callingbackend for deleting");
 
@@ -187,8 +187,7 @@ class JobManager {
     userId: string,
     eventIds: string[]
   ): Promise<void> {
-    const API_BASE_URL =
-      process.env.EXPO_PUBLIC_API_URL || "http://localhost:3000";
+    const API_BASE_URL = config.EXPO_PUBLIC_API_URL;
 
     const response = await fetch(`${API_BASE_URL}/videos/associate-events`, {
       method: "POST",

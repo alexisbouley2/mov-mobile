@@ -1,7 +1,8 @@
 import * as FileSystem from "expo-file-system";
 import { ThumbnailGenerator } from "./ThumbnailGenerator";
+import { config } from "@/lib/config";
 
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3000";
+const API_BASE_URL = config.EXPO_PUBLIC_API_URL;
 
 interface PresignedUrlResponse {
   uploadUrl: string;

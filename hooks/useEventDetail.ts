@@ -1,5 +1,6 @@
 // hooks/useEventDetail.ts
 import { useState, useEffect, useCallback } from "react";
+import { config } from "@/lib/config";
 
 export interface User {
   id: string;
@@ -31,7 +32,7 @@ export interface EventDetail {
   };
 }
 
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3000";
+const API_BASE_URL = config.EXPO_PUBLIC_API_URL;
 
 export function useEventDetail(eventId: string) {
   const [event, setEvent] = useState<EventDetail | null>(null);

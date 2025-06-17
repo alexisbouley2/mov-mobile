@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { Image } from "expo-image";
 import VideoViewerModal from "./VideoViewerModal";
+import { config } from "@/lib/config";
 
 const { width } = Dimensions.get("window");
 const GRID_PADDING = 15; // Increased padding from screen edges
@@ -43,7 +44,7 @@ interface EventVideoFeedProps {
   filterByUser?: boolean; // If true, show only current user's videos
 }
 
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3000";
+const API_BASE_URL = config.EXPO_PUBLIC_API_URL;
 
 export default function EventVideoFeed({
   eventId,
