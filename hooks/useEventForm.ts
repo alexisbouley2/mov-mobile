@@ -1,4 +1,3 @@
-// hooks/useEventForm.ts - Base hook for shared form logic
 import { useState } from "react";
 import { Alert } from "react-native";
 
@@ -8,33 +7,31 @@ export interface EventFormData {
   date: Date;
   location: string;
   photo: string | null;
+  photoJobId: string | null; // Add photo job ID
 }
 
-export function useEventForm(initialData?: Partial<EventFormData>) {
+export function useEventForm() {
   const [formData, setFormData] = useState<EventFormData>({
     name: "",
     information: "",
     date: new Date(),
     location: "",
     photo: null,
-    ...initialData,
+    photoJobId: null,
   });
 
   const updateField = (field: keyof EventFormData, value: any) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const validateEventDateTime = (date: Date) => {
+  const validateEventDateTime = (selectedDate: Date): boolean => {
     const now = new Date();
     const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
 
-    if (date < oneHourAgo) {
+    if (selectedDate < oneHourAgo) {
       Alert.alert(
-        "Invalid Date/Time",
-        "Event cannot be scheduled more than one hour in the past."
+        "Invalid Date",
+        "Event must be scheduled at least 1 hour from now"
       );
       return false;
     }

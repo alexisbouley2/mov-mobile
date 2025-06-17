@@ -42,8 +42,8 @@ export default function EventHeader({ event, onBack }: EventHeaderProps) {
     <View style={styles.container}>
       <ImageBackground
         source={
-          event.photo
-            ? { uri: event.photo }
+          event.photoUrl
+            ? { uri: event.photoUrl }
             : require("@/assets/images/react-logo.png") // Default placeholder
         }
         style={styles.backgroundImage}

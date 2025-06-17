@@ -21,7 +21,8 @@ export interface EventDetail {
   date: string;
   createdAt: string;
   location: string | null;
-  photo: string | null;
+  photoUrl?: string; // Full size photo URL
+  photoThumbnailUrl?: string; // Thumbnail photo URL
   adminId: string;
   admin: User;
   participants: EventParticipant[];

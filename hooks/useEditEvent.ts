@@ -1,7 +1,7 @@
-// hooks/useEditEvent.ts
 import { useState, useEffect } from "react";
 import { Alert } from "react-native";
 import { useEventForm } from "./useEventForm";
+import { eventPhotoJobManager } from "@/services/eventPhotoJobService";
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3000";
 
@@ -10,6 +10,7 @@ export function useEditEvent(eventId: string, userId: string) {
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [photoUploadProgress, setPhotoUploadProgress] = useState(0);
 
   // Load existing event data
   useEffect(() => {
@@ -37,7 +38,8 @@ export function useEditEvent(eventId: string, userId: string) {
           information: event.information || "",
           date: new Date(event.date),
           location: event.location || "",
-          photo: event.photo || null,
+          photo: event.photoUrl || null, // Use photoUrl from response (includes presigned URL)
+          photoJobId: null, // No job initially since we're loading existing data
         });
       } catch (err) {
         console.error("Error loading event:", err);
@@ -64,15 +66,51 @@ export function useEditEvent(eventId: string, userId: string) {
     }
 
     setLoading(true);
+    setPhotoUploadProgress(0);
 
     try {
-      const eventData = {
+      let photoData = undefined;
+
+      // If there's a new photo job, upload it first
+      if (formData.photoJobId) {
+        try {
+          console.log("Uploading new event photo...");
+          const uploadResult = await eventPhotoJobManager.uploadJob(
+            formData.photoJobId,
+            (progress) => {
+              setPhotoUploadProgress(progress);
+            }
+          );
+
+          photoData = {
+            photoStoragePath: uploadResult.fullPath,
+            photoThumbnailPath: uploadResult.thumbnailPath,
+          };
+
+          // Clean up the job
+          eventPhotoJobManager.cleanupJob(formData.photoJobId);
+        } catch (uploadError) {
+          console.error("Photo upload failed:", uploadError);
+          Alert.alert(
+            "Warning",
+            "Photo upload failed. Saving event without new photo."
+          );
+        }
+      }
+
+      // Prepare update data
+      const eventData: any = {
         name: formData.name.trim(),
         information: formData.information.trim() || undefined,
         location: formData.location.trim() || undefined,
         // Note: Don't include date in edit - it can't be changed
-        // Note: photo upload would require additional backend setup for file handling
       };
+
+      // Only include photo data if we have new photos
+      if (photoData) {
+        eventData.photoStoragePath = photoData.photoStoragePath;
+        eventData.photoThumbnailPath = photoData.photoThumbnailPath;
+      }
 
       const response = await fetch(`${API_BASE_URL}/events/${eventId}`, {
         method: "PATCH",
@@ -93,6 +131,17 @@ export function useEditEvent(eventId: string, userId: string) {
       Alert.alert("Error", "Failed to update event. Please try again.");
     } finally {
       setLoading(false);
+      setPhotoUploadProgress(0);
+    }
+  };
+
+  const cancelPhotoUpload = () => {
+    if (formData.photoJobId) {
+      eventPhotoJobManager.cancelJob(formData.photoJobId);
+      updateField("photoJobId", null);
+      setPhotoUploadProgress(0);
+      // Revert to original photo if available
+      // Note: You might want to store the original photo URL separately
     }
   };
 
@@ -101,7 +150,9 @@ export function useEditEvent(eventId: string, userId: string) {
     loading,
     initialLoading,
     error,
+    photoUploadProgress,
     updateField,
     handleSubmit,
+    cancelPhotoUpload,
   };
 }

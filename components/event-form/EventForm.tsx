@@ -1,4 +1,3 @@
-// components/event-form/EventForm.tsx
 import React from "react";
 import {
   StyleSheet,
@@ -22,6 +21,7 @@ interface EventFormProps {
   onSubmit: () => void;
   submitButtonText: string;
   mode: "create" | "edit";
+  photoUploadProgress?: number;
 }
 
 export default function EventForm({
@@ -31,7 +31,12 @@ export default function EventForm({
   onSubmit,
   submitButtonText,
   mode,
+  photoUploadProgress = 0,
 }: EventFormProps) {
+  const handlePhotoJobChange = (jobId: string | null) => {
+    onFieldChange("photoJobId", jobId);
+  };
+
   return (
     <KeyboardAvoidingView
       style={styles.keyboardAvoidingView}
@@ -47,6 +52,11 @@ export default function EventForm({
         <EventPhotoSection
           photo={formData.photo}
           onPhotoChange={(photo: any) => onFieldChange("photo", photo)}
+          onPhotoJobChange={handlePhotoJobChange}
+          isLoading={
+            loading && photoUploadProgress > 0 && photoUploadProgress < 100
+          }
+          uploadProgress={photoUploadProgress}
         />
 
         <EventNameSection

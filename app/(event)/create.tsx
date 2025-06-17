@@ -1,4 +1,3 @@
-// app/(event)/create.tsx - Refactored
 import React from "react";
 import { SafeAreaView, StatusBar, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
@@ -10,9 +9,8 @@ import EventForm from "@/components/event-form/EventForm";
 export default function CreateEventScreen() {
   const { user } = useAuth();
   const router = useRouter();
-  const { formData, loading, updateField, handleSubmit } = useCreateEvent(
-    user?.id || ""
-  );
+  const { formData, loading, photoUploadProgress, updateField, handleSubmit } =
+    useCreateEvent(user?.id || "");
 
   const handleBack = () => {
     router.back();
@@ -39,6 +37,7 @@ export default function CreateEventScreen() {
         onSubmit={onSubmit}
         submitButtonText="Create Event"
         mode="create"
+        photoUploadProgress={photoUploadProgress}
       />
     </SafeAreaView>
   );

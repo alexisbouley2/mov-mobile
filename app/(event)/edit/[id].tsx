@@ -1,4 +1,3 @@
-// app/(event)/edit/[id].tsx - New edit screen
 import React from "react";
 import {
   SafeAreaView,
@@ -23,6 +22,7 @@ export default function EditEventScreen() {
     loading,
     initialLoading,
     error,
+    photoUploadProgress,
     updateField,
     handleSubmit,
   } = useEditEvent(id!, user?.id || "");
@@ -75,6 +75,7 @@ export default function EditEventScreen() {
         onSubmit={onSubmit}
         submitButtonText="Update Event"
         mode="edit"
+        photoUploadProgress={photoUploadProgress}
       />
     </SafeAreaView>
   );
