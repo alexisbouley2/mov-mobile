@@ -12,7 +12,7 @@ import {
   Alert,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { jobManager } from "../../services/jobService";
+import { jobManager } from "@/services/jobService";
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
