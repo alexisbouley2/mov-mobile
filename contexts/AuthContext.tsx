@@ -7,7 +7,10 @@ interface User {
   id: string;
   phone: string;
   username: string;
-  photo?: string;
+  photoStoragePath?: string;
+  photoThumbnailPath?: string;
+  photoUrl?: string;
+  photoThumbnailUrl?: string;
 }
 
 interface AuthContextType {
@@ -17,7 +20,13 @@ interface AuthContextType {
   loading: boolean;
   signInWithOtp: (_phone: string) => Promise<{ error: any }>;
   verifyOtp: (_phone: string, _token: string) => Promise<{ error: any }>;
-  createUserProfile: (_username: string) => Promise<{ error: any }>;
+  createUserProfile: (
+    _username: string,
+    _photoData?: {
+      photoStoragePath: string;
+      photoThumbnailPath: string;
+    }
+  ) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
 }
 
@@ -91,6 +100,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const fetchUserProfile = async (userId: string) => {
     try {
+      // First get user data from Supabase
       const { data, error } = await supabase
         .from("User")
         .select("*")
@@ -104,7 +114,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       if (data) {
-        setUser(data);
+        // If user has photos, get the URLs from backend
+        if (data.photoStoragePath && data.photoThumbnailPath) {
+          try {
+            const API_BASE_URL =
+              process.env.EXPO_PUBLIC_API_URL || "http://localhost:3000";
+            const response = await fetch(`${API_BASE_URL}/users/${userId}`);
+
+            if (response.ok) {
+              const userWithUrls = await response.json();
+              setUser(userWithUrls);
+            } else {
+              setUser(data);
+            }
+          } catch (error) {
+            console.error("Error fetching photo URLs:", error);
+            setUser(data);
+          }
+        } else {
+          setUser(data);
+        }
       }
       setLoading(false);
     } catch (error) {
@@ -129,20 +158,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { error };
   };
 
-  const createUserProfile = async (username: string) => {
+  const createUserProfile = async (
+    username: string,
+    photoData?: {
+      photoStoragePath: string;
+      photoThumbnailPath: string;
+    }
+  ) => {
     if (!supabaseUser) {
       return { error: "No authenticated user" };
     }
 
     const phone = supabaseUser.phone || "";
 
-    const { error } = await supabase.from("User").insert([
-      {
-        id: supabaseUser.id,
-        phone: phone,
-        username: username,
-      },
-    ]);
+    // Prepare user data with optional photo fields
+    const userData = {
+      id: supabaseUser.id,
+      phone: phone,
+      username: username,
+      ...(photoData && {
+        photoStoragePath: photoData.photoStoragePath,
+        photoThumbnailPath: photoData.photoThumbnailPath,
+      }),
+    };
+
+    const { error } = await supabase.from("User").insert([userData]);
 
     if (!error) {
       // Refresh user profile
