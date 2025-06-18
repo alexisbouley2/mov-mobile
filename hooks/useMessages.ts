@@ -1,4 +1,4 @@
-// hooks/useChat.ts - Updated to work with eventId directly
+// hooks/useMessages.ts - Simplified version without chat model
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
@@ -12,59 +12,18 @@ export interface Message {
   sender: {
     id: string;
     username: string;
-    photo?: string;
+    photoThumbnailPath?: string | null;
   };
 }
 
-export interface Chat {
-  id: string;
-  eventId: string;
-  event: {
-    id: string;
-    name: string;
-  };
-}
-
-export function useChat(eventId: string) {
-  const [chat, setChat] = useState<Chat | null>(null);
+export function useMessages(eventId: string) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
-  const { user } = useAuth(); // Only get user, no token
-
-  // Initialize chat - now guaranteed to exist
-  const initializeChat = useCallback(async () => {
-    if (!user?.id) return;
-
-    try {
-      const response = await fetch(
-        `${config.EXPO_PUBLIC_API_URL}/chat/event/${eventId}/user/${user.id}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      if (response.ok) {
-        const chatData = await response.json();
-        setChat(chatData);
-
-        // Load initial messages
-        await loadMessages(eventId, 1);
-      } else {
-        throw new Error("Failed to load chat");
-      }
-    } catch (error) {
-      console.error("Error initializing chat:", error);
-    } finally {
-      setLoading(false);
-    }
-  }, [eventId, user?.id]);
+  const { user } = useAuth();
 
   // Load messages with pagination
   const loadMessages = useCallback(
@@ -73,7 +32,7 @@ export function useChat(eventId: string) {
 
       try {
         const response = await fetch(
-          `${config.EXPO_PUBLIC_API_URL}/chat/event/${eventId}/messages/user/${user.id}?page=${pageNum}&limit=30`,
+          `${config.EXPO_PUBLIC_API_URL}/messages/event/${eventId}/user/${user.id}?page=${pageNum}&limit=30`,
           {
             headers: {
               "Content-Type": "application/json",
@@ -91,7 +50,7 @@ export function useChat(eventId: string) {
             setMessages((prev) => {
               const existingIds = new Set(prev.map((m) => m.id));
               const newMessages = data.messages.filter(
-                (m: any) => !existingIds.has(m.id)
+                (m: Message) => !existingIds.has(m.id)
               );
               return [...newMessages, ...prev];
             });
@@ -100,9 +59,13 @@ export function useChat(eventId: string) {
           setHasMore(data.hasMore);
           setTotal(data.total);
           setPage(pageNum);
+        } else {
+          console.error("Failed to load messages:", response.statusText);
         }
       } catch (error) {
         console.error("Error loading messages:", error);
+      } finally {
+        setLoading(false);
       }
     },
     [user?.id]
@@ -116,7 +79,7 @@ export function useChat(eventId: string) {
       setSending(true);
       try {
         const response = await fetch(
-          `${config.EXPO_PUBLIC_API_URL}/chat/event/${eventId}/messages/user/${user.id}`,
+          `${config.EXPO_PUBLIC_API_URL}/messages/event/${eventId}/user/${user.id}`,
           {
             method: "POST",
             headers: {
@@ -130,6 +93,8 @@ export function useChat(eventId: string) {
           const newMessage = await response.json();
           setMessages((prev) => [...prev, newMessage]);
           setTotal((prev) => prev + 1);
+        } else {
+          console.error("Failed to send message:", response.statusText);
         }
       } catch (error) {
         console.error("Error sending message:", error);
@@ -147,19 +112,19 @@ export function useChat(eventId: string) {
     }
   }, [eventId, hasMore, loading, page, loadMessages]);
 
-  // Set up real-time subscription
+  // Set up real-time subscription for new messages
   useEffect(() => {
-    if (!chat) return;
+    if (!eventId || !user?.id) return;
 
     const channel = supabase
-      .channel(`chat-${chat.id}`)
+      .channel(`event-messages-${eventId}`)
       .on(
         "postgres_changes",
         {
           event: "INSERT",
           schema: "public",
           table: "Message",
-          filter: `chatId=eq.${chat.id}`,
+          filter: `eventId=eq.${eventId}`,
         },
         (payload) => {
           const newMessage = payload.new as any;
@@ -167,24 +132,27 @@ export function useChat(eventId: string) {
           // Don't add our own messages (they're already added optimistically)
           if (newMessage.senderId === user?.id) return;
 
-          // Add the new message - we'll need to fetch sender info
+          // Add the new message with basic sender info
+          // You might want to fetch complete sender data from your API
+          const messageWithSender: Message = {
+            id: newMessage.id,
+            content: newMessage.content,
+            createdAt: newMessage.createdAt,
+            type: newMessage.type || "text",
+            sender: {
+              id: newMessage.senderId,
+              username: "User", // Placeholder - ideally fetch from API
+              photoThumbnailPath: null,
+            },
+          };
+
           setMessages((prev) => {
             const exists = prev.some((m) => m.id === newMessage.id);
             if (exists) return prev;
-
-            // For now, add with minimal sender info
-            // In a real app, you might want to fetch complete sender data
-            const messageWithSender = {
-              ...newMessage,
-              sender: {
-                id: newMessage.senderId,
-                username: "User", // Placeholder
-                photo: null,
-              },
-            };
-
             return [...prev, messageWithSender];
           });
+
+          setTotal((prev) => prev + 1);
         }
       )
       .subscribe();
@@ -192,14 +160,16 @@ export function useChat(eventId: string) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [chat, user?.id]);
+  }, [eventId, user?.id]);
 
+  // Initial load
   useEffect(() => {
-    initializeChat();
-  }, [initializeChat]);
+    if (eventId && user?.id) {
+      loadMessages(eventId, 1);
+    }
+  }, [eventId, user?.id, loadMessages]);
 
   return {
-    chat,
     messages,
     loading,
     sending,
@@ -207,6 +177,6 @@ export function useChat(eventId: string) {
     total,
     sendMessage,
     loadMoreMessages,
-    refetch: initializeChat,
+    refetch: () => loadMessages(eventId, 1),
   };
 }

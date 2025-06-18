@@ -18,7 +18,7 @@ import EventActions from "@/components/event/EventActions";
 import EventLocation from "@/components/event/EventLocation";
 import EventInformation from "@/components/event/EventInformation";
 import EventParticipants from "@/components/event/EventParticipants";
-import EventChat from "@/components/event/EventChat";
+import EventMessages from "@/components/event/EventMessages";
 import EventGallery from "@/components/event/EventGallery";
 
 export default function EventDetailScreen() {
@@ -130,7 +130,7 @@ export default function EventDetailScreen() {
       case "chat":
         return (
           <View style={styles.content}>
-            <EventChat eventId={item.data.eventId} />
+            <EventMessages eventId={item.data.eventId} />
           </View>
         );
 

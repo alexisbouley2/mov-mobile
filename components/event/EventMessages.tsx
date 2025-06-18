@@ -1,18 +1,18 @@
-// components/event/EventChat.tsx
+// components/event/EventMessages.tsx - Updated to work with message preview
 import React from "react";
 import { useCallback } from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { useRouter, useFocusEffect } from "expo-router";
-import { useChatPreview } from "@/hooks/useChatPreview";
+import { useMessagePreview } from "@/hooks/useMessagePreview"; // Updated import
 
-interface EventChatProps {
+interface EventMessagesProps {
   eventId: string;
 }
 
-export default function EventChat({ eventId }: EventChatProps) {
+export default function EventMessages({ eventId }: EventMessagesProps) {
   const router = useRouter();
-  const { preview, loading, refetch } = useChatPreview(eventId);
+  const { preview, loading, refetch } = useMessagePreview(eventId); // Updated hook
 
   const handleOpenChat = () => {
     router.push(`/(chat)/${eventId}`);
@@ -50,6 +50,11 @@ export default function EventChat({ eventId }: EventChatProps) {
             <Text style={styles.lastMessage} numberOfLines={1}>
               {preview.lastMessage.content}
             </Text>
+            {preview.messageCount > 1 && (
+              <Text style={styles.messageCount}>
+                {preview.messageCount} messages
+              </Text>
+            )}
           </View>
         ) : (
           <Text style={styles.chatButtonText}>Open Chat</Text>
@@ -92,5 +97,10 @@ const styles = StyleSheet.create({
   lastMessage: {
     color: "#ccc",
     fontSize: 14,
+    marginBottom: 2,
+  },
+  messageCount: {
+    color: "#888",
+    fontSize: 12,
   },
 });

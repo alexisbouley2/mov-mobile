@@ -1,10 +1,10 @@
+// hooks/useMessagePreview.ts - Updated to work with direct event-message relationship
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { config } from "@/lib/config";
 
-export interface ChatPreview {
-  hasChat: boolean;
+export interface MessagePreview {
   hasMessages: boolean;
   messageCount: number;
   lastMessage?: {
@@ -12,15 +12,15 @@ export interface ChatPreview {
     sender: {
       id: string;
       username: string;
-      photo?: string;
+      photoThumbnailPath?: string | null;
     };
     createdAt: string;
     type: string;
   } | null;
 }
 
-export function useChatPreview(eventId: string) {
-  const [preview, setPreview] = useState<ChatPreview | null>(null);
+export function useMessagePreview(eventId: string) {
+  const [preview, setPreview] = useState<MessagePreview | null>(null);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
 
@@ -29,7 +29,7 @@ export function useChatPreview(eventId: string) {
 
     try {
       const response = await fetch(
-        `${config.EXPO_PUBLIC_API_URL}/chat/event/${eventId}/preview/user/${user.id}`,
+        `${config.EXPO_PUBLIC_API_URL}/messages/event/${eventId}/preview/user/${user.id}`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -40,28 +40,30 @@ export function useChatPreview(eventId: string) {
       if (response.ok) {
         const data = await response.json();
         setPreview(data);
+      } else {
+        console.error("Failed to fetch message preview:", response.statusText);
       }
     } catch (error) {
-      console.error("Error fetching chat preview:", error);
+      console.error("Error fetching message preview:", error);
     } finally {
       setLoading(false);
     }
   }, [eventId, user?.id]);
 
-  // Set up real-time subscription for chat updates
+  // Set up real-time subscription for message updates
   useEffect(() => {
     if (!eventId) return;
 
-    // Subscribe to new messages for this event's chat
+    // Subscribe to new messages for this event
     const channel = supabase
-      .channel(`chat-preview-${eventId}`)
+      .channel(`message-preview-${eventId}`)
       .on(
         "postgres_changes",
         {
           event: "INSERT",
           schema: "public",
           table: "Message",
-          // Note: We'll filter by eventId in the callback since we can't directly filter on Chat.eventId
+          filter: `eventId=eq.${eventId}`,
         },
         (_payload) => {
           // When a new message is inserted, refresh the preview
