@@ -52,7 +52,7 @@ export function useCreateEvent(userId: string) {
           );
 
           photoData = {
-            coverStoragePath: uploadResult.imagePath,
+            coverImagePath: uploadResult.imagePath,
             coverThumbnailPath: uploadResult.thumbnailPath,
           };
 
@@ -75,7 +75,7 @@ export function useCreateEvent(userId: string) {
         location: formData.location.trim() || undefined,
         adminId: userId,
         ...(photoData && {
-          coverStoragePath: photoData.coverStoragePath,
+          coverImagePath: photoData.coverImagePath,
           coverThumbnailPath: photoData.coverThumbnailPath,
         }),
       };

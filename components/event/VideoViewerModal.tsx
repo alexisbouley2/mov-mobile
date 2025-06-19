@@ -19,7 +19,7 @@ const { width, height } = Dimensions.get("window");
 
 interface VideoItem {
   id: string;
-  storagePath: string;
+  videoPath: string;
   thumbnailPath: string;
   videoUrl: string;
   thumbnailUrl: string;

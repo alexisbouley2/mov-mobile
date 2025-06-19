@@ -108,8 +108,8 @@ export default function CreateProfileScreen() {
           );
 
           photoData = {
-            photoStoragePath: uploadResult.fullPath,
-            photoThumbnailPath: uploadResult.thumbnailPath,
+            profileImagePath: uploadResult.imagePath,
+            profileThumbnailPath: uploadResult.thumbnailPath,
           };
 
           // Clean up the job

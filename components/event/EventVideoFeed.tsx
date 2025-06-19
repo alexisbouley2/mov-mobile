@@ -19,7 +19,7 @@ const ITEM_SIZE = (width - GRID_PADDING * 2 - ITEM_SPACING * 2) / 3; // 3 column
 
 interface VideoItem {
   id: string;
-  storagePath: string;
+  videoPath: string;
   thumbnailPath: string;
   videoUrl: string;
   thumbnailUrl: string;

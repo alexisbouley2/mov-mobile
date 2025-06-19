@@ -84,7 +84,7 @@ export function useEditEvent(eventId: string, userId: string) {
           );
 
           photoData = {
-            coverStoragePath: uploadResult.imagePath,
+            coverImagePath: uploadResult.imagePath,
             coverThumbnailPath: uploadResult.thumbnailPath,
           };
 
@@ -109,7 +109,7 @@ export function useEditEvent(eventId: string, userId: string) {
 
       // Only include photo data if we have new photos
       if (photoData) {
-        eventData.coverStoragePath = photoData.coverStoragePath;
+        eventData.coverImagePath = photoData.coverImagePath;
         eventData.coverThumbnailPath = photoData.coverThumbnailPath;
       }
 

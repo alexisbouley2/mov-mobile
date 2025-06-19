@@ -81,8 +81,6 @@ class JobManager {
    */
   private async performUpload(job: UploadJob): Promise<void> {
     try {
-      console.log("perform upload for job", job.id);
-      console.log("job: ", job);
       const result = await MediaService.uploadVideo(
         job.videoUri,
         job.userId,
@@ -93,7 +91,7 @@ class JobManager {
       );
 
       job.status = "uploaded";
-      job.uploadedFileName = result.video.storagePath;
+      job.uploadedFileName = result.video.videoPath;
       job.uploadCompletedAt = new Date();
       job.progress = 100;
       this.notifyListeners(job.id);
@@ -109,10 +107,7 @@ class JobManager {
    * Cancel a job and cleanup
    */
   async cancelJob(jobId: string): Promise<void> {
-    console.log("in cancel job");
     const job = this.jobs.get(jobId);
-
-    console.log("job", job);
     if (!job) return;
 
     // Mark as cancelled
@@ -128,7 +123,6 @@ class JobManager {
 
     // Delete from R2 if upload was completed
     if (job.uploadedFileName) {
-      console.log("the file was actually uploaded");
       try {
         await this.deleteFromR2(job.uploadedFileName, job.userId);
       } catch (error) {
@@ -165,8 +159,6 @@ class JobManager {
    */
   private async deleteFromR2(fileName: string, userId: string): Promise<void> {
     const API_BASE_URL = config.EXPO_PUBLIC_API_URL;
-
-    console.log("callingbackend for deleting");
 
     const response = await fetch(`${API_BASE_URL}/videos/delete`, {
       method: "POST",

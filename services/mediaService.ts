@@ -20,7 +20,7 @@ interface UploadConfirmResponse {
   success: boolean;
   video: {
     id: string;
-    storagePath: string;
+    videoPath: string;
     thumbnailPath: string;
     userId: string;
     createdAt: string;
