@@ -84,8 +84,8 @@ export function useEditEvent(eventId: string, userId: string) {
           );
 
           photoData = {
-            photoStoragePath: uploadResult.fullPath,
-            photoThumbnailPath: uploadResult.thumbnailPath,
+            coverStoragePath: uploadResult.imagePath,
+            coverThumbnailPath: uploadResult.thumbnailPath,
           };
 
           // Clean up the job
@@ -109,8 +109,8 @@ export function useEditEvent(eventId: string, userId: string) {
 
       // Only include photo data if we have new photos
       if (photoData) {
-        eventData.photoStoragePath = photoData.photoStoragePath;
-        eventData.photoThumbnailPath = photoData.photoThumbnailPath;
+        eventData.coverStoragePath = photoData.coverStoragePath;
+        eventData.coverThumbnailPath = photoData.coverThumbnailPath;
       }
 
       const response = await fetch(`${API_BASE_URL}/events/${eventId}`, {
@@ -125,7 +125,6 @@ export function useEditEvent(eventId: string, userId: string) {
         throw new Error("Failed to update event");
       }
 
-      await response.json();
       onSuccess();
     } catch (error) {
       console.error("Error updating event:", error);

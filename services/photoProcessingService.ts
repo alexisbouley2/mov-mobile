@@ -2,7 +2,7 @@ import * as ImageManipulator from "expo-image-manipulator";
 
 export interface ProcessedPhoto {
   thumbnail: string; // Different sizes based on entity type
-  full: string; // Different sizes based on entity type
+  image: string; // Different sizes based on entity type
 }
 
 export class PhotoProcessingService {
@@ -25,7 +25,7 @@ export class PhotoProcessingService {
       );
 
       // Process full version (800x800)
-      const fullResult = await ImageManipulator.manipulateAsync(
+      const imageResult = await ImageManipulator.manipulateAsync(
         imageUri,
         [{ resize: { width: 800, height: 800 } }],
         {
@@ -38,7 +38,7 @@ export class PhotoProcessingService {
       console.log("User image processing completed");
       return {
         thumbnail: thumbnailResult.uri,
-        full: fullResult.uri,
+        image: imageResult.uri,
       };
     } catch (error) {
       console.error("Error processing user image:", error);
@@ -65,7 +65,7 @@ export class PhotoProcessingService {
       );
 
       // Process full version (1600x900) - 16:9 aspect ratio
-      const fullResult = await ImageManipulator.manipulateAsync(
+      const imageResult = await ImageManipulator.manipulateAsync(
         imageUri,
         [{ resize: { width: 1600, height: 900 } }],
         {
@@ -78,7 +78,7 @@ export class PhotoProcessingService {
       console.log("Event image processing completed");
       return {
         thumbnail: thumbnailResult.uri,
-        full: fullResult.uri,
+        image: imageResult.uri,
       };
     } catch (error) {
       console.error("Error processing event image:", error);

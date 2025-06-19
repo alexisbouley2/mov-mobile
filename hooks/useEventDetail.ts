@@ -74,28 +74,12 @@ export function useEventDetail(eventId: string) {
     [eventId]
   );
 
-  const toggleParticipation = async (userId: string) => {
+  const toggleParticipation = async (_userId: string) => {
     if (!event) return;
 
     try {
-      const isParticipant = event.participants?.some(
-        (p) => p.userId === userId
-      );
-
-      const response = await fetch(
-        `${API_BASE_URL}/events/${eventId}/participants/${userId}`,
-        {
-          method: isParticipant ? "DELETE" : "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to toggle participation");
-      }
-
+      //TODO: Implement toggling participation
+      console.log("Toggling participation...");
       // Refetch the event data to get updated participants
       await fetchEvent(true);
     } catch (err) {

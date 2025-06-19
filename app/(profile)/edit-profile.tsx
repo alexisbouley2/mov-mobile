@@ -115,8 +115,8 @@ export default function EditProfileScreen() {
           );
 
           photoData = {
-            photoStoragePath: uploadResult.fullPath,
-            photoThumbnailPath: uploadResult.thumbnailPath,
+            profileImagePath: uploadResult.imagePath,
+            profileThumbnailPath: uploadResult.thumbnailPath,
           };
 
           photoJobManager.cleanupJob(currentJobId);
@@ -137,8 +137,8 @@ export default function EditProfileScreen() {
       };
 
       if (photoData) {
-        updateData.photoStoragePath = photoData.photoStoragePath;
-        updateData.photoThumbnailPath = photoData.photoThumbnailPath;
+        updateData.profileImagePath = photoData.profileImagePath;
+        updateData.profileThumbnailPath = photoData.profileThumbnailPath;
       }
 
       const response = await fetch(`${API_BASE_URL}/users/${supabaseUser.id}`, {

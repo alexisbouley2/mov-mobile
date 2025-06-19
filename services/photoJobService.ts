@@ -117,7 +117,7 @@ class PhotoJobManager {
 
       const uploadResult = await PhotoUploadService.uploadPhotos(
         job.processedPhotos.thumbnail,
-        job.processedPhotos.full,
+        job.processedPhotos.image,
         job.userId,
         job.entityType,
         (progress) => {

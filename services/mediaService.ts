@@ -49,17 +49,9 @@ export class MediaService {
       console.log("userId", userId);
       console.log("Requesting presigned URLs from backend...");
 
-      // Get video upload URL
-      const videoResponse = await fetch(`${API_BASE_URL}/videos/upload-url`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          userId,
-          contentType: "video/mp4",
-        }),
-      });
+      const videoResponse = await fetch(
+        `${API_BASE_URL}/videos/upload-url?userId=${userId}&size=full`
+      );
 
       if (!videoResponse.ok) {
         const errorText = await videoResponse.text();
@@ -67,22 +59,11 @@ export class MediaService {
           `Failed to get video upload URL: ${videoResponse.status} - ${errorText}`
         );
       }
-
       const videoData = await videoResponse.json();
 
       // Get thumbnail upload URL
       const thumbnailResponse = await fetch(
-        `${API_BASE_URL}/videos/thumbnail-url`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            userId,
-            contentType: "image/jpeg",
-          }),
-        }
+        `${API_BASE_URL}/videos/upload-url?userId=${userId}&size=thumbnail`
       );
 
       if (!thumbnailResponse.ok) {
@@ -171,15 +152,13 @@ export class MediaService {
     userId: string
   ): Promise<UploadConfirmResponse> {
     try {
-      console.log("Confirming upload with backend...");
-
       const response = await fetch(`${API_BASE_URL}/videos/confirm-upload`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          fileName: videoFileName,
+          videoFileName: videoFileName,
           thumbnailFileName,
           userId,
         }),

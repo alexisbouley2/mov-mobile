@@ -14,8 +14,8 @@ interface User {
   id: string;
   phone: string;
   username: string;
-  photoStoragePath?: string;
-  photoThumbnailPath?: string;
+  profileImagePath?: string;
+  profileThumbnailPath?: string;
   photoUrl?: string;
   photoThumbnailUrl?: string;
 }
@@ -30,8 +30,8 @@ interface AuthContextType {
   createUserProfile: (
     _username: string,
     _photoData?: {
-      photoStoragePath: string;
-      photoThumbnailPath: string;
+      profileImagePath: string;
+      profileThumbnailPath: string;
     }
   ) => Promise<{ error: any }>;
   refreshUserProfile: () => Promise<void>;
@@ -76,7 +76,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (data) {
         // If user has photos, get the URLs from backend
-        if (data.photoStoragePath && data.photoThumbnailPath) {
+        if (data.profileImagePath && data.profileThumbnailPath) {
           try {
             const API_BASE_URL = config.EXPO_PUBLIC_API_URL;
             const response = await fetch(`${API_BASE_URL}/users/${userId}`);
@@ -180,8 +180,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     async (
       username: string,
       photoData?: {
-        photoStoragePath: string;
-        photoThumbnailPath: string;
+        profileImagePath: string;
+        profileThumbnailPath: string;
       }
     ) => {
       if (!supabaseUser) {
@@ -196,8 +196,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         phone: phone,
         username: username,
         ...(photoData && {
-          photoStoragePath: photoData.photoStoragePath,
-          photoThumbnailPath: photoData.photoThumbnailPath,
+          profileImagePath: photoData.profileImagePath,
+          profileThumbnailPath: photoData.profileThumbnailPath,
         }),
       };
 

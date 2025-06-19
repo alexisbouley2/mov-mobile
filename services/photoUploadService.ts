@@ -7,13 +7,13 @@ export interface UploadUrls {
   urls: Array<{
     uploadUrl: string;
     fileName: string;
-    type: "thumbnail" | "full";
+    type: "thumbnail" | "image";
   }>;
 }
 
 export interface PhotoUploadResult {
   thumbnailPath: string;
-  fullPath: string;
+  imagePath: string;
 }
 
 export class PhotoUploadService {
@@ -25,17 +25,9 @@ export class PhotoUploadService {
     entityType: "user" | "event"
   ): Promise<UploadUrls> {
     try {
-      const response = await fetch(`${API_BASE_URL}/photos/upload-urls`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          userId,
-          entityType,
-          count: 2,
-        }),
-      });
+      const response = await fetch(
+        `${API_BASE_URL}/photos/upload-urls?userId=${userId}&entityType=${entityType}`
+      );
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -103,7 +95,7 @@ export class PhotoUploadService {
    */
   static async uploadPhotos(
     thumbnailUri: string,
-    fullUri: string,
+    imageUri: string,
     userId: string,
     entityType: "user" | "event",
     onProgress?: (_progress: number) => void
@@ -116,9 +108,9 @@ export class PhotoUploadService {
       const { urls } = await this.getUploadUrls(userId, entityType);
 
       const thumbnailUrl = urls.find((u) => u.type === "thumbnail");
-      const fullUrl = urls.find((u) => u.type === "full");
+      const imageUrl = urls.find((u) => u.type === "image");
 
-      if (!thumbnailUrl || !fullUrl) {
+      if (!thumbnailUrl || !imageUrl) {
         throw new Error("Failed to get required upload URLs");
       }
 
@@ -136,7 +128,7 @@ export class PhotoUploadService {
 
       // Step 3: Upload full size
       onProgress?.(60);
-      await this.uploadToR2(fullUri, fullUrl.uploadUrl, (progress) => {
+      await this.uploadToR2(imageUri, imageUrl.uploadUrl, (progress) => {
         // Map full size progress to 60% -> 100%
         const mappedProgress = 60 + progress * 0.4;
         onProgress?.(mappedProgress);
@@ -147,7 +139,7 @@ export class PhotoUploadService {
 
       return {
         thumbnailPath: thumbnailUrl.fileName,
-        fullPath: fullUrl.fileName,
+        imagePath: imageUrl.fileName,
       };
     } catch (error) {
       console.error("=== Photo upload flow failed ===", error);

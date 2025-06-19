@@ -52,8 +52,8 @@ export function useCreateEvent(userId: string) {
           );
 
           photoData = {
-            photoStoragePath: uploadResult.fullPath,
-            photoThumbnailPath: uploadResult.thumbnailPath,
+            coverStoragePath: uploadResult.imagePath,
+            coverThumbnailPath: uploadResult.thumbnailPath,
           };
 
           // Clean up the job
@@ -75,8 +75,8 @@ export function useCreateEvent(userId: string) {
         location: formData.location.trim() || undefined,
         adminId: userId,
         ...(photoData && {
-          photoStoragePath: photoData.photoStoragePath,
-          photoThumbnailPath: photoData.photoThumbnailPath,
+          coverStoragePath: photoData.coverStoragePath,
+          coverThumbnailPath: photoData.coverThumbnailPath,
         }),
       };
 
