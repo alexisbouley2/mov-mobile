@@ -13,6 +13,7 @@ module.exports = defineConfig([
       ],
       "no-console": "warn",
       eqeqeq: ["error", "always"],
+      "react/no-unescaped-entities": "off",
     },
   },
 ]);

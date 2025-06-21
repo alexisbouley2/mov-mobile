@@ -68,7 +68,7 @@ export default function PhoneInput({
           onChangeText={handleTextChange}
           keyboardType="phone-pad"
           autoFocus={autoFocus}
-          maxLength={selectedCountry.maxLength + 5} // Extra space for formatting
+          maxLength={selectedCountry.maxLength + 5}
         />
       </View>
       <Text style={styles.hint}>

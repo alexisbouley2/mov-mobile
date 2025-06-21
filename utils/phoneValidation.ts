@@ -237,9 +237,15 @@ export function formatPhoneNumberForDisplay(
       break;
 
     case "FR":
-      // Format as XX XX XX XX XX
+      // Format as X XX XX XX XX (1 digit, then groups of 2)
       if (cleanedNumber.length === 9) {
-        return cleanedNumber.replace(/(\d{2})(?=\d)/g, "$1 ");
+        return `${cleanedNumber.slice(0, 1)} ${cleanedNumber.slice(
+          1,
+          3
+        )} ${cleanedNumber.slice(3, 5)} ${cleanedNumber.slice(
+          5,
+          7
+        )} ${cleanedNumber.slice(7)}`;
       }
       break;
 
@@ -254,9 +260,66 @@ export function formatPhoneNumberForDisplay(
       break;
 
     case "DE":
-      // Format as XXX XXXXXXXX
+      // Format as XXX XXXXXXXX (3 digits, then 8 digits)
       if (cleanedNumber.length >= 10) {
         return `${cleanedNumber.slice(0, 3)} ${cleanedNumber.slice(3)}`;
+      }
+      break;
+
+    case "IN":
+      // Format as XXXXX XXXXX (5 digits, then 5 digits)
+      if (cleanedNumber.length === 10) {
+        return `${cleanedNumber.slice(0, 5)} ${cleanedNumber.slice(5)}`;
+      }
+      break;
+
+    case "AU":
+      // Format as XXXX XXX XXX (4 digits, then 3, then 3)
+      if (cleanedNumber.length === 9) {
+        return `${cleanedNumber.slice(0, 4)} ${cleanedNumber.slice(
+          4,
+          7
+        )} ${cleanedNumber.slice(7)}`;
+      }
+      break;
+
+    case "BR":
+      // Format as (XX) XXXXX-XXXX (2 digits, then 5, then 4)
+      if (cleanedNumber.length === 11) {
+        return `(${cleanedNumber.slice(0, 2)}) ${cleanedNumber.slice(
+          2,
+          7
+        )}-${cleanedNumber.slice(7)}`;
+      }
+      break;
+
+    case "JP":
+      // Format as XXX-XXXX-XXXX (3 digits, then 4, then 4)
+      if (cleanedNumber.length === 11) {
+        return `${cleanedNumber.slice(0, 3)}-${cleanedNumber.slice(
+          3,
+          7
+        )}-${cleanedNumber.slice(7)}`;
+      }
+      break;
+
+    case "CN":
+      // Format as XXX XXXX XXXX (3 digits, then 4, then 4)
+      if (cleanedNumber.length === 11) {
+        return `${cleanedNumber.slice(0, 3)} ${cleanedNumber.slice(
+          3,
+          7
+        )} ${cleanedNumber.slice(7)}`;
+      }
+      break;
+
+    case "RU":
+      // Format as (XXX) XXX-XX-XX (3 digits, then 3, then 2, then 2)
+      if (cleanedNumber.length === 10) {
+        return `(${cleanedNumber.slice(0, 3)}) ${cleanedNumber.slice(
+          3,
+          6
+        )}-${cleanedNumber.slice(6, 8)}-${cleanedNumber.slice(8)}`;
       }
       break;
 

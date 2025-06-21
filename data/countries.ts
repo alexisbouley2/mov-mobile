@@ -75,7 +75,7 @@ export const countries: Country[] = [
     maxLength: 11,
   },
   {
-    name: "France",
+    name: "French",
     code: "FR",
     dialCode: "+33",
     flag: "🇫🇷",
