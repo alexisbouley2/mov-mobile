@@ -1,3 +1,4 @@
+// app/(auth)/verify.tsx
 import React from "react";
 import {
   Text,
@@ -6,7 +7,7 @@ import {
   Keyboard,
   Pressable,
 } from "react-native";
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { CommonStyles } from "@/styles/common";
 import { ButtonStyles } from "@/styles/buttons";
 import { useOTPTimer } from "@/hooks/otp/useOTPTimer";
@@ -21,6 +22,7 @@ const OTP_LENGTH = 6;
 export default function VerifyScreen() {
   useDebugLifecycle("VerifyScreen");
 
+  const router = useRouter();
   const { phone } = useLocalSearchParams<{ phone: string }>();
 
   const { countdown, isTimerFinished, resetTimer } = useOTPTimer({
@@ -40,6 +42,10 @@ export default function VerifyScreen() {
     useOTPVerification({
       phone: phone || "",
       otpLength: OTP_LENGTH,
+      onVerificationSuccess: () => {
+        // Navigate to the root index which will handle routing based on auth state
+        router.replace("/");
+      },
       onVerificationError: () => {
         // Focus will be handled by the OTPInput component
       },

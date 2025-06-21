@@ -97,7 +97,7 @@ export default function EventDetailScreen() {
             <EventActions
               isAdmin={item.data.isAdmin}
               isParticipant={item.data.isParticipant}
-              onUpdate={() => router.push(`/(event)/edit/${id}`)}
+              onUpdate={() => router.push(`/(app)/(event)/edit/${id}`)}
               onParticipate={() => toggleParticipation(user?.id || "")}
               onInvite={() => {
                 /* TODO: Implement invite */

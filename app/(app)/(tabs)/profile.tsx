@@ -25,7 +25,7 @@ export default function ProfileScreen() {
   );
 
   const handleEditProfile = () => {
-    router.push("/(profile)/edit-profile");
+    router.push("/(app)/(profile)/edit-profile");
   };
 
   const handleSharePov = () => {
@@ -45,7 +45,7 @@ export default function ProfileScreen() {
 
   const handleDangerousZone = () => {
     log.info("in handle dangerous zone");
-    router.push("/(profile)/dangerous-zone");
+    router.push("/(app)/(profile)/dangerous-zone");
   };
 
   const handleLogOut = async () => {

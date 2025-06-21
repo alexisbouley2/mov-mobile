@@ -112,7 +112,7 @@ export function useCreateEvent(userId: string) {
           Alert.alert("Success", "Event created and video added!", [
             {
               text: "OK",
-              onPress: () => router.push("/(tabs)/events"),
+              onPress: () => router.push("/(app)/(tabs)/events"),
             },
           ]);
         } catch (error) {
@@ -123,7 +123,7 @@ export function useCreateEvent(userId: string) {
             [
               {
                 text: "OK",
-                onPress: () => router.push("/(tabs)/events"),
+                onPress: () => router.push("/(app)/(tabs)/events"),
               },
             ]
           );
@@ -133,7 +133,7 @@ export function useCreateEvent(userId: string) {
         if (onSuccess) {
           onSuccess();
         } else {
-          router.push("/(tabs)/events");
+          router.push("/(app)/(tabs)/events");
         }
       }
     } catch (error) {

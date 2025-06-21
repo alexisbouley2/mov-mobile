@@ -1,3 +1,4 @@
+// app/(onboarding)/create-profile.tsx
 import React, { useState } from "react";
 import {
   View,
@@ -9,6 +10,7 @@ import {
   Alert,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
+import { useRouter } from "expo-router";
 import { useAuth } from "@/contexts/AuthContext";
 import { photoJobManager } from "@/services/photoJobService";
 import AvatarPicker from "@/components/profile/AvatarPicker";
@@ -18,6 +20,7 @@ import { useDebugLifecycle } from "@/utils/debugLifecycle";
 export default function CreateProfileScreen() {
   useDebugLifecycle("CreateProfileScreen");
 
+  const router = useRouter();
   const [username, setUsername] = useState("");
   const [loading, setLoading] = useState(false);
   const [_selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -140,6 +143,9 @@ export default function CreateProfileScreen() {
       }
 
       log.info("Profile created successfully");
+
+      // Navigate to the root index which will handle routing to the main app
+      router.replace("/");
     } catch (error) {
       Alert.alert(
         "Error",

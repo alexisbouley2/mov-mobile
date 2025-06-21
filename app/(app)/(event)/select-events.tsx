@@ -72,7 +72,7 @@ export default function SelectEventsScreen() {
       // If creating new event, navigate there with job context
       if (includeCreateNew) {
         router.push({
-          pathname: "/(event)/create",
+          pathname: "/(app)/(event)/create",
           params: {
             jobId,
             selectedEventIds: Array.from(selectedEventIds).join(","),
@@ -87,7 +87,7 @@ export default function SelectEventsScreen() {
       Alert.alert("Success", "Video added to events!", [
         {
           text: "OK",
-          onPress: () => router.push("/(tabs)/events"),
+          onPress: () => router.push("/(app)/(tabs)/events"),
         },
       ]);
     } catch (error) {

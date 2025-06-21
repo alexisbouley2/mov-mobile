@@ -17,7 +17,7 @@ export default function CreateEventScreen() {
   };
 
   const handleCreateSuccess = () => {
-    router.push("/(tabs)/events");
+    router.push("/(app)/(tabs)/events");
   };
 
   const onSubmit = () => {

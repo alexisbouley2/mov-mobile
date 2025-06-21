@@ -36,11 +36,11 @@ export default function EventsScreen() {
   );
 
   const handleCreateEvent = () => {
-    router.push("/(event)/create");
+    router.push("/(app)/(event)/create");
   };
 
   const handleEventPress = (eventId: string) => {
-    router.push(`/(event)/${eventId}`);
+    router.push(`/(app)/(event)/${eventId}`);
   };
 
   if (loading && !hasInitialData) {
