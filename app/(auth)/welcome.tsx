@@ -7,8 +7,12 @@ import {
   SafeAreaView,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { useDebugLifecycle } from "@/utils/debugLifecycle";
+import log from "@/utils/logger";
 
 export default function WelcomeScreen() {
+  useDebugLifecycle("WelcomeScreen");
+
   const router = useRouter();
   return (
     <SafeAreaView style={styles.container}>
@@ -24,7 +28,10 @@ export default function WelcomeScreen() {
 
         <TouchableOpacity
           style={styles.button}
-          onPress={() => router.push("/(auth)/phone")}
+          onPress={() => {
+            log.debug("Get Started button pressed");
+            router.push("/(auth)/phone");
+          }}
         >
           <Text style={styles.buttonText}>Get Started</Text>
         </TouchableOpacity>

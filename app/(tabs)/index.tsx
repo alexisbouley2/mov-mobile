@@ -1,3 +1,5 @@
+// app/(tabs)/index.tsx
+
 import CameraControls from "@/components/camera/CameraControls";
 import MediaPreview from "@/components/camera/MediaPreview";
 import type { CameraView as CameraViewType } from "expo-camera";
@@ -12,11 +14,13 @@ import { Dimensions, StatusBar, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect } from "@react-navigation/native";
 import { useAuth } from "@/contexts/AuthContext";
-import log from "@/utils/logger";
+import { useDebugLifecycle } from "@/utils/debugLifecycle";
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
 export default function CameraScreen() {
+  useDebugLifecycle("CameraScreen");
+
   const MAX_VIDEO_DURATION: number = 6;
   const { user } = useAuth();
   const [cameraPermission, requestCameraPermission] = useCameraPermissions();
@@ -46,7 +50,6 @@ export default function CameraScreen() {
   // Cleanup when screen loses focus (tab switch)
   useFocusEffect(
     React.useCallback(() => {
-      log.info("Camera screen focus effect triggered");
       // When screen gains focus, activate camera
       setIsCameraActive(true);
 

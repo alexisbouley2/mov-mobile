@@ -12,8 +12,11 @@ import PhoneInput from "@/components/phone/PhoneInput";
 import { PhoneValidationResult } from "@/utils/phoneValidation";
 import { CommonStyles } from "@/styles/common";
 import { ButtonStyles } from "@/styles/buttons";
+import { useDebugLifecycle } from "@/utils/debugLifecycle";
 
 export default function PhoneScreen() {
+  useDebugLifecycle("PhoneScreen");
+
   const [phoneNumber, setPhoneNumber] = useState("");
   const [validation, setValidation] = useState<PhoneValidationResult>({
     isValid: false,

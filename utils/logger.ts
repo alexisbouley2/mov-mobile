@@ -8,6 +8,7 @@ const defaultConfig = {
       info: "blueBright",
       warn: "yellowBright",
       error: "redBright",
+      debug: "greenBright",
     },
   },
   dateFormat: "time",

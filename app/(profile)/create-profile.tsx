@@ -13,8 +13,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import { photoJobManager } from "@/services/photoJobService";
 import AvatarPicker from "@/components/profile/AvatarPicker";
 import log from "@/utils/logger";
+import { useDebugLifecycle } from "@/utils/debugLifecycle";
 
 export default function CreateProfileScreen() {
+  useDebugLifecycle("CreateProfileScreen");
+
   const [username, setUsername] = useState("");
   const [loading, setLoading] = useState(false);
   const [_selectedImage, setSelectedImage] = useState<string | null>(null);

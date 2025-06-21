@@ -15,8 +15,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useEvents } from "@/hooks/useEvents";
 import EventsHeader from "@/components/events/EventsHeader";
 import EventsContent from "@/components/events/EventsContent";
+import { useDebugLifecycle } from "@/utils/debugLifecycle";
 
 export default function EventsScreen() {
+  useDebugLifecycle("EventsScreen");
+
   const router = useRouter();
   const { user } = useAuth();
   const { events, loading, refreshing, error, refetch, hasInitialData } =
