@@ -1,4 +1,4 @@
-// app/(chat)/[eventId].tsx - Chat screen route
+// app/(app)/(event)/chat/[eventId].tsx - Chat screen route
 import React, { useState, useRef, useEffect } from "react";
 import {
   View,

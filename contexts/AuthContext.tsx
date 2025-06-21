@@ -61,7 +61,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const fetchUserProfile = useCallback(async (userId: string) => {
-    log.debug("🔍 AuthContext - fetchUserProfile called for:", userId);
     try {
       const { data, error } = await supabase
         .from("User")
@@ -70,13 +69,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .single();
 
       if (error && error.code !== "PGRST116") {
-        log.error("Error fetching user profile:", error);
         return;
       }
 
       if (data) {
-        log.debug("📊 AuthContext - User data fetched:", data.username);
-
         if (data.profileImagePath && data.profileThumbnailPath) {
           try {
             const API_BASE_URL = config.EXPO_PUBLIC_API_URL;
@@ -84,39 +80,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
             if (response.ok) {
               const userWithUrls = await response.json();
-              log.debug("📸 AuthContext - User with photo URLs set");
               setUser(userWithUrls);
             } else {
-              log.debug("📊 AuthContext - User without photo URLs set");
               setUser(data);
             }
           } catch (error) {
-            log.error("Error fetching photo URLs:", error);
+            log.error("Error fetching user profile:", error);
             setUser(data);
           }
         } else {
-          log.debug("📊 AuthContext - User without photos set");
           setUser(data);
         }
       }
     } catch (error) {
-      log.error("Error in fetchUserProfile:", error);
+      log.error("Error fetching user profile:", error);
     }
   }, []);
 
   const refreshUserProfile = useCallback(async () => {
-    log.debug("🔄 AuthContext - refreshUserProfile called");
     if (supabaseUser) {
       await fetchUserProfile(supabaseUser.id);
     }
   }, [supabaseUser, fetchUserProfile]);
 
   useEffect(() => {
-    log.debug("🚀 AuthContext - Initial setup starting");
-
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      log.debug("🎯 AuthContext - Initial session:", !!session);
       setSession(session);
       setSupabaseUser(session?.user ?? null);
 
@@ -131,7 +120,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      log.debug("🔔 AuthContext - Auth state change:", event, !!session);
       setSession(session);
       setSupabaseUser(session?.user ?? null);
 
@@ -145,34 +133,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     return () => {
-      log.debug("🧹 AuthContext - Cleanup auth listener");
       subscription?.unsubscribe();
     };
   }, [fetchUserProfile]);
 
   const signInWithOtp = useCallback(async (phone: string) => {
-    log.debug("📱 AuthContext - signInWithOtp called for:", phone);
     const { error } = await supabase.auth.signInWithOtp({
       phone: phone,
     });
-    log.debug(
-      "📱 AuthContext - signInWithOtp result:",
-      !!error ? "error" : "success"
-    );
     return { error };
   }, []);
 
   const verifyOtp = useCallback(async (phone: string, token: string) => {
-    log.debug("🔐 AuthContext - verifyOtp called for:", phone);
     const { error } = await supabase.auth.verifyOtp({
       phone: phone,
       token: token,
       type: "sms",
     });
-    log.debug(
-      "🔐 AuthContext - verifyOtp result:",
-      !!error ? "error" : "success"
-    );
     return { error };
   }, []);
 
@@ -184,7 +161,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         profileThumbnailPath: string;
       }
     ) => {
-      log.debug("👤 AuthContext - createUserProfile called for:", username);
       if (!supabaseUser) {
         return { error: "No authenticated user" };
       }
@@ -207,22 +183,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         await fetchUserProfile(supabaseUser.id);
       }
 
-      log.debug(
-        "👤 AuthContext - createUserProfile result:",
-        !!error ? "error" : "success"
-      );
       return { error };
     },
     [supabaseUser, fetchUserProfile]
   );
 
   const signOut = useCallback(async () => {
-    log.debug("🚪 AuthContext - signOut called");
     await supabase.auth.signOut();
     setUser(null);
     setSupabaseUser(null);
     setSession(null);
-    log.debug("🚪 AuthContext - signOut completed");
   }, []);
 
   const contextValue = useMemo(

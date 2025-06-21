@@ -26,8 +26,8 @@ export default function VerifyScreen() {
   const { phone } = useLocalSearchParams<{ phone: string }>();
 
   const { countdown, isTimerFinished, resetTimer } = useOTPTimer({
-    initialCountdown: 10,
-    resendCountdown: 20,
+    initialCountdown: 30,
+    resendCountdown: 60,
   });
 
   const { isResending, canResend, hasReachedMaxResends, handleResend } =

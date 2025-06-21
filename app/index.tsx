@@ -2,16 +2,9 @@
 import { Redirect } from "expo-router";
 import { View, ActivityIndicator, StyleSheet } from "react-native";
 import { useAuth } from "@/contexts/AuthContext";
-import log from "@/utils/logger";
 
 export default function Index() {
   const { session, user, loading } = useAuth();
-
-  log.debug("🏠 Index - Routing decision", {
-    loading,
-    hasSession: !!session,
-    hasUser: !!user,
-  });
 
   if (loading) {
     return (
@@ -21,7 +14,6 @@ export default function Index() {
     );
   }
 
-  // Route to appropriate screen based on auth state
   if (!session) {
     return <Redirect href="/(auth)/welcome" />;
   }

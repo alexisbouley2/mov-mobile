@@ -15,7 +15,7 @@ export default function EventMessages({ eventId }: EventMessagesProps) {
   const { preview, loading, refetch } = useMessagePreview(eventId); // Updated hook
 
   const handleOpenChat = () => {
-    router.push(`/(app)/(chat)/${eventId}`);
+    router.push(`/(app)/(event)/chat/${eventId}`);
   };
 
   useFocusEffect(

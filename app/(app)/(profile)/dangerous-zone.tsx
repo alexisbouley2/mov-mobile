@@ -11,23 +11,17 @@ import {
 import { router } from "expo-router";
 import { useAuth } from "@/contexts/AuthContext";
 import { config } from "@/lib/config";
-import log from "@/utils/logger";
 
 export default function DangerousZoneScreen() {
   const { user, supabaseUser, signOut } = useAuth();
   const [usernameInput, setUsernameInput] = useState("");
   const [loading, setLoading] = useState(false);
 
-  log.info("in dangerous zone screen");
-  log.info("user", user);
-  log.info("supabaseUser", supabaseUser);
-
   const handleBack = () => {
     router.back();
   };
 
   const handleDelete = async () => {
-    log.info("in handle delete");
     if (!user || !supabaseUser) {
       Alert.alert("Error", "No user found");
       return;
@@ -56,7 +50,6 @@ export default function DangerousZoneScreen() {
   };
 
   const confirmDelete = async () => {
-    log.info("in confirm delete");
     if (!supabaseUser) return;
 
     setLoading(true);
@@ -64,7 +57,6 @@ export default function DangerousZoneScreen() {
     try {
       const API_BASE_URL = config.EXPO_PUBLIC_API_URL;
 
-      // Delete user from backend (will also clean up photos)
       const response = await fetch(`${API_BASE_URL}/users/${supabaseUser.id}`, {
         method: "DELETE",
       });
@@ -76,19 +68,7 @@ export default function DangerousZoneScreen() {
         );
       }
 
-      // Sign out from Supabase auth
       await signOut();
-
-      Alert.alert(
-        "Account Deleted",
-        "Your account has been permanently deleted.",
-        [
-          {
-            text: "OK",
-            onPress: () => router.replace("/(auth)/welcome"),
-          },
-        ]
-      );
     } catch (error) {
       Alert.alert(
         "Error",

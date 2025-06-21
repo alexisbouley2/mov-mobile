@@ -7,8 +7,8 @@ interface UseOTPTimerProps {
 }
 
 export const useOTPTimer = ({
-  initialCountdown = 10,
-  resendCountdown = 20,
+  initialCountdown = 30,
+  resendCountdown = 60,
 }: UseOTPTimerProps = {}) => {
   const [countdown, setCountdown] = useState(initialCountdown);
 

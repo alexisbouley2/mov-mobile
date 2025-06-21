@@ -12,42 +12,25 @@ import { useEffect } from "react";
 
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { AuthProvider } from "@/contexts/AuthContext";
-import log from "@/utils/logger";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  log.debug("🔄 RootLayout - Render");
-
   const colorScheme = useColorScheme();
   const [loaded] = useFonts({
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
   });
 
   useEffect(() => {
-    log.debug("🎨 RootLayout - Color scheme:", colorScheme);
-  }, [colorScheme]);
-
-  useEffect(() => {
-    log.debug("📝 RootLayout - Fonts loaded:", loaded);
     if (loaded) {
       SplashScreen.hideAsync();
-      log.debug("📱 RootLayout - Splash screen hidden");
     }
   }, [loaded]);
 
-  useEffect(() => {
-    log.debug("🟢 RootLayout - Mounted");
-    return () => log.debug("🔴 RootLayout - Unmounted");
-  }, []);
-
   if (!loaded) {
-    log.debug("⏳ RootLayout - Waiting for fonts to load");
     return null;
   }
-
-  log.debug("✅ RootLayout - Rendering full app");
 
   return (
     <AuthProvider>
