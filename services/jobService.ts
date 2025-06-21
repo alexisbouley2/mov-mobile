@@ -1,5 +1,6 @@
 import { MediaService } from "./mediaService";
 import { config } from "@/lib/config";
+import log from "@/utils/logger";
 
 export interface UploadJob {
   id: string;
@@ -70,7 +71,7 @@ class JobManager {
       await uploadPromise;
     } catch (error) {
       // Error is already handled in performUpload
-      console.error("Error in uploadPromise:", error);
+      log.error("Error in uploadPromise:", error);
     } finally {
       this.uploadPromises.delete(jobId);
     }
@@ -126,7 +127,7 @@ class JobManager {
       try {
         await this.deleteFromR2(job.uploadedFileName, job.userId);
       } catch (error) {
-        console.error("Failed to delete from R2:", error);
+        log.error("Failed to delete from R2:", error);
       }
     }
 
@@ -240,7 +241,7 @@ class JobManager {
 
     for (const [jobId, job] of this.jobs.entries()) {
       if (job.createdAt < tenMinutesAgo && job.status !== "uploading") {
-        this.cancelJob(jobId).catch(console.error);
+        this.cancelJob(jobId).catch(log.error);
       }
     }
   }
@@ -256,7 +257,7 @@ class JobManager {
 
     // Cancel all jobs
     for (const jobId of this.jobs.keys()) {
-      this.cancelJob(jobId).catch(console.error);
+      this.cancelJob(jobId).catch(log.error);
     }
   }
 }

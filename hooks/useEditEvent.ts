@@ -3,6 +3,7 @@ import { Alert } from "react-native";
 import { useEventForm } from "./useEventForm";
 import { eventPhotoJobManager } from "@/services/eventPhotoJobService";
 import { config } from "@/lib/config";
+import log from "@/utils/logger";
 
 const API_BASE_URL = config.EXPO_PUBLIC_API_URL;
 
@@ -43,7 +44,7 @@ export function useEditEvent(eventId: string, userId: string) {
           photoJobId: null, // No job initially since we're loading existing data
         });
       } catch (err) {
-        console.error("Error loading event:", err);
+        log.error("Error loading event:", err);
         setError(err instanceof Error ? err.message : "Failed to load event");
       } finally {
         setInitialLoading(false);
@@ -75,7 +76,7 @@ export function useEditEvent(eventId: string, userId: string) {
       // If there's a new photo job, upload it first
       if (formData.photoJobId) {
         try {
-          console.log("Uploading new event photo...");
+          log.info("Uploading new event photo...");
           const uploadResult = await eventPhotoJobManager.uploadJob(
             formData.photoJobId,
             (progress) => {
@@ -91,7 +92,7 @@ export function useEditEvent(eventId: string, userId: string) {
           // Clean up the job
           eventPhotoJobManager.cleanupJob(formData.photoJobId);
         } catch (uploadError) {
-          console.error("Photo upload failed:", uploadError);
+          log.error("Photo upload failed:", uploadError);
           Alert.alert(
             "Warning",
             "Photo upload failed. Saving event without new photo."
@@ -127,7 +128,7 @@ export function useEditEvent(eventId: string, userId: string) {
 
       onSuccess();
     } catch (error) {
-      console.error("Error updating event:", error);
+      log.error("Error updating event:", error);
       Alert.alert("Error", "Failed to update event. Please try again.");
     } finally {
       setLoading(false);

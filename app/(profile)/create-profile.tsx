@@ -12,6 +12,7 @@ import * as ImagePicker from "expo-image-picker";
 import { useAuth } from "@/contexts/AuthContext";
 import { photoJobManager } from "@/services/photoJobService";
 import AvatarPicker from "@/components/profile/AvatarPicker";
+import log from "@/utils/logger";
 
 export default function CreateProfileScreen() {
   const [username, setUsername] = useState("");
@@ -65,12 +66,12 @@ export default function CreateProfileScreen() {
           }
         } catch (error) {
           Alert.alert("Error", "Failed to process image");
-          console.error("Image processing error:", error);
+          log.error("Image processing error:", error);
         }
       }
     } catch (error) {
       Alert.alert("Error", "Failed to pick image");
-      console.error("Image picker error:", error);
+      log.error("Image picker error:", error);
     }
   };
 
@@ -99,7 +100,7 @@ export default function CreateProfileScreen() {
       // If there's a photo job, upload it first
       if (currentJobId) {
         try {
-          console.log("Uploading photo...");
+          log.info("Uploading photo...");
           const uploadResult = await photoJobManager.uploadJob(
             currentJobId,
             (progress: any) => {
@@ -116,7 +117,7 @@ export default function CreateProfileScreen() {
           photoJobManager.cleanupJob(currentJobId);
           setCurrentJobId(null);
         } catch (uploadError) {
-          console.error("Photo upload failed:", uploadError);
+          log.error("Photo upload failed:", uploadError);
           // Continue without photo
           Alert.alert(
             "Warning",
@@ -135,7 +136,7 @@ export default function CreateProfileScreen() {
         throw new Error(profileError.message || "Failed to create profile");
       }
 
-      console.log("Profile created successfully");
+      log.info("Profile created successfully");
     } catch (error) {
       Alert.alert(
         "Error",

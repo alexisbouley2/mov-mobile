@@ -1,4 +1,5 @@
 import * as ImageManipulator from "expo-image-manipulator";
+import log from "@/utils/logger";
 
 export interface ProcessedPhoto {
   thumbnail: string; // Different sizes based on entity type
@@ -11,7 +12,7 @@ export class PhotoProcessingService {
    */
   static async processUserImage(imageUri: string): Promise<ProcessedPhoto> {
     try {
-      console.log("Processing user image:", imageUri);
+      log.info("Processing user image:", imageUri);
 
       // Process thumbnail version (200x200)
       const thumbnailResult = await ImageManipulator.manipulateAsync(
@@ -35,13 +36,13 @@ export class PhotoProcessingService {
         }
       );
 
-      console.log("User image processing completed");
+      log.info("User image processing completed");
       return {
         thumbnail: thumbnailResult.uri,
         image: imageResult.uri,
       };
     } catch (error) {
-      console.error("Error processing user image:", error);
+      log.error("Error processing user image:", error);
       throw new Error("Failed to process user image");
     }
   }
@@ -51,7 +52,7 @@ export class PhotoProcessingService {
    */
   static async processEventImage(imageUri: string): Promise<ProcessedPhoto> {
     try {
-      console.log("Processing event image:", imageUri);
+      log.info("Processing event image:", imageUri);
 
       // Process thumbnail version (200x200) - 16:9 aspect ratio
       const thumbnailResult = await ImageManipulator.manipulateAsync(
@@ -75,13 +76,13 @@ export class PhotoProcessingService {
         }
       );
 
-      console.log("Event image processing completed");
+      log.info("Event image processing completed");
       return {
         thumbnail: thumbnailResult.uri,
         image: imageResult.uri,
       };
     } catch (error) {
-      console.error("Error processing event image:", error);
+      log.error("Error processing event image:", error);
       throw new Error("Failed to process event image");
     }
   }

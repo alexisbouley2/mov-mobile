@@ -1,5 +1,6 @@
 import * as FileSystem from "expo-file-system";
 import { config } from "@/lib/config";
+import log from "@/utils/logger";
 
 const API_BASE_URL = config.EXPO_PUBLIC_API_URL;
 
@@ -38,7 +39,7 @@ export class PhotoUploadService {
 
       return await response.json();
     } catch (error) {
-      console.error("Error getting upload URLs:", error);
+      log.error("Error getting upload URLs:", error);
       throw error;
     }
   }
@@ -52,7 +53,7 @@ export class PhotoUploadService {
     onProgress?: (_progress: number) => void
   ): Promise<void> {
     try {
-      console.log("Starting upload to R2");
+      log.info("Starting upload to R2");
 
       // Check if file exists
       const fileInfo = await FileSystem.getInfoAsync(fileUri);
@@ -64,7 +65,7 @@ export class PhotoUploadService {
       const response = await fetch(fileUri);
       const blob = await response.blob();
 
-      console.log("File blob created, size:", blob.size);
+      log.info("File blob created, size:", blob.size);
 
       // Upload to R2
       const uploadResponse = await fetch(uploadUrl, {
@@ -83,9 +84,9 @@ export class PhotoUploadService {
       }
 
       onProgress?.(100);
-      console.log("Upload to R2 successful!");
+      log.info("Upload to R2 successful!");
     } catch (error) {
-      console.error("Error uploading to R2:", error);
+      log.error("Error uploading to R2:", error);
       throw error;
     }
   }
@@ -101,7 +102,7 @@ export class PhotoUploadService {
     onProgress?: (_progress: number) => void
   ): Promise<PhotoUploadResult> {
     try {
-      console.log("=== Starting photo upload flow ===");
+      log.info("=== Starting photo upload flow ===");
 
       // Step 1: Get upload URLs
       onProgress?.(10);
@@ -135,14 +136,14 @@ export class PhotoUploadService {
       });
 
       onProgress?.(100);
-      console.log("=== Photo upload flow completed ===");
+      log.info("=== Photo upload flow completed ===");
 
       return {
         thumbnailPath: thumbnailUrl.fileName,
         imagePath: imageUrl.fileName,
       };
     } catch (error) {
-      console.error("=== Photo upload flow failed ===", error);
+      log.error("=== Photo upload flow failed ===", error);
       throw error;
     }
   }

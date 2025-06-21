@@ -14,6 +14,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { photoJobManager } from "@/services/photoJobService";
 import AvatarPicker from "@/components/profile/AvatarPicker";
 import { config } from "@/lib/config";
+import log from "@/utils/logger";
 
 export default function EditProfileScreen() {
   const { user, supabaseUser, refreshUserProfile } = useAuth();
@@ -72,12 +73,12 @@ export default function EditProfileScreen() {
           }
         } catch (error) {
           Alert.alert("Error", "Failed to process image");
-          console.error("Image processing error:", error);
+          log.error("Image processing error:", error);
         }
       }
     } catch (error) {
       Alert.alert("Error", "Failed to pick image");
-      console.error("Image picker error:", error);
+      log.error("Image picker error:", error);
     }
   };
 
@@ -106,7 +107,7 @@ export default function EditProfileScreen() {
       // If there's a new photo job, upload it
       if (currentJobId) {
         try {
-          console.log("Uploading new photo...");
+          log.info("Uploading new photo...");
           const uploadResult = await photoJobManager.uploadJob(
             currentJobId,
             (progress: any) => {
@@ -122,7 +123,7 @@ export default function EditProfileScreen() {
           photoJobManager.cleanupJob(currentJobId);
           setCurrentJobId(null);
         } catch (uploadError) {
-          console.error("Photo upload failed:", uploadError);
+          log.error("Photo upload failed:", uploadError);
           Alert.alert(
             "Warning",
             "Photo upload failed. Saving profile without new photo."
@@ -156,7 +157,7 @@ export default function EditProfileScreen() {
         );
       }
 
-      console.log("Profile updated successfully");
+      log.info("Profile updated successfully");
       await refreshUserProfile();
       router.back();
     } catch (error) {

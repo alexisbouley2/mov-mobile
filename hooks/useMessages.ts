@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { config } from "@/lib/config";
+import log from "@/utils/logger";
 
 export interface Message {
   id: string;
@@ -60,10 +61,10 @@ export function useMessages(eventId: string) {
           setTotal(data.total);
           setPage(pageNum);
         } else {
-          console.error("Failed to load messages:", response.statusText);
+          log.error("Failed to load messages:", response.statusText);
         }
       } catch (error) {
-        console.error("Error loading messages:", error);
+        log.error("Error loading messages:", error);
       } finally {
         setLoading(false);
       }
@@ -94,10 +95,10 @@ export function useMessages(eventId: string) {
           setMessages((prev) => [...prev, newMessage]);
           setTotal((prev) => prev + 1);
         } else {
-          console.error("Failed to send message:", response.statusText);
+          log.error("Failed to send message:", response.statusText);
         }
       } catch (error) {
-        console.error("Error sending message:", error);
+        log.error("Error sending message:", error);
       } finally {
         setSending(false);
       }

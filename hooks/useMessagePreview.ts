@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { config } from "@/lib/config";
+import log from "@/utils/logger";
 
 export interface MessagePreview {
   hasMessages: boolean;
@@ -41,10 +42,10 @@ export function useMessagePreview(eventId: string) {
         const data = await response.json();
         setPreview(data);
       } else {
-        console.error("Failed to fetch message preview:", response.statusText);
+        log.error("Failed to fetch message preview:", response.statusText);
       }
     } catch (error) {
-      console.error("Error fetching message preview:", error);
+      log.error("Error fetching message preview:", error);
     } finally {
       setLoading(false);
     }

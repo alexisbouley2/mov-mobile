@@ -11,6 +11,7 @@ import { IconSymbol } from "@/components/ui/IconSymbol";
 import * as ImagePicker from "expo-image-picker";
 import { useAuth } from "@/contexts/AuthContext";
 import { eventPhotoJobManager } from "@/services/eventPhotoJobService";
+import log from "@/utils/logger";
 
 interface EventPhotoSectionProps {
   photo: string | null;
@@ -67,12 +68,12 @@ export default function EventPhotoSection({
           }
         } catch (error) {
           Alert.alert("Error", "Failed to process image");
-          console.error("Image processing error:", error);
+          log.error("Image processing error:", error);
         }
       }
     } catch (error) {
       Alert.alert("Error", "Failed to pick image");
-      console.error("Image picker error:", error);
+      log.error("Image picker error:", error);
     }
   };
 

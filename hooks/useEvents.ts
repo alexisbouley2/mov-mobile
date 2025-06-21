@@ -1,6 +1,7 @@
 // hooks/useEvents.ts
 import { useState, useEffect, useCallback } from "react";
 import { config } from "@/lib/config";
+import log from "@/utils/logger";
 
 export interface User {
   id: string;
@@ -70,7 +71,7 @@ export const useEvents = (userId: string) => {
         setError(null);
         setHasInitialData(true);
       } catch (err) {
-        console.log("err", err);
+        log.error("Error fetching events:", err);
         setError(err instanceof Error ? err.message : "An error occurred");
       } finally {
         if (isRefresh) {

@@ -9,6 +9,7 @@ import { router, useSegments } from "expo-router";
 import { supabase } from "@/lib/supabase";
 import { Session, User as SupabaseUser } from "@supabase/supabase-js";
 import { config } from "@/lib/config";
+import log from "@/utils/logger";
 
 interface User {
   id: string;
@@ -69,7 +70,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .single();
 
       if (error && error.code !== "PGRST116") {
-        console.error("Error fetching user profile:", error);
+        log.error("Error fetching user profile:", error);
         setLoading(false);
         return;
       }
@@ -88,7 +89,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               setUser(data);
             }
           } catch (error) {
-            console.error("Error fetching photo URLs:", error);
+            log.error("Error fetching photo URLs:", error);
             setUser(data);
           }
         } else {
@@ -97,7 +98,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       setLoading(false);
     } catch (error) {
-      console.error("Error in fetchUserProfile:", error);
+      log.error("Error in fetchUserProfile:", error);
       setLoading(false);
     }
   }, []); // Empty dependency array since it doesn't depend on any state/props
@@ -147,15 +148,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     if (!session && !inAuthGroup) {
       // Redirect to auth if not authenticated
-      console.log("here 1");
+      log.info("here 1");
       router.replace("/(auth)/welcome");
     } else if (session && !user && !inAuthGroup && !inProfileGroup) {
       // User is authenticated but profile not complete
-      console.log("here 2");
+      log.info("here 2");
       router.replace("/(profile)/create-profile");
     } else if (session && user && inAuthGroup) {
       // User is fully authenticated, redirect to main app
-      console.log("here 3");
+      log.info("here 3");
       router.replace("/(tabs)");
     }
   }, [session, user, loading, segments]);

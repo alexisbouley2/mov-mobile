@@ -3,6 +3,7 @@ import {
   ProcessedPhoto,
 } from "./photoProcessingService";
 import { PhotoUploadService, PhotoUploadResult } from "./photoUploadService";
+import log from "@/utils/logger";
 
 export interface PhotoJob {
   id: string;
@@ -77,7 +78,7 @@ class PhotoJobManager {
       job.progress = 100;
       this.notifyListeners(jobId);
 
-      console.log("Photo processing completed for job:", jobId);
+      log.info("Photo processing completed for job:", jobId);
       return jobId;
     } catch (error) {
       job.status = "failed";

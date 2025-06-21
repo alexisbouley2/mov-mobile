@@ -12,6 +12,7 @@ import { router } from "expo-router";
 import { useAuth } from "@/contexts/AuthContext";
 import PhoneInput from "@/components/phone/PhoneInput";
 import { PhoneValidationResult } from "@/utils/phoneValidation";
+import log from "@/utils/logger";
 
 export default function PhoneScreen() {
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -31,7 +32,7 @@ export default function PhoneScreen() {
     }
 
     setLoading(true);
-    console.log("sign in with otp", validation.formattedNumber);
+    log.info("sign in with otp", validation.formattedNumber);
     const { error } = await signInWithOtp(validation.formattedNumber);
     setLoading(false);
 

@@ -14,6 +14,7 @@ import {
 import { Video, ResizeMode } from "expo-av";
 import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
+import log from "@/utils/logger";
 
 const { width, height } = Dimensions.get("window");
 
@@ -72,7 +73,7 @@ export default function VideoViewerModal({
   };
 
   const handleVideoError = (error: any) => {
-    console.error("Video playback error:", error);
+    log.error("Video playback error:", error);
     setLoadingVideo(false);
   };
 

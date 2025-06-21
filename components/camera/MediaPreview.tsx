@@ -13,6 +13,7 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { jobManager } from "@/services/jobService";
+import log from "@/utils/logger";
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
@@ -44,7 +45,7 @@ export default function MediaPreview({
   // Handle send button
   const handleSend = async () => {
     try {
-      console.log("=== MediaPreview: Creating job ===");
+      log.info("=== MediaPreview: Creating job ===");
 
       // Stop video before navigating
       if (videoRef.current) {
@@ -60,7 +61,7 @@ export default function MediaPreview({
 
       // Start upload in background
       jobManager.startUpload(newJobId).catch((error) => {
-        console.error("Upload failed:", error);
+        log.error("Upload failed:", error);
         Alert.alert("Error", "Failed to upload video. Please try again.");
       });
 
@@ -73,7 +74,7 @@ export default function MediaPreview({
       // Clean up subscription when component unmounts
       return () => unsubscribe();
     } catch (error) {
-      console.error("=== MediaPreview: Failed to create job ===", error);
+      log.error("=== MediaPreview: Failed to create job ===", error);
       Alert.alert("Error", "Failed to start upload. Please try again.");
     }
   };
@@ -96,7 +97,7 @@ export default function MediaPreview({
               await jobManager.cancelJob(jobId);
               onDismiss();
             } catch (error) {
-              console.error("Failed to cancel job:", error);
+              log.error("Failed to cancel job:", error);
               onDismiss();
             }
           },

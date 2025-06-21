@@ -15,6 +15,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEvents } from "@/hooks/useEvents";
 import { jobManager } from "@/services/jobService";
+import log from "@/utils/logger";
 
 export default function SelectEventsScreen() {
   const router = useRouter();
@@ -90,7 +91,7 @@ export default function SelectEventsScreen() {
         },
       ]);
     } catch (error) {
-      console.error("Failed to associate events:", error);
+      log.error("Failed to associate events:", error);
       Alert.alert("Error", "Failed to add video to events");
     } finally {
       setIsProcessing(false);

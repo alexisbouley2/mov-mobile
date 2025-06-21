@@ -11,6 +11,7 @@ import {
 import { Image } from "expo-image";
 import VideoViewerModal from "./VideoViewerModal";
 import { config } from "@/lib/config";
+import log from "@/utils/logger";
 
 const { width } = Dimensions.get("window");
 const GRID_PADDING = 15; // Increased padding from screen edges
@@ -100,7 +101,7 @@ export default function EventVideoFeed({
       setNextCursor(data.nextCursor);
       setHasMore(data.hasMore);
     } catch (err) {
-      console.error("Error fetching videos:", err);
+      log.error("Error fetching videos:", err);
       setError(err instanceof Error ? err.message : "Failed to fetch videos");
     } finally {
       setLoading(false);

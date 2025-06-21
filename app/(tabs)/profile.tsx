@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { router, useFocusEffect } from "expo-router";
 import { useAuth } from "@/contexts/AuthContext";
+import log from "@/utils/logger";
 
 export default function ProfileScreen() {
   const { user, signOut, refreshUserProfile } = useAuth();
@@ -26,21 +27,21 @@ export default function ProfileScreen() {
 
   const handleSharePov = () => {
     // TODO: Implement share POV functionality
-    console.log("Share POV pressed");
+    log.info("Share POV pressed");
   };
 
   const handleTermsAndConditions = () => {
     // TODO: Implement terms and conditions
-    console.log("Terms & Conditions pressed");
+    log.info("Terms & Conditions pressed");
   };
 
   const handlePrivacyPolicy = () => {
     // TODO: Implement privacy policy
-    console.log("Privacy Policy pressed");
+    log.info("Privacy Policy pressed");
   };
 
   const handleDangerousZone = () => {
-    console.log("in handle dangerous zone");
+    log.info("in handle dangerous zone");
     router.push("/(profile)/dangerous-zone");
   };
 

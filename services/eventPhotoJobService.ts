@@ -3,6 +3,7 @@ import {
   ProcessedPhoto,
 } from "./photoProcessingService";
 import { PhotoUploadService, PhotoUploadResult } from "./photoUploadService";
+import log from "../utils/logger";
 
 export interface EventPhotoJob {
   id: string;
@@ -71,7 +72,7 @@ class EventPhotoJobManager {
       job.progress = 100;
       this.notifyListeners(jobId);
 
-      console.log("Event photo processing completed for job:", jobId);
+      log.info("Event photo processing completed for job:", jobId);
       return jobId;
     } catch (error) {
       job.status = "failed";
@@ -111,7 +112,7 @@ class EventPhotoJobManager {
 
       const uploadResult = await PhotoUploadService.uploadPhotos(
         job.processedPhotos.thumbnail,
-        job.processedPhotos.full,
+        job.processedPhotos.image,
         job.userId,
         "event", // entityType for events
         (progress) => {

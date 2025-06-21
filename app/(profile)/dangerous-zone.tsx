@@ -11,22 +11,23 @@ import {
 import { router } from "expo-router";
 import { useAuth } from "@/contexts/AuthContext";
 import { config } from "@/lib/config";
+import log from "@/utils/logger";
 
 export default function DangerousZoneScreen() {
   const { user, supabaseUser, signOut } = useAuth();
   const [usernameInput, setUsernameInput] = useState("");
   const [loading, setLoading] = useState(false);
 
-  console.log("in dangerous zone screen");
-  console.log("user", user);
-  console.log("supabaseUser", supabaseUser);
+  log.info("in dangerous zone screen");
+  log.info("user", user);
+  log.info("supabaseUser", supabaseUser);
 
   const handleBack = () => {
     router.back();
   };
 
   const handleDelete = async () => {
-    console.log("in handle delete");
+    log.info("in handle delete");
     if (!user || !supabaseUser) {
       Alert.alert("Error", "No user found");
       return;
@@ -55,7 +56,7 @@ export default function DangerousZoneScreen() {
   };
 
   const confirmDelete = async () => {
-    console.log("in confirm delete");
+    log.info("in confirm delete");
     if (!supabaseUser) return;
 
     setLoading(true);

@@ -1,6 +1,7 @@
 import * as FileSystem from "expo-file-system";
 import { ThumbnailGenerator } from "./ThumbnailGenerator";
 import { config } from "@/lib/config";
+import log from "@/utils/logger";
 
 const API_BASE_URL = config.EXPO_PUBLIC_API_URL;
 
@@ -46,8 +47,8 @@ export class MediaService {
     thumbnail: ThumbnailUploadResponse;
   }> {
     try {
-      console.log("userId", userId);
-      console.log("Requesting presigned URLs from backend...");
+      log.info("userId", userId);
+      log.info("Requesting presigned URLs from backend...");
 
       const videoResponse = await fetch(
         `${API_BASE_URL}/videos/upload-url?userId=${userId}&size=full`
@@ -75,14 +76,14 @@ export class MediaService {
 
       const thumbnailData = await thumbnailResponse.json();
 
-      console.log("Received presigned URLs for video and thumbnail");
+      log.info("Received presigned URLs for video and thumbnail");
 
       return {
         video: videoData,
         thumbnail: thumbnailData,
       };
     } catch (error) {
-      console.error("Error getting upload URLs:", error);
+      log.error("Error getting upload URLs:", error);
       throw error;
     }
   }
@@ -97,7 +98,7 @@ export class MediaService {
     onProgress?: (_progress: number) => void
   ): Promise<void> {
     try {
-      console.log(`Starting upload to R2: ${contentType}`);
+      log.info(`Starting upload to R2: ${contentType}`);
 
       // Check if file exists
       const fileInfo = await FileSystem.getInfoAsync(fileUri);
@@ -105,7 +106,7 @@ export class MediaService {
         throw new Error("File does not exist");
       }
 
-      console.log("File info:", {
+      log.info("File info:", {
         exists: fileInfo.exists,
         size: fileInfo.size,
         uri: fileUri,
@@ -115,7 +116,7 @@ export class MediaService {
       const response = await fetch(fileUri);
       const blob = await response.blob();
 
-      console.log("File blob created, size:", blob.size);
+      log.info("File blob created, size:", blob.size);
 
       // Upload to R2
       const uploadResponse = await fetch(uploadUrl, {
@@ -126,7 +127,7 @@ export class MediaService {
         },
       });
 
-      console.log("R2 upload response status:", uploadResponse.status);
+      log.info("R2 upload response status:", uploadResponse.status);
 
       if (!uploadResponse.ok) {
         const errorText = await uploadResponse.text();
@@ -136,9 +137,9 @@ export class MediaService {
       }
 
       onProgress?.(100);
-      console.log(`Upload to R2 successful for ${contentType}!`);
+      log.info(`Upload to R2 successful for ${contentType}!`);
     } catch (error) {
-      console.error("Error uploading to R2:", error);
+      log.error("Error uploading to R2:", error);
       throw error;
     }
   }
@@ -172,11 +173,11 @@ export class MediaService {
       }
 
       const data = await response.json();
-      console.log("Upload confirmed:", data.video.id);
+      log.info("Upload confirmed:", data.video.id);
 
       return data;
     } catch (error) {
-      console.error("Error confirming upload:", error);
+      log.error("Error confirming upload:", error);
       throw error;
     }
   }
@@ -190,7 +191,7 @@ export class MediaService {
     onProgress?: (_progress: number) => void
   ): Promise<UploadConfirmResponse> {
     try {
-      console.log("=== Starting video upload flow with thumbnail ===");
+      log.info("=== Starting video upload flow with thumbnail ===");
 
       // Step 1: Generate thumbnail
       onProgress?.(5);
@@ -236,11 +237,11 @@ export class MediaService {
       );
 
       onProgress?.(100);
-      console.log("=== Video upload flow with thumbnail completed ===");
+      log.info("=== Video upload flow with thumbnail completed ===");
 
       return result;
     } catch (error) {
-      console.error("=== Video upload flow failed ===", error);
+      log.error("=== Video upload flow failed ===", error);
       throw error;
     }
   }

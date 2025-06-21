@@ -5,6 +5,7 @@ import { useEventForm } from "./useEventForm";
 import { jobManager } from "@/services/jobService";
 import { eventPhotoJobManager } from "@/services/eventPhotoJobService";
 import { config } from "@/lib/config";
+import log from "@/utils/logger";
 
 const API_BASE_URL = config.EXPO_PUBLIC_API_URL;
 
@@ -43,7 +44,7 @@ export function useCreateEvent(userId: string) {
       // If there's a photo job, upload it first
       if (formData.photoJobId) {
         try {
-          console.log("Uploading event photo...");
+          log.info("Uploading event photo...");
           const uploadResult = await eventPhotoJobManager.uploadJob(
             formData.photoJobId,
             (progress) => {
@@ -59,7 +60,7 @@ export function useCreateEvent(userId: string) {
           // Clean up the job
           eventPhotoJobManager.cleanupJob(formData.photoJobId);
         } catch (uploadError) {
-          console.error("Photo upload failed:", uploadError);
+          log.error("Photo upload failed:", uploadError);
           Alert.alert(
             "Warning",
             "Photo upload failed. Creating event without photo."
@@ -115,7 +116,7 @@ export function useCreateEvent(userId: string) {
             },
           ]);
         } catch (error) {
-          console.error("Failed to associate video with event:", error);
+          log.error("Failed to associate video with event:", error);
           Alert.alert(
             "Warning",
             "Event created but failed to add video. You can add it later.",
@@ -136,7 +137,7 @@ export function useCreateEvent(userId: string) {
         }
       }
     } catch (error) {
-      console.error("Error creating event:", error);
+      log.error("Error creating event:", error);
       Alert.alert("Error", "Failed to create event. Please try again.");
     } finally {
       setLoading(false);

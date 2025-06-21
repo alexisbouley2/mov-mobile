@@ -12,6 +12,7 @@ import { Dimensions, StatusBar, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect } from "@react-navigation/native";
 import { useAuth } from "@/contexts/AuthContext";
+import log from "@/utils/logger";
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
@@ -45,7 +46,7 @@ export default function CameraScreen() {
   // Cleanup when screen loses focus (tab switch)
   useFocusEffect(
     React.useCallback(() => {
-      console.log("in use callback");
+      log.info("Camera screen focus effect triggered");
       // When screen gains focus, activate camera
       setIsCameraActive(true);
 

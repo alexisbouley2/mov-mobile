@@ -1,6 +1,7 @@
 import * as VideoThumbnails from "expo-video-thumbnails";
 import * as FileSystem from "expo-file-system";
 import { manipulateAsync, SaveFormat } from "expo-image-manipulator";
+import log from "@/utils/logger";
 
 export interface ThumbnailOptions {
   time?: number; // Time in milliseconds to extract thumbnail from
@@ -18,7 +19,7 @@ export class ThumbnailGenerator {
     options: ThumbnailOptions = {}
   ): Promise<string> {
     try {
-      console.log("Generating thumbnail from video:", videoUri);
+      log.info("Generating thumbnail from video:", videoUri);
 
       const {
         time = 1000, // Extract frame at 1 second by default
@@ -44,7 +45,7 @@ export class ThumbnailGenerator {
         }
       );
 
-      console.log("Raw thumbnail generated:", thumbnailUri);
+      log.info("Raw thumbnail generated:", thumbnailUri);
 
       // Process the thumbnail (resize, compress, format)
       const processedThumbnail = await this.processThumbnail(thumbnailUri);
@@ -54,13 +55,13 @@ export class ThumbnailGenerator {
         await this.safeDeleteFile(thumbnailUri);
       }
 
-      console.log("Processed thumbnail ready:", processedThumbnail);
+      log.info("Processed thumbnail ready:", processedThumbnail);
       return processedThumbnail;
     } catch (error) {
-      console.error("Error generating thumbnail:", error);
+      log.error("Error generating thumbnail:", error);
 
       // Fallback to placeholder if thumbnail generation fails
-      console.log("Falling back to placeholder thumbnail");
+      log.info("Falling back to placeholder thumbnail");
       return this.createPlaceholderThumbnail();
     }
   }
@@ -85,7 +86,7 @@ export class ThumbnailGenerator {
 
       return result.uri;
     } catch (error) {
-      console.error("Error processing thumbnail:", error);
+      log.error("Error processing thumbnail:", error);
       return thumbnailUri; // Return original if processing fails
     }
   }
@@ -122,7 +123,7 @@ export class ThumbnailGenerator {
 
       return result.uri;
     } catch (error) {
-      console.error("Error creating placeholder thumbnail:", error);
+      log.error("Error creating placeholder thumbnail:", error);
       throw new Error("Failed to create placeholder thumbnail");
     }
   }
@@ -142,8 +143,8 @@ export class ThumbnailGenerator {
     try {
       await FileSystem.deleteAsync(fileUri, { idempotent: true });
     } catch (error) {
-      console.error(error);
-      console.log("Could not delete temporary file:", fileUri);
+      log.error(error);
+      log.info("Could not delete temporary file:", fileUri);
     }
   }
 
@@ -157,10 +158,10 @@ export class ThumbnailGenerator {
 
       if (dirInfo.exists) {
         await FileSystem.deleteAsync(cacheDir, { idempotent: true });
-        console.log("Thumbnail cache cleared");
+        log.info("Thumbnail cache cleared");
       }
     } catch (error) {
-      console.error("Error clearing thumbnail cache:", error);
+      log.error("Error clearing thumbnail cache:", error);
     }
   }
 }
