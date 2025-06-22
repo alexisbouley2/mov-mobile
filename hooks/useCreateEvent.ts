@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { Alert } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useEventForm } from "./useEventForm";
-import { jobManager } from "@/services/jobService";
-import { eventPhotoJobManager } from "@/services/eventPhotoJobService";
+import { useEventForm } from "./event/useEventForm";
+import { useEventPhoto } from "./event/useEventPhoto";
+import { mediaUploadManager } from "@/services/upload";
 import { config } from "@/lib/config";
 import log from "@/utils/logger";
 
@@ -18,7 +18,22 @@ export function useCreateEvent(userId: string) {
 
   const { formData, updateField, validateEventDateTime } = useEventForm();
   const [loading, setLoading] = useState(false);
-  const [photoUploadProgress, setPhotoUploadProgress] = useState(0);
+
+  const {
+    currentJobId,
+    isUploading,
+    progress,
+    getPhotoData,
+    waitForUpload,
+    cleanup,
+    cancelJob,
+  } = useEventPhoto({
+    initialImageUrl: formData.photo,
+    onImageChange: (imageUri) => {
+      updateField("photo", imageUri);
+      updateField("photoJobId", currentJobId);
+    },
+  });
 
   const handleSubmit = async (onSuccess?: () => void) => {
     if (!validateEventDateTime(formData.date)) {
@@ -36,36 +51,20 @@ export function useCreateEvent(userId: string) {
     }
 
     setLoading(true);
-    setPhotoUploadProgress(0);
 
     try {
+      // If there's an upload in progress, wait for it to complete
+      if (isUploading) {
+        await waitForUpload();
+      }
+
       let photoData = undefined;
 
-      // If there's a photo job, upload it first
-      if (formData.photoJobId) {
-        try {
-          log.info("Uploading event photo...");
-          const uploadResult = await eventPhotoJobManager.uploadJob(
-            formData.photoJobId,
-            (progress) => {
-              setPhotoUploadProgress(progress);
-            }
-          );
-
-          photoData = {
-            coverImagePath: uploadResult.imagePath,
-            coverThumbnailPath: uploadResult.thumbnailPath,
-          };
-
-          // Clean up the job
-          eventPhotoJobManager.cleanupJob(formData.photoJobId);
-        } catch (uploadError) {
-          log.error("Photo upload failed:", uploadError);
-          Alert.alert(
-            "Warning",
-            "Photo upload failed. Creating event without photo."
-          );
-        }
+      // If there's a completed photo job, get the upload result
+      const photoResult = getPhotoData();
+      if (photoResult) {
+        photoData = photoResult;
+        cleanup();
       }
 
       // Create event data
@@ -107,7 +106,7 @@ export function useCreateEvent(userId: string) {
           const allEventIds = [...previousEventIds, newEvent.id];
 
           // Associate video with all selected events
-          await jobManager.associateEvents(jobId, allEventIds);
+          await associateVideoWithEvents(jobId, allEventIds);
 
           Alert.alert("Success", "Event created and video added!", [
             {
@@ -141,16 +140,48 @@ export function useCreateEvent(userId: string) {
       Alert.alert("Error", "Failed to create event. Please try again.");
     } finally {
       setLoading(false);
-      setPhotoUploadProgress(0);
     }
+  };
+
+  // Associate video with events
+  const associateVideoWithEvents = async (
+    jobId: string,
+    eventIds: string[]
+  ) => {
+    const job = mediaUploadManager.getJob(jobId);
+    if (!job || job.status !== "uploaded" || !job.uploadResult?.videoPath) {
+      throw new Error("Video not ready for association");
+    }
+
+    const response = await fetch(`${API_BASE_URL}/videos/associate-events`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        fileName: job.uploadResult.videoPath,
+        userId: job.userId,
+        eventIds,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to associate events");
+    }
+
+    // Clean up the job
+    mediaUploadManager.cleanupJob(jobId);
+  };
+
+  const handleBack = () => {
+    cancelJob();
   };
 
   return {
     formData,
     loading,
-    photoUploadProgress,
+    photoUploadProgress: progress,
     updateField,
     handleSubmit,
+    handleBack,
     hasVideo: !!jobId,
   };
 }

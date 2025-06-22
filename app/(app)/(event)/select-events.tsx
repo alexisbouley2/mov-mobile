@@ -14,7 +14,8 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEvents } from "@/hooks/useEvents";
-import { jobManager } from "@/services/jobService";
+import { mediaUploadManager, type UploadJob } from "@/services/upload";
+import { config } from "@/lib/config";
 import log from "@/utils/logger";
 
 export default function SelectEventsScreen() {
@@ -28,15 +29,18 @@ export default function SelectEventsScreen() {
   );
   const [includeCreateNew, setIncludeCreateNew] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [_job, setJob] = useState(jobManager.getJob(jobId));
+  const [_job, setJob] = useState(mediaUploadManager.getJob(jobId));
 
   // Subscribe to job updates
   useEffect(() => {
     if (!jobId) return;
 
-    const unsubscribe = jobManager.subscribe(jobId, (updatedJob) => {
-      setJob(updatedJob);
-    });
+    const unsubscribe = mediaUploadManager.subscribe(
+      jobId,
+      (updatedJob: UploadJob) => {
+        setJob(updatedJob);
+      }
+    );
 
     return unsubscribe;
   }, [jobId]);
@@ -82,7 +86,7 @@ export default function SelectEventsScreen() {
       }
 
       // Otherwise, associate with selected events
-      await jobManager.associateEvents(jobId, Array.from(selectedEventIds));
+      await associateVideoWithEvents(jobId, Array.from(selectedEventIds));
 
       Alert.alert("Success", "Video added to events!", [
         {
@@ -96,6 +100,35 @@ export default function SelectEventsScreen() {
     } finally {
       setIsProcessing(false);
     }
+  };
+
+  // Associate video with events
+  const associateVideoWithEvents = async (
+    jobId: string,
+    eventIds: string[]
+  ) => {
+    const job = mediaUploadManager.getJob(jobId);
+    if (!job || job.status !== "uploaded" || !job.uploadResult?.videoPath) {
+      throw new Error("Video not ready for association");
+    }
+
+    const API_BASE_URL = config.EXPO_PUBLIC_API_URL;
+    const response = await fetch(`${API_BASE_URL}/videos/associate-events`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        fileName: job.uploadResult.videoPath,
+        userId: job.userId,
+        eventIds,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to associate events");
+    }
+
+    // Clean up the job
+    mediaUploadManager.cleanupJob(jobId);
   };
 
   // Format time display

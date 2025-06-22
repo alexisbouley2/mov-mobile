@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useAuth } from "@/contexts/AuthContext";
-import { useEditEvent } from "@/hooks/useEditEvent";
+import { useEditEvent } from "@/hooks/event/useEditEvent";
 import EventFormHeader from "@/components/event-form/EventFormHeader";
 import EventForm from "@/components/event-form/EventForm";
 
@@ -22,12 +22,13 @@ export default function EditEventScreen() {
     loading,
     initialLoading,
     error,
-    photoUploadProgress,
     updateField,
     handleSubmit,
+    handleBack,
   } = useEditEvent(id!, user?.id || "");
 
-  const handleBack = () => {
+  const onBack = () => {
+    handleBack();
     router.back();
   };
 
@@ -66,7 +67,7 @@ export default function EditEventScreen() {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#000" />
 
-      <EventFormHeader title="Edit Event" onBack={handleBack} />
+      <EventFormHeader title="Edit Event" onBack={onBack} />
 
       <EventForm
         formData={formData}
@@ -75,7 +76,6 @@ export default function EditEventScreen() {
         onSubmit={onSubmit}
         submitButtonText="Update Event"
         mode="edit"
-        photoUploadProgress={photoUploadProgress}
       />
     </SafeAreaView>
   );

@@ -64,8 +64,11 @@ export default function ProfileScreen() {
       <View style={styles.content}>
         <View style={styles.profileSection}>
           <View style={styles.avatarContainer}>
-            {user?.photoUrl ? (
-              <Image source={{ uri: user.photoUrl }} style={styles.avatar} />
+            {user?.profileImageUrl ? (
+              <Image
+                source={{ uri: user.profileImageUrl }}
+                style={styles.avatar}
+              />
             ) : (
               <View style={styles.avatar}>
                 <Text style={styles.avatarText}>

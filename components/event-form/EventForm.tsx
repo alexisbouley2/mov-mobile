@@ -5,7 +5,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
-import { EventFormData } from "@/hooks/useEventForm";
+import { EventFormData } from "@/hooks/event/useEventForm";
 import EventPhotoSection from "@/components/event-form/EventPhotoSection";
 import EventNameSection from "@/components/event-form/EventNameSection";
 import EventInformationSection from "@/components/event-form/EventInformationSection";
@@ -21,7 +21,6 @@ interface EventFormProps {
   onSubmit: () => void;
   submitButtonText: string;
   mode: "create" | "edit";
-  photoUploadProgress?: number;
 }
 
 export default function EventForm({
@@ -31,7 +30,6 @@ export default function EventForm({
   onSubmit,
   submitButtonText,
   mode,
-  photoUploadProgress = 0,
 }: EventFormProps) {
   const handlePhotoJobChange = (jobId: string | null) => {
     onFieldChange("photoJobId", jobId);
@@ -53,10 +51,6 @@ export default function EventForm({
           photo={formData.photo}
           onPhotoChange={(photo: any) => onFieldChange("photo", photo)}
           onPhotoJobChange={handlePhotoJobChange}
-          isLoading={
-            loading && photoUploadProgress > 0 && photoUploadProgress < 100
-          }
-          uploadProgress={photoUploadProgress}
         />
 
         <EventNameSection

@@ -12,7 +12,7 @@ import {
   Alert,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { jobManager } from "@/services/jobService";
+import { mediaUploadManager } from "@/services/upload";
 import log from "@/utils/logger";
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
@@ -45,24 +45,24 @@ export default function MediaPreview({
   // Handle send button
   const handleSend = async () => {
     try {
-      log.info("=== MediaPreview: Creating job ===");
+      log.info("=== MediaPreview: Creating unified upload job ===");
 
       // Stop video before navigating
       if (videoRef.current) {
         await videoRef.current.pauseAsync();
       }
 
-      // Create job
-      const newJobId = jobManager.createJob(mediaUri, userId);
+      // Create job immediately
+      const newJobId = mediaUploadManager.createJob(mediaUri, userId, "video", {
+        quality: 0.8,
+        time: 1000,
+      });
+
       setJobId(newJobId);
 
-      // Subscribe to job updates
-      const unsubscribe = jobManager.subscribe(newJobId, (_job) => {});
-
       // Start upload in background
-      jobManager.startUpload(newJobId).catch((error) => {
-        log.error("Upload failed:", error);
-        Alert.alert("Error", "Failed to upload video. Please try again.");
+      mediaUploadManager.startUpload(newJobId, (progress) => {
+        log.debug(`Video upload progress: ${progress}%`);
       });
 
       // Navigate to event selection immediately
@@ -70,9 +70,6 @@ export default function MediaPreview({
         pathname: "/(app)/(event)/select-events",
         params: { jobId: newJobId },
       });
-
-      // Clean up subscription when component unmounts
-      return () => unsubscribe();
     } catch (error) {
       log.error("=== MediaPreview: Failed to create job ===", error);
       Alert.alert("Error", "Failed to start upload. Please try again.");
@@ -94,7 +91,7 @@ export default function MediaPreview({
           style: "destructive",
           onPress: async () => {
             try {
-              await jobManager.cancelJob(jobId);
+              mediaUploadManager.cancelJob(jobId);
               onDismiss();
             } catch (error) {
               log.error("Failed to cancel job:", error);

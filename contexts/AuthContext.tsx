@@ -18,8 +18,8 @@ interface User {
   username: string;
   profileImagePath?: string;
   profileThumbnailPath?: string;
-  photoUrl?: string;
-  photoThumbnailUrl?: string;
+  profileImageUrl?: string;
+  profileThumbnailUrl?: string;
 }
 
 interface AuthContextType {
@@ -32,8 +32,8 @@ interface AuthContextType {
   createUserProfile: (
     _username: string,
     _photoData?: {
-      profileImagePath: string;
-      profileThumbnailPath: string;
+      profileImagePath?: string;
+      profileThumbnailPath?: string;
     }
   ) => Promise<{ error: any }>;
   refreshUserProfile: () => Promise<void>;
@@ -157,8 +157,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     async (
       username: string,
       photoData?: {
-        profileImagePath: string;
-        profileThumbnailPath: string;
+        profileImagePath?: string;
+        profileThumbnailPath?: string;
       }
     ) => {
       if (!supabaseUser) {

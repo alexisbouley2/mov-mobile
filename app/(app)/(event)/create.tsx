@@ -9,10 +9,11 @@ import EventForm from "@/components/event-form/EventForm";
 export default function CreateEventScreen() {
   const { user } = useAuth();
   const router = useRouter();
-  const { formData, loading, photoUploadProgress, updateField, handleSubmit } =
+  const { formData, loading, updateField, handleSubmit, handleBack } =
     useCreateEvent(user?.id || "");
 
-  const handleBack = () => {
+  const onBack = () => {
+    handleBack();
     router.back();
   };
 
@@ -28,7 +29,7 @@ export default function CreateEventScreen() {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#000" />
 
-      <EventFormHeader title="Create Event" onBack={handleBack} />
+      <EventFormHeader title="Create Event" onBack={onBack} />
 
       <EventForm
         formData={formData}
@@ -37,7 +38,6 @@ export default function CreateEventScreen() {
         onSubmit={onSubmit}
         submitButtonText="Create Event"
         mode="create"
-        photoUploadProgress={photoUploadProgress}
       />
     </SafeAreaView>
   );

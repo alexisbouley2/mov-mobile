@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Alert } from "react-native";
 import { useEventForm } from "./useEventForm";
-import { eventPhotoJobManager } from "@/services/eventPhotoJobService";
+import { useEventPhoto } from "./useEventPhoto";
 import { config } from "@/lib/config";
 import log from "@/utils/logger";
 
@@ -12,7 +12,22 @@ export function useEditEvent(eventId: string, userId: string) {
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [photoUploadProgress, setPhotoUploadProgress] = useState(0);
+
+  const {
+    currentJobId,
+    isUploading,
+    progress,
+    getPhotoData,
+    waitForUpload,
+    cleanup,
+    cancelJob,
+  } = useEventPhoto({
+    initialImageUrl: formData.photo,
+    onImageChange: (imageUri) => {
+      updateField("photo", imageUri);
+      updateField("photoJobId", currentJobId);
+    },
+  });
 
   // Load existing event data
   useEffect(() => {
@@ -57,6 +72,8 @@ export function useEditEvent(eventId: string, userId: string) {
   }, [eventId, userId, setFormData]);
 
   const handleSubmit = async (onSuccess: () => void) => {
+    log.info("formData", formData);
+    log.info("here 1");
     if (!userId) {
       Alert.alert("Error", "User not authenticated");
       return;
@@ -68,37 +85,26 @@ export function useEditEvent(eventId: string, userId: string) {
     }
 
     setLoading(true);
-    setPhotoUploadProgress(0);
 
     try {
+      // If there's an upload in progress, wait for it to complete
+      log.info("here 2");
+      if (isUploading) {
+        await waitForUpload();
+      }
+
+      log.info("here 3");
       let photoData = undefined;
 
-      // If there's a new photo job, upload it first
-      if (formData.photoJobId) {
-        try {
-          log.info("Uploading new event photo...");
-          const uploadResult = await eventPhotoJobManager.uploadJob(
-            formData.photoJobId,
-            (progress) => {
-              setPhotoUploadProgress(progress);
-            }
-          );
-
-          photoData = {
-            coverImagePath: uploadResult.imagePath,
-            coverThumbnailPath: uploadResult.thumbnailPath,
-          };
-
-          // Clean up the job
-          eventPhotoJobManager.cleanupJob(formData.photoJobId);
-        } catch (uploadError) {
-          log.error("Photo upload failed:", uploadError);
-          Alert.alert(
-            "Warning",
-            "Photo upload failed. Saving event without new photo."
-          );
-        }
+      // If there's a completed photo job, get the upload result
+      const photoResult = getPhotoData();
+      if (photoResult) {
+        photoData = photoResult;
+        cleanup();
       }
+
+      log.info("here 4");
+      log.info("photoData", photoData);
 
       // Prepare update data
       const eventData: any = {
@@ -114,6 +120,9 @@ export function useEditEvent(eventId: string, userId: string) {
         eventData.coverThumbnailPath = photoData.coverThumbnailPath;
       }
 
+      log.info("here 5");
+      log.info("eventData", eventData);
+
       const response = await fetch(`${API_BASE_URL}/events/${eventId}`, {
         method: "PATCH",
         headers: {
@@ -122,28 +131,28 @@ export function useEditEvent(eventId: string, userId: string) {
         body: JSON.stringify(eventData),
       });
 
+      log.info("here 6");
+      log.info("response", response);
+
       if (!response.ok) {
         throw new Error("Failed to update event");
       }
 
+      log.info("here 7");
+
       onSuccess();
+
+      log.info("here 8");
     } catch (error) {
       log.error("Error updating event:", error);
       Alert.alert("Error", "Failed to update event. Please try again.");
     } finally {
       setLoading(false);
-      setPhotoUploadProgress(0);
     }
   };
 
-  const cancelPhotoUpload = () => {
-    if (formData.photoJobId) {
-      eventPhotoJobManager.cancelJob(formData.photoJobId);
-      updateField("photoJobId", null);
-      setPhotoUploadProgress(0);
-      // Revert to original photo if available
-      // Note: You might want to store the original photo URL separately
-    }
+  const handleBack = () => {
+    cancelJob();
   };
 
   return {
@@ -151,9 +160,9 @@ export function useEditEvent(eventId: string, userId: string) {
     loading,
     initialLoading,
     error,
-    photoUploadProgress,
+    photoUploadProgress: progress,
     updateField,
     handleSubmit,
-    cancelPhotoUpload,
+    handleBack,
   };
 }
