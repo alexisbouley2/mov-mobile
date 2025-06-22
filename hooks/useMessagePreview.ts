@@ -1,9 +1,9 @@
 // hooks/useMessagePreview.ts - Updated to work with direct event-message relationship
 import { useState, useEffect, useCallback } from "react";
-import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { config } from "@/lib/config";
 import log from "@/utils/logger";
+import { useUserProfile } from "@/contexts/UserProfileContext";
 
 export interface MessagePreview {
   hasMessages: boolean;
@@ -23,7 +23,7 @@ export interface MessagePreview {
 export function useMessagePreview(eventId: string) {
   const [preview, setPreview] = useState<MessagePreview | null>(null);
   const [loading, setLoading] = useState(true);
-  const { user } = useAuth();
+  const { user } = useUserProfile();
 
   const fetchPreview = useCallback(async () => {
     if (!user?.id) return;

@@ -1,18 +1,18 @@
 import React, { useMemo } from "react";
 import { SafeAreaView, StatusBar, StyleSheet } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useAuth } from "@/contexts/AuthContext";
 import { useEditEvent } from "@/hooks/event/useEditEvent";
 import EventFormHeader from "@/components/event-form/EventFormHeader";
 import EventForm from "@/components/event-form/EventForm";
 import { EventDetail } from "@/hooks/event/useEventDetail";
+import { useUserProfile } from "@/contexts/UserProfileContext";
 
 export default function EditEventScreen() {
   const { id, eventData: eventDataParam } = useLocalSearchParams<{
     id: string;
     eventData?: string;
   }>();
-  const { user } = useAuth();
+  const { user } = useUserProfile();
   const router = useRouter();
 
   // Parse the event data if passed - memoize to prevent recreation on every render

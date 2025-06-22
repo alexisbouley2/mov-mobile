@@ -11,9 +11,11 @@ import {
 import { router } from "expo-router";
 import { useAuth } from "@/contexts/AuthContext";
 import { config } from "@/lib/config";
+import { useUserProfile } from "@/contexts/UserProfileContext";
 
 export default function DangerousZoneScreen() {
-  const { user, supabaseUser, signOut } = useAuth();
+  const { supabaseUser, signOut } = useAuth();
+  const { user } = useUserProfile();
   const [usernameInput, setUsernameInput] = useState("");
   const [loading, setLoading] = useState(false);
 

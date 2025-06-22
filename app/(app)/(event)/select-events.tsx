@@ -12,16 +12,16 @@ import {
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { useAuth } from "@/contexts/AuthContext";
 import { useEvents } from "@/hooks/useEvents";
 import { mediaUploadManager, type UploadJob } from "@/services/upload";
 import { config } from "@/lib/config";
 import log from "@/utils/logger";
+import { useUserProfile } from "@/contexts/UserProfileContext";
 
 export default function SelectEventsScreen() {
   const router = useRouter();
   const { jobId } = useLocalSearchParams<{ jobId: string }>();
-  const { user } = useAuth();
+  const { user } = useUserProfile();
   const { events, loading } = useEvents(user?.id || "");
 
   const [selectedEventIds, setSelectedEventIds] = useState<Set<string>>(

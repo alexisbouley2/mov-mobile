@@ -13,8 +13,8 @@ import React, { useEffect, useRef, useState } from "react";
 import { Dimensions, StatusBar, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect } from "@react-navigation/native";
-import { useAuth } from "@/contexts/AuthContext";
 import { useDebugLifecycle } from "@/utils/debugLifecycle";
+import { useUserProfile } from "@/contexts/UserProfileContext";
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
@@ -22,7 +22,7 @@ export default function CameraScreen() {
   useDebugLifecycle("CameraScreen");
 
   const MAX_VIDEO_DURATION: number = 6;
-  const { user } = useAuth();
+  const { user } = useUserProfile();
   const [cameraPermission, requestCameraPermission] = useCameraPermissions();
   const [microphonePermission, requestMicrophonePermission] =
     useMicrophonePermissions();

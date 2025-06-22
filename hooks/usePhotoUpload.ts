@@ -1,11 +1,11 @@
 import { useState, useCallback } from "react";
 import { Alert } from "react-native";
 import * as ImagePicker from "expo-image-picker";
-import { useAuth } from "@/contexts/AuthContext";
 import { mediaUploadManager } from "@/services/upload";
 import { useUploadStatus } from "@/hooks/useUploadStatus";
 import { UploadType } from "@/services/upload/types";
 import log from "@/utils/logger";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface UsePhotoUploadProps {
   initialImageUrl?: string | null;
@@ -41,7 +41,6 @@ export function usePhotoUpload({
     });
 
   const pickImage = useCallback(async () => {
-    console.log("in pickImage");
     try {
       const { status } =
         await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -76,8 +75,6 @@ export function usePhotoUpload({
 
           setCurrentJobId(jobId);
 
-          console.log("jobId", jobId);
-
           // Start upload in background
           mediaUploadManager.startUpload(jobId, (progress) => {
             log.debug(`${uploadType} upload progress: ${progress}%`);
@@ -94,7 +91,6 @@ export function usePhotoUpload({
   }, [aspectRatio, supabaseUser, uploadType, onImageChange]);
 
   const getPhotoData = useCallback(() => {
-    console.log("currentJobId", currentJobId);
     if (!currentJobId) return undefined;
 
     try {

@@ -11,17 +11,17 @@ import {
 } from "react-native";
 import { useRouter, useFocusEffect } from "expo-router";
 import { useCallback } from "react";
-import { useAuth } from "@/contexts/AuthContext";
 import { useEvents } from "@/hooks/useEvents";
 import EventsHeader from "@/components/events/EventsHeader";
 import EventsContent from "@/components/events/EventsContent";
 import { useDebugLifecycle } from "@/utils/debugLifecycle";
+import { useUserProfile } from "@/contexts/UserProfileContext";
 
 export default function EventsScreen() {
   useDebugLifecycle("EventsScreen");
 
   const router = useRouter();
-  const { user } = useAuth();
+  const { user } = useUserProfile();
   const { events, loading, refreshing, error, refetch, hasInitialData } =
     useEvents(user?.id || "");
 

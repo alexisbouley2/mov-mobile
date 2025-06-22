@@ -2,11 +2,14 @@
 import { Redirect } from "expo-router";
 import { View, ActivityIndicator, StyleSheet } from "react-native";
 import { useAuth } from "@/contexts/AuthContext";
+import { useUserProfile } from "@/contexts/UserProfileContext";
 
 export default function Index() {
-  const { session, user, loading } = useAuth();
+  const { session, loading } = useAuth();
+  const { user, profileLoading } = useUserProfile();
 
-  if (loading) {
+  // Wait for both auth AND profile to finish loading
+  if (loading || profileLoading) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#fff" />

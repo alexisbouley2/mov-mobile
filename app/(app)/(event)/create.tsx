@@ -1,13 +1,13 @@
 import React from "react";
 import { SafeAreaView, StatusBar, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
-import { useAuth } from "@/contexts/AuthContext";
 import { useCreateEvent } from "@/hooks/useCreateEvent";
 import EventFormHeader from "@/components/event-form/EventFormHeader";
 import EventForm from "@/components/event-form/EventForm";
+import { useUserProfile } from "@/contexts/UserProfileContext";
 
 export default function CreateEventScreen() {
-  const { user } = useAuth();
+  const { user } = useUserProfile();
   const router = useRouter();
   const {
     formData,

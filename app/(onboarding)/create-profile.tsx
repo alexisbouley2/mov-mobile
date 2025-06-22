@@ -1,8 +1,8 @@
 // app/(onboarding)/create-profile.tsx
-import React from "react";
+import React, { useEffect } from "react";
 import { SafeAreaView, StyleSheet, Alert } from "react-native";
 import { useRouter } from "expo-router";
-import { useAuth } from "@/contexts/AuthContext";
+import { useUserProfile } from "@/contexts/UserProfileContext";
 import ProfileForm from "@/components/profile/ProfileForm";
 import { useProfilePhoto } from "@/hooks/profile/useProfilePhoto";
 import { useProfileForm } from "@/hooks/profile/useProfileForm";
@@ -13,7 +13,8 @@ export default function CreateProfileScreen() {
   useDebugLifecycle("CreateProfileScreen");
 
   const router = useRouter();
-  const { createUserProfile } = useAuth();
+  const { createUserProfile, profileError, clearProfileError } =
+    useUserProfile();
 
   const { username, setUsername, loading, setLoading, validateUsername } =
     useProfileForm();
@@ -25,6 +26,14 @@ export default function CreateProfileScreen() {
     waitForUpload,
     cleanup,
   } = useProfilePhoto();
+  // Handle profile errors
+  useEffect(() => {
+    if (profileError) {
+      Alert.alert("Profile Error", profileError, [
+        { text: "OK", onPress: clearProfileError },
+      ]);
+    }
+  }, [profileError, clearProfileError]);
 
   const handleCreateAccount = async () => {
     if (!validateUsername()) {
@@ -55,7 +64,7 @@ export default function CreateProfileScreen() {
       );
 
       if (profileError) {
-        throw new Error(profileError.message || "Failed to create profile");
+        throw new Error(profileError);
       }
 
       log.info("Profile created successfully");

@@ -10,7 +10,7 @@ interface AuthGuardProps {
 }
 
 export function AuthGuard({ children, requireProfile = true }: AuthGuardProps) {
-  const { session, user, loading } = useAuth();
+  const { session, supabaseUser, loading } = useAuth();
   const router = useRouter();
   const segments = useSegments();
 
@@ -24,11 +24,11 @@ export function AuthGuard({ children, requireProfile = true }: AuthGuardProps) {
     }
 
     // Authenticated but no profile (and profile is required)
-    if (requireProfile && !user) {
+    if (requireProfile && !supabaseUser) {
       router.replace("/(onboarding)/create-profile");
       return;
     }
-  }, [session, user, loading, requireProfile, router, segments]);
+  }, [session, supabaseUser, loading, requireProfile, router, segments]);
 
   // Show loading screen while checking auth
   if (loading) {
@@ -40,7 +40,7 @@ export function AuthGuard({ children, requireProfile = true }: AuthGuardProps) {
   }
 
   // Don't render children until we've verified access
-  if (!session || (requireProfile && !user)) {
+  if (!session || (requireProfile && !supabaseUser)) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#fff" />

@@ -1,8 +1,8 @@
+// app/(app)/(profile)/edit-profile.tsx
 import React, { useEffect } from "react";
 import { SafeAreaView, StyleSheet, Alert } from "react-native";
 import { router } from "expo-router";
-import { useAuth } from "@/contexts/AuthContext";
-import { config } from "@/lib/config";
+import { useUserProfile } from "@/contexts/UserProfileContext";
 import ProfileForm from "@/components/profile/ProfileForm";
 import ProfileHeader from "@/components/profile/ProfileHeader";
 import { useProfilePhoto } from "@/hooks/profile/useProfilePhoto";
@@ -10,7 +10,13 @@ import { useProfileForm } from "@/hooks/profile/useProfileForm";
 import log from "@/utils/logger";
 
 export default function EditProfileScreen() {
-  const { user, supabaseUser, refreshUserProfile } = useAuth();
+  const {
+    user,
+    updateUserProfile,
+    profileLoading,
+    profileError,
+    clearProfileError,
+  } = useUserProfile();
 
   const { username, setUsername, loading, setLoading, validateUsername } =
     useProfileForm({
@@ -29,19 +35,24 @@ export default function EditProfileScreen() {
     initialImageUrl: user?.profileImageUrl || null,
   });
 
+  // Update username when user data changes
   useEffect(() => {
     if (user) {
       setUsername(user.username);
     }
   }, [user, setUsername]);
 
+  // Handle profile errors
+  useEffect(() => {
+    if (profileError) {
+      Alert.alert("Profile Error", profileError, [
+        { text: "OK", onPress: clearProfileError },
+      ]);
+    }
+  }, [profileError, clearProfileError]);
+
   const handleSave = async () => {
     if (!validateUsername()) {
-      return;
-    }
-
-    if (!supabaseUser) {
-      Alert.alert("Error", "No authenticated user");
       return;
     }
 
@@ -62,39 +73,17 @@ export default function EditProfileScreen() {
         cleanup();
       }
 
-      // Update user profile
-      const API_BASE_URL = config.EXPO_PUBLIC_API_URL;
-      const updateData: any = {
-        username: username.trim(),
-      };
-
-      if (photoData) {
-        updateData.profileImagePath = photoData.profileImagePath;
-        updateData.profileThumbnailPath = photoData.profileThumbnailPath;
-      }
-
-      const response = await fetch(
-        `${API_BASE_URL}/users/${supabaseUser!.id}`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(updateData),
-        }
+      // Update user profile using the context method
+      const { error } = await updateUserProfile(
+        { username: username.trim() },
+        photoData
       );
 
-      log.info("we are here 1");
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(
-          `Failed to update profile: ${response.status} - ${errorText}`
-        );
+      if (error) {
+        throw new Error(error);
       }
 
-      await refreshUserProfile();
-
+      log.info("Profile updated successfully");
       router.back();
     } catch (error) {
       Alert.alert(
@@ -121,7 +110,7 @@ export default function EditProfileScreen() {
         previewImage={previewImage}
         onImagePress={pickImage}
         onSubmit={handleSave}
-        loading={loading}
+        loading={loading || profileLoading}
         submitButtonText="Save"
         loadingButtonText={isUploading ? "Waiting for upload..." : "Saving..."}
         avatarSize={120}

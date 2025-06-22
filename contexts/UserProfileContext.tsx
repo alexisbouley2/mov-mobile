@@ -1,0 +1,301 @@
+// contexts/UserProfileContext.tsx
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useCallback,
+  useMemo,
+} from "react";
+import { supabase } from "@/lib/supabase";
+import { config } from "@/lib/config";
+import { useAuth } from "./AuthContext";
+import log from "@/utils/logger";
+
+interface User {
+  id: string;
+  phone: string;
+  username: string;
+  profileImagePath?: string;
+  profileThumbnailPath?: string;
+  profileImageUrl?: string;
+  profileThumbnailUrl?: string;
+}
+
+interface UserProfileContextType {
+  user: User | null;
+  profileLoading: boolean;
+  profileError: string | null;
+  isRefreshing: boolean;
+  lastFetch: number | null;
+  createUserProfile: (
+    _username: string,
+    _photoData?: {
+      profileImagePath?: string;
+      profileThumbnailPath?: string;
+    }
+  ) => Promise<{ error: any }>;
+  updateUserProfile: (
+    _data: Partial<User>,
+    _photoData?: {
+      profileImagePath?: string;
+      profileThumbnailPath?: string;
+    }
+  ) => Promise<{ error: any }>;
+  refreshUserProfile: () => Promise<void>;
+  clearProfileError: () => void;
+}
+
+const UserProfileContext = createContext<UserProfileContextType>({
+  user: null,
+  profileLoading: false,
+  profileError: null,
+  isRefreshing: false,
+  lastFetch: null,
+  createUserProfile: async () => ({ error: null }),
+  updateUserProfile: async () => ({ error: null }),
+  refreshUserProfile: async () => {},
+  clearProfileError: () => {},
+});
+
+export const useUserProfile = () => useContext(UserProfileContext);
+
+export function UserProfileProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const { supabaseUser, isAuthenticated } = useAuth();
+  const [user, setUser] = useState<User | null>(null);
+  const [profileLoading, setProfileLoading] = useState(false);
+  const [profileError, setProfileError] = useState<string | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [lastFetch, setLastFetch] = useState<number | null>(null);
+
+  const fetchUserProfile = useCallback(
+    async (userId: string, isRefresh = false) => {
+      try {
+        if (isRefresh) {
+          setIsRefreshing(true);
+        } else {
+          setProfileLoading(true);
+        }
+        setProfileError(null);
+
+        // First, get basic profile data from Supabase
+        const { data, error } = await supabase
+          .from("User")
+          .select("*")
+          .eq("id", userId)
+          .single();
+
+        if (error && error.code !== "PGRST116") {
+          throw new Error(error.message);
+        }
+
+        if (data) {
+          // If user has profile images, fetch URLs from API
+          if (data.profileImagePath && data.profileThumbnailPath) {
+            try {
+              const API_BASE_URL = config.EXPO_PUBLIC_API_URL;
+              const response = await fetch(`${API_BASE_URL}/users/${userId}`);
+
+              if (response.ok) {
+                const userWithUrls = await response.json();
+                setUser(userWithUrls);
+              } else {
+                // Fallback to basic data if API fails
+                setUser(data);
+              }
+            } catch (apiError) {
+              log.error("Error fetching user profile URLs:", apiError);
+              // Fallback to basic data if API fails
+              setUser(data);
+            }
+          } else {
+            setUser(data);
+          }
+          setLastFetch(Date.now());
+        }
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error
+            ? error.message
+            : "Failed to fetch user profile";
+        log.error("Error fetching user profile:", error);
+        setProfileError(errorMessage);
+      } finally {
+        if (isRefresh) {
+          setIsRefreshing(false);
+        } else {
+          setProfileLoading(false);
+        }
+      }
+    },
+    []
+  );
+
+  const refreshUserProfile = useCallback(async () => {
+    if (supabaseUser) {
+      await fetchUserProfile(supabaseUser.id, true);
+    }
+  }, [supabaseUser, fetchUserProfile]);
+
+  const createUserProfile = useCallback(
+    async (
+      username: string,
+      photoData?: {
+        profileImagePath?: string;
+        profileThumbnailPath?: string;
+      }
+    ) => {
+      if (!supabaseUser) {
+        return { error: "No authenticated user" };
+      }
+
+      try {
+        setProfileLoading(true);
+        setProfileError(null);
+
+        const phone = supabaseUser.phone || "";
+
+        const userData = {
+          id: supabaseUser.id,
+          phone: phone,
+          username: username,
+          ...(photoData && {
+            profileImagePath: photoData.profileImagePath,
+            profileThumbnailPath: photoData.profileThumbnailPath,
+          }),
+        };
+
+        const { error } = await supabase.from("User").insert([userData]);
+
+        if (error) {
+          throw new Error(error.message);
+        }
+
+        // Fetch the newly created profile
+        await fetchUserProfile(supabaseUser.id);
+        return { error: null };
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error
+            ? error.message
+            : "Failed to create user profile";
+        setProfileError(errorMessage);
+        return { error: errorMessage };
+      } finally {
+        setProfileLoading(false);
+      }
+    },
+    [supabaseUser, fetchUserProfile]
+  );
+
+  const updateUserProfile = useCallback(
+    async (
+      data: Partial<User>,
+      photoData?: {
+        profileImagePath?: string;
+        profileThumbnailPath?: string;
+      }
+    ) => {
+      if (!supabaseUser) {
+        return { error: "No authenticated user" };
+      }
+
+      try {
+        setProfileLoading(true);
+        setProfileError(null);
+
+        // Use API for updates to handle image URLs properly
+        const API_BASE_URL = config.EXPO_PUBLIC_API_URL;
+        const updateData: any = { ...data };
+
+        if (photoData) {
+          updateData.profileImagePath = photoData.profileImagePath;
+          updateData.profileThumbnailPath = photoData.profileThumbnailPath;
+        }
+
+        const response = await fetch(
+          `${API_BASE_URL}/users/${supabaseUser.id}`,
+          {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(updateData),
+          }
+        );
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(
+            `Failed to update profile: ${response.status} - ${errorText}`
+          );
+        }
+
+        // Refresh profile to get updated data
+        await fetchUserProfile(supabaseUser.id);
+        return { error: null };
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error
+            ? error.message
+            : "Failed to update user profile";
+        setProfileError(errorMessage);
+        return { error: errorMessage };
+      } finally {
+        setProfileLoading(false);
+      }
+    },
+    [supabaseUser, fetchUserProfile]
+  );
+
+  const clearProfileError = useCallback(() => {
+    setProfileError(null);
+  }, []);
+
+  // Fetch profile when user logs in
+  useEffect(() => {
+    if (isAuthenticated && supabaseUser) {
+      fetchUserProfile(supabaseUser.id);
+    } else if (!isAuthenticated) {
+      // Clear profile data when user logs out
+      setUser(null);
+      setProfileError(null);
+      setLastFetch(null);
+    }
+  }, [isAuthenticated, supabaseUser, fetchUserProfile]);
+
+  const contextValue = useMemo(
+    () => ({
+      user,
+      profileLoading,
+      profileError,
+      isRefreshing,
+      lastFetch,
+      createUserProfile,
+      updateUserProfile,
+      refreshUserProfile,
+      clearProfileError,
+    }),
+    [
+      user,
+      profileLoading,
+      profileError,
+      isRefreshing,
+      lastFetch,
+      createUserProfile,
+      updateUserProfile,
+      refreshUserProfile,
+      clearProfileError,
+    ]
+  );
+
+  return (
+    <UserProfileContext.Provider value={contextValue}>
+      {children}
+    </UserProfileContext.Provider>
+  );
+}

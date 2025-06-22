@@ -15,12 +15,12 @@ import {
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { useMessages, Message } from "@/hooks/useMessages"; // Updated import
-import { useAuth } from "@/contexts/AuthContext";
+import { useUserProfile } from "@/contexts/UserProfileContext";
 
 export default function ChatScreen() {
   const { eventId } = useLocalSearchParams<{ eventId: string }>();
   const router = useRouter();
-  const { user } = useAuth();
+  const { user } = useUserProfile();
   const [inputText, setInputText] = useState("");
   const flatListRef = useRef<FlatList>(null);
 

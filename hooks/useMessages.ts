@@ -1,9 +1,9 @@
 // hooks/useMessages.ts - Simplified version without chat model
 import { useState, useEffect, useCallback } from "react";
-import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { config } from "@/lib/config";
 import log from "@/utils/logger";
+import { useUserProfile } from "@/contexts/UserProfileContext";
 
 export interface Message {
   id: string;
@@ -24,7 +24,7 @@ export function useMessages(eventId: string) {
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
-  const { user } = useAuth();
+  const { user } = useUserProfile();
 
   // Load messages with pagination
   const loadMessages = useCallback(
