@@ -20,18 +20,18 @@ export function useCreateEvent(userId: string) {
   const [loading, setLoading] = useState(false);
 
   const {
-    currentJobId,
     isUploading,
     progress,
     getPhotoData,
     waitForUpload,
     cleanup,
     cancelJob,
+    pickImage,
+    previewImage,
   } = useEventPhoto({
-    initialImageUrl: formData.photo,
+    initialImageUrl: formData.coverImageUrl,
     onImageChange: (imageUri) => {
-      updateField("photo", imageUri);
-      updateField("photoJobId", currentJobId);
+      updateField("coverImageUrl", imageUri);
     },
   });
 
@@ -183,5 +183,9 @@ export function useCreateEvent(userId: string) {
     handleSubmit,
     handleBack,
     hasVideo: !!jobId,
+    // Photo upload functions to pass to child components (like edit-profile)
+    pickImage,
+    previewImage,
+    isUploading,
   };
 }

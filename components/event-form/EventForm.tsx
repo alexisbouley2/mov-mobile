@@ -21,6 +21,9 @@ interface EventFormProps {
   onSubmit: () => void;
   submitButtonText: string;
   mode: "create" | "edit";
+  pickImage: () => Promise<void>;
+  previewImage: string | null;
+  isUploading: boolean;
 }
 
 export default function EventForm({
@@ -30,11 +33,10 @@ export default function EventForm({
   onSubmit,
   submitButtonText,
   mode,
+  pickImage,
+  previewImage,
+  isUploading,
 }: EventFormProps) {
-  const handlePhotoJobChange = (jobId: string | null) => {
-    onFieldChange("photoJobId", jobId);
-  };
-
   return (
     <KeyboardAvoidingView
       style={styles.keyboardAvoidingView}
@@ -48,9 +50,9 @@ export default function EventForm({
         keyboardShouldPersistTaps="handled"
       >
         <EventPhotoSection
-          photo={formData.photo}
-          onPhotoChange={(photo: any) => onFieldChange("photo", photo)}
-          onPhotoJobChange={handlePhotoJobChange}
+          pickImage={pickImage}
+          previewImage={previewImage}
+          isUploading={isUploading}
         />
 
         <EventNameSection

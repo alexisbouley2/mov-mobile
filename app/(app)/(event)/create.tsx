@@ -9,8 +9,16 @@ import EventForm from "@/components/event-form/EventForm";
 export default function CreateEventScreen() {
   const { user } = useAuth();
   const router = useRouter();
-  const { formData, loading, updateField, handleSubmit, handleBack } =
-    useCreateEvent(user?.id || "");
+  const {
+    formData,
+    loading,
+    updateField,
+    handleSubmit,
+    handleBack,
+    pickImage,
+    previewImage,
+    isUploading,
+  } = useCreateEvent(user?.id || "");
 
   const onBack = () => {
     handleBack();
@@ -38,6 +46,9 @@ export default function CreateEventScreen() {
         onSubmit={onSubmit}
         submitButtonText="Create Event"
         mode="create"
+        pickImage={pickImage}
+        previewImage={previewImage}
+        isUploading={isUploading}
       />
     </SafeAreaView>
   );

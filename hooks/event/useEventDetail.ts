@@ -1,7 +1,6 @@
 // hooks/useEventDetail.ts
 import { useState, useEffect, useCallback } from "react";
 import { config } from "@/lib/config";
-import log from "@/utils/logger";
 
 export interface User {
   id: string;
@@ -23,8 +22,9 @@ export interface EventDetail {
   date: string;
   createdAt: string;
   location: string | null;
-  photoUrl?: string; // Full size photo URL
-  photoThumbnailUrl?: string; // Thumbnail photo URL
+  coverImagePath: string | null;
+  coverThumbnailPath: string | null;
+  coverImageUrl: string | null;
   adminId: string;
   admin: User;
   participants: EventParticipant[];
@@ -62,7 +62,6 @@ export function useEventDetail(eventId: string) {
         setEvent(data);
         setHasInitialData(true);
       } catch (err) {
-        log.error("Error fetching event:", err);
         setError(err instanceof Error ? err.message : "Failed to fetch event");
       } finally {
         if (isRefresh) {
@@ -80,11 +79,9 @@ export function useEventDetail(eventId: string) {
 
     try {
       //TODO: Implement toggling participation
-      log.info("Toggling participation...");
       // Refetch the event data to get updated participants
       await fetchEvent(true);
     } catch (err) {
-      log.error("Error toggling participation:", err);
       setError(
         err instanceof Error ? err.message : "Failed to toggle participation"
       );

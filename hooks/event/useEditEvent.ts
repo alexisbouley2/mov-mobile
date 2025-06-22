@@ -1,79 +1,63 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Alert } from "react-native";
 import { useEventForm } from "./useEventForm";
 import { useEventPhoto } from "./useEventPhoto";
+import { EventDetail } from "./useEventDetail";
 import { config } from "@/lib/config";
 import log from "@/utils/logger";
 
 const API_BASE_URL = config.EXPO_PUBLIC_API_URL;
 
-export function useEditEvent(eventId: string, userId: string) {
+export function useEditEvent(
+  eventId: string,
+  userId: string,
+  eventData: EventDetail | null
+) {
   const { formData, updateField, setFormData } = useEventForm();
   const [loading, setLoading] = useState(false);
-  const [initialLoading, setInitialLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
+  // Memoize the event data to prevent unnecessary re-renders
+  const memoizedEventData = useMemo(
+    () => eventData,
+    [
+      eventData?.id,
+      eventData?.name,
+      eventData?.information,
+      eventData?.date,
+      eventData?.location,
+      eventData?.coverImageUrl,
+    ]
+  );
+
+  // Initialize photo hook with initial image if provided
   const {
-    currentJobId,
-    isUploading,
-    progress,
+    previewImage,
+    pickImage,
     getPhotoData,
+    isUploading,
     waitForUpload,
     cleanup,
     cancelJob,
   } = useEventPhoto({
-    initialImageUrl: formData.photo,
-    onImageChange: (imageUri) => {
-      updateField("photo", imageUri);
-      updateField("photoJobId", currentJobId);
-    },
+    initialImageUrl: memoizedEventData?.coverImageUrl || null,
   });
 
-  // Load existing event data
+  // Initialize form with event data
   useEffect(() => {
-    const loadEvent = async () => {
-      try {
-        setInitialLoading(true);
-        setError(null);
+    if (memoizedEventData) {
+      // Populate form with existing data
+      setFormData({
+        name: memoizedEventData.name || "",
+        information: memoizedEventData.information || "",
+        date: new Date(memoizedEventData.date),
+        location: memoizedEventData.location || "",
+      });
 
-        const response = await fetch(`${API_BASE_URL}/events/${eventId}`);
-
-        if (!response.ok) {
-          throw new Error("Failed to load event");
-        }
-
-        const event = await response.json();
-
-        // Check if user is admin
-        if (event.adminId !== userId) {
-          throw new Error("You don't have permission to edit this event");
-        }
-
-        // Populate form with existing data
-        setFormData({
-          name: event.name || "",
-          information: event.information || "",
-          date: new Date(event.date),
-          location: event.location || "",
-          photo: event.photoUrl || null, // Use photoUrl from response (includes presigned URL)
-          photoJobId: null, // No job initially since we're loading existing data
-        });
-      } catch (err) {
-        log.error("Error loading event:", err);
-        setError(err instanceof Error ? err.message : "Failed to load event");
-      } finally {
-        setInitialLoading(false);
-      }
-    };
-
-    if (eventId && userId) {
-      loadEvent();
+      // The image is already set via initialImageUrl in useEventPhoto
     }
-  }, [eventId, userId, setFormData]);
+  }, [memoizedEventData, setFormData]);
 
   const handleSubmit = async (onSuccess: () => void) => {
-    log.info("formData", formData);
-    log.info("here 1");
     if (!userId) {
       Alert.alert("Error", "User not authenticated");
       return;
@@ -88,12 +72,10 @@ export function useEditEvent(eventId: string, userId: string) {
 
     try {
       // If there's an upload in progress, wait for it to complete
-      log.info("here 2");
       if (isUploading) {
         await waitForUpload();
       }
 
-      log.info("here 3");
       let photoData = undefined;
 
       // If there's a completed photo job, get the upload result
@@ -102,9 +84,6 @@ export function useEditEvent(eventId: string, userId: string) {
         photoData = photoResult;
         cleanup();
       }
-
-      log.info("here 4");
-      log.info("photoData", photoData);
 
       // Prepare update data
       const eventData: any = {
@@ -120,9 +99,6 @@ export function useEditEvent(eventId: string, userId: string) {
         eventData.coverThumbnailPath = photoData.coverThumbnailPath;
       }
 
-      log.info("here 5");
-      log.info("eventData", eventData);
-
       const response = await fetch(`${API_BASE_URL}/events/${eventId}`, {
         method: "PATCH",
         headers: {
@@ -131,18 +107,11 @@ export function useEditEvent(eventId: string, userId: string) {
         body: JSON.stringify(eventData),
       });
 
-      log.info("here 6");
-      log.info("response", response);
-
       if (!response.ok) {
         throw new Error("Failed to update event");
       }
 
-      log.info("here 7");
-
       onSuccess();
-
-      log.info("here 8");
     } catch (error) {
       log.error("Error updating event:", error);
       Alert.alert("Error", "Failed to update event. Please try again.");
@@ -158,11 +127,11 @@ export function useEditEvent(eventId: string, userId: string) {
   return {
     formData,
     loading,
-    initialLoading,
-    error,
-    photoUploadProgress: progress,
     updateField,
     handleSubmit,
     handleBack,
+    pickImage,
+    previewImage,
+    isUploading,
   };
 }

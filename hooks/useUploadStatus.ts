@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { mediaUploadManager } from "@/services/upload";
 
 interface UseUploadStatusProps {
@@ -51,16 +51,19 @@ export function useUploadStatus({ jobId }: UseUploadStatusProps) {
     return unsubscribe;
   }, [jobId]);
 
-  const waitForCompletion = async (timeoutMs: number = 30000) => {
-    if (!jobId) return;
+  const waitForCompletion = useCallback(
+    async (timeoutMs: number = 30000) => {
+      if (!jobId) return;
 
-    try {
-      await mediaUploadManager.waitForJob(jobId, timeoutMs);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Upload failed");
-      throw err;
-    }
-  };
+      try {
+        await mediaUploadManager.waitForJob(jobId, timeoutMs);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Upload failed");
+        throw err;
+      }
+    },
+    [jobId]
+  );
 
   return {
     isUploading,

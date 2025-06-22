@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Alert } from "react-native";
 
 export interface EventFormData {
@@ -6,25 +6,25 @@ export interface EventFormData {
   information: string;
   date: Date;
   location: string;
-  photo: string | null;
-  photoJobId: string | null; // Add photo job ID
 }
 
 export function useEventForm() {
-  const [formData, setFormData] = useState<EventFormData>({
+  const [formData, setFormDataState] = useState<EventFormData>({
     name: "",
     information: "",
     date: new Date(),
     location: "",
-    photo: null,
-    photoJobId: null,
   });
 
-  const updateField = (field: keyof EventFormData, value: any) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-  };
+  const updateField = useCallback((field: keyof EventFormData, value: any) => {
+    setFormDataState((prev) => ({ ...prev, [field]: value }));
+  }, []);
 
-  const validateEventDateTime = (selectedDate: Date): boolean => {
+  const setFormData = useCallback((data: EventFormData) => {
+    setFormDataState(data);
+  }, []);
+
+  const validateEventDateTime = useCallback((selectedDate: Date): boolean => {
     const now = new Date();
     const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
 
@@ -36,7 +36,7 @@ export function useEventForm() {
       return false;
     }
     return true;
-  };
+  }, []);
 
   return {
     formData,

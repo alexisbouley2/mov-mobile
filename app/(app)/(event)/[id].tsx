@@ -1,4 +1,3 @@
-// Updated app/(event)/[id].tsx - Updated EventDetailScreen with eventId prop
 import React from "react";
 import {
   View,
@@ -12,7 +11,7 @@ import {
 import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
 import { useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useEventDetail } from "@/hooks/useEventDetail";
+import { useEventDetail } from "@/hooks/event/useEventDetail";
 import EventHeader from "@/components/event/EventHeader";
 import EventActions from "@/components/event/EventActions";
 import EventLocation from "@/components/event/EventLocation";
@@ -44,6 +43,18 @@ export default function EventDetailScreen() {
       }
     }, [hasInitialData, refetch])
   );
+
+  // Handler for navigating to edit screen with event data
+  const handleEdit = useCallback(() => {
+    if (event) {
+      router.push({
+        pathname: `/(app)/(event)/edit/${id}`,
+        params: {
+          eventData: JSON.stringify(event),
+        },
+      });
+    }
+  }, [event, id, router]);
 
   if (loading && !hasInitialData) {
     return (
@@ -97,7 +108,7 @@ export default function EventDetailScreen() {
             <EventActions
               isAdmin={item.data.isAdmin}
               isParticipant={item.data.isParticipant}
-              onUpdate={() => router.push(`/(app)/(event)/edit/${id}`)}
+              onUpdate={handleEdit}
               onParticipate={() => toggleParticipation(user?.id || "")}
               onInvite={() => {
                 /* TODO: Implement invite */

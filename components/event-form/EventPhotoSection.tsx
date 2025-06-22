@@ -1,27 +1,18 @@
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Image } from "react-native";
 import { IconSymbol } from "@/components/ui/IconSymbol";
-import { useEventPhoto } from "@/hooks/event/useEventPhoto";
 
 interface EventPhotoSectionProps {
-  photo: string | null;
-  onPhotoChange: (_photo: string | null) => void;
-  onPhotoJobChange?: (_jobId: string | null) => void;
+  pickImage: () => Promise<void>;
+  previewImage: string | null;
+  isUploading: boolean;
 }
 
 export default function EventPhotoSection({
-  photo,
-  onPhotoChange,
-  onPhotoJobChange,
+  pickImage,
+  previewImage,
+  isUploading,
 }: EventPhotoSectionProps) {
-  const { previewImage, currentJobId, pickImage } = useEventPhoto({
-    initialImageUrl: photo,
-    onImageChange: (imageUri) => {
-      onPhotoChange(imageUri);
-      onPhotoJobChange?.(currentJobId);
-    },
-  });
-
   return (
     <View style={styles.section}>
       <Text style={styles.sectionLabel}>Event Photo</Text>
@@ -36,6 +27,17 @@ export default function EventPhotoSection({
           </View>
         )}
       </TouchableOpacity>
+
+      {isUploading && (
+        <View style={styles.loadingOverlay}>
+          <View style={styles.progressContainer}>
+            <Text style={styles.progressText}>Uploading...</Text>
+            <View style={styles.progressBar}>
+              <View style={styles.progressFill} />
+            </View>
+          </View>
+        </View>
+      )}
 
       <Text style={styles.helperText}>
         Choose a photo that represents your event (16:9 aspect ratio)

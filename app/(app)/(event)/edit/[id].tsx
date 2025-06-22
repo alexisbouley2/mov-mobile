@@ -1,31 +1,41 @@
-import React from "react";
-import {
-  SafeAreaView,
-  StatusBar,
-  StyleSheet,
-  View,
-  Text,
-  ActivityIndicator,
-} from "react-native";
+import React, { useMemo } from "react";
+import { SafeAreaView, StatusBar, StyleSheet } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEditEvent } from "@/hooks/event/useEditEvent";
 import EventFormHeader from "@/components/event-form/EventFormHeader";
 import EventForm from "@/components/event-form/EventForm";
+import { EventDetail } from "@/hooks/event/useEventDetail";
 
 export default function EditEventScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, eventData: eventDataParam } = useLocalSearchParams<{
+    id: string;
+    eventData?: string;
+  }>();
   const { user } = useAuth();
   const router = useRouter();
+
+  // Parse the event data if passed - memoize to prevent recreation on every render
+  const eventData = useMemo(() => {
+    if (!eventDataParam) return null;
+    try {
+      return JSON.parse(eventDataParam) as EventDetail;
+    } catch (error) {
+      console.error("Failed to parse event data:", error);
+      return null;
+    }
+  }, [eventDataParam]);
+
   const {
     formData,
     loading,
-    initialLoading,
-    error,
     updateField,
     handleSubmit,
     handleBack,
-  } = useEditEvent(id!, user?.id || "");
+    pickImage,
+    previewImage,
+    isUploading,
+  } = useEditEvent(id!, user?.id || "", eventData);
 
   const onBack = () => {
     handleBack();
@@ -40,29 +50,6 @@ export default function EditEventScreen() {
     handleSubmit(handleEditSuccess);
   };
 
-  if (initialLoading) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <StatusBar barStyle="light-content" backgroundColor="#000" />
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#fff" />
-          <Text style={styles.loadingText}>Loading event...</Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  if (error) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <StatusBar barStyle="light-content" backgroundColor="#000" />
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>{error}</Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#000" />
@@ -76,6 +63,9 @@ export default function EditEventScreen() {
         onSubmit={onSubmit}
         submitButtonText="Update Event"
         mode="edit"
+        pickImage={pickImage}
+        previewImage={previewImage}
+        isUploading={isUploading}
       />
     </SafeAreaView>
   );

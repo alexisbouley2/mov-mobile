@@ -6,6 +6,7 @@ export default function EventLayout() {
       <Stack.Screen name="create" />
       <Stack.Screen name="[id]" />
       <Stack.Screen name="edit/[id]" />
+      <Stack.Screen name="chat/[eventId]" />
       <Stack.Screen name="select-events" />
     </Stack>
   );

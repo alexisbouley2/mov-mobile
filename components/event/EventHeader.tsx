@@ -9,7 +9,7 @@ import {
   Dimensions,
 } from "react-native";
 import { IconSymbol } from "@/components/ui/IconSymbol";
-import { EventDetail } from "@/hooks/useEventDetail";
+import { EventDetail } from "@/hooks/event/useEventDetail";
 
 interface EventHeaderProps {
   event: EventDetail;
@@ -42,8 +42,8 @@ export default function EventHeader({ event, onBack }: EventHeaderProps) {
     <View style={styles.container}>
       <ImageBackground
         source={
-          event.photoUrl
-            ? { uri: event.photoUrl }
+          event.coverImageUrl
+            ? { uri: event.coverImageUrl }
             : require("@/assets/images/react-logo.png") // Default placeholder
         }
         style={styles.backgroundImage}

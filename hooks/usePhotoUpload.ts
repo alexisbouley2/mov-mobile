@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Alert } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { useAuth } from "@/contexts/AuthContext";
@@ -40,7 +40,7 @@ export function usePhotoUpload({
       jobId: currentJobId,
     });
 
-  const pickImage = async () => {
+  const pickImage = useCallback(async () => {
     console.log("in pickImage");
     try {
       const { status } =
@@ -91,9 +91,9 @@ export function usePhotoUpload({
       Alert.alert("Error", "Failed to pick image");
       log.error("Image picker error:", error);
     }
-  };
+  }, [aspectRatio, supabaseUser, uploadType, onImageChange]);
 
-  const getPhotoData = () => {
+  const getPhotoData = useCallback(() => {
     console.log("currentJobId", currentJobId);
     if (!currentJobId) return undefined;
 
@@ -109,37 +109,40 @@ export function usePhotoUpload({
       log.error("Failed to get photo data:", error);
     }
     return undefined;
-  };
+  }, [currentJobId, photoDataKey]);
 
-  const isUploadComplete = () => {
+  const isUploadComplete = useCallback(() => {
     if (!currentJobId) return true; // No upload in progress
     return mediaUploadManager.isJobReady(currentJobId);
-  };
+  }, [currentJobId]);
 
-  const waitForUpload = async (timeoutMs: number = 30000) => {
-    if (!currentJobId) return;
+  const waitForUpload = useCallback(
+    async (timeoutMs: number = 30000) => {
+      if (!currentJobId) return;
 
-    try {
-      await waitForCompletion(timeoutMs);
-    } catch (error) {
-      log.error("Upload wait failed:", error);
-      throw error;
-    }
-  };
+      try {
+        await waitForCompletion(timeoutMs);
+      } catch (error) {
+        log.error("Upload wait failed:", error);
+        throw error;
+      }
+    },
+    [currentJobId, waitForCompletion]
+  );
 
-  const cleanup = () => {
+  const cleanup = useCallback(() => {
     if (currentJobId) {
       mediaUploadManager.cleanupJob(currentJobId);
       setCurrentJobId(null);
     }
-  };
+  }, [currentJobId]);
 
-  const cancelJob = () => {
+  const cancelJob = useCallback(() => {
     if (currentJobId) {
       mediaUploadManager.cancelJob(currentJobId);
       setCurrentJobId(null);
     }
-  };
+  }, [currentJobId]);
 
   return {
     previewImage,
