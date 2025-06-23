@@ -6,7 +6,7 @@ import { useEventPhoto } from "./useEventPhoto";
 import { useEvent } from "@/contexts/EventContext";
 import log from "@/utils/logger";
 
-export function useEditEvent(eventId: string, userId: string) {
+export function useEditEvent() {
   const { event, updateEvent } = useEvent(); // Get from context
   const { formData, updateField, setFormData } = useEventForm();
   const [loading, setLoading] = useState(false);
@@ -26,7 +26,7 @@ export function useEditEvent(eventId: string, userId: string) {
 
   // Initialize form with event data from context
   useEffect(() => {
-    if (event && event.id === eventId) {
+    if (event) {
       setFormData({
         name: event.name || "",
         information: event.information || "",
@@ -34,14 +34,9 @@ export function useEditEvent(eventId: string, userId: string) {
         location: event.location || "",
       });
     }
-  }, [event, eventId, setFormData]);
+  }, [event, setFormData]);
 
   const handleSubmit = async (onSuccess: () => void) => {
-    if (!userId) {
-      Alert.alert("Error", "User not authenticated");
-      return;
-    }
-
     if (!formData.name.trim()) {
       Alert.alert("Error", "Event name is required");
       return;
@@ -73,7 +68,11 @@ export function useEditEvent(eventId: string, userId: string) {
       };
 
       // Use context's updateEvent instead of direct fetch
-      const { error } = await updateEvent(eventId, eventUpdateData, photoData);
+      const { error } = await updateEvent(
+        event!.id,
+        eventUpdateData,
+        photoData
+      );
 
       if (error) {
         throw new Error(error);

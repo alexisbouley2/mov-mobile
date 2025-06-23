@@ -1,14 +1,11 @@
 import React from "react";
 import { SafeAreaView, StatusBar, StyleSheet } from "react-native";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import { useEditEvent } from "@/hooks/event/useEditEvent";
 import EventFormHeader from "@/components/event-form/EventFormHeader";
 import EventForm from "@/components/event-form/EventForm";
-import { useUserProfile } from "@/contexts/UserProfileContext";
 
 export default function EditEventScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
-  const { user } = useUserProfile();
   const router = useRouter();
 
   const {
@@ -20,7 +17,7 @@ export default function EditEventScreen() {
     pickImage,
     previewImage,
     isUploading,
-  } = useEditEvent(id!, user?.id || "");
+  } = useEditEvent();
 
   const onBack = () => {
     handleBack();

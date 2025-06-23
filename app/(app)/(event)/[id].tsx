@@ -39,9 +39,9 @@ export default function EventDetailScreen() {
   // Handler for navigating to edit screen - no data passing needed!
   const handleEdit = useCallback(() => {
     if (event) {
-      router.push(`/(app)/(event)/edit/${id}`);
+      router.push(`/(app)/(event)/edit`);
     }
-  }, [event, id, router]);
+  }, [event, router]);
 
   if (eventLoading && !event) {
     return (
@@ -128,7 +128,7 @@ export default function EventDetailScreen() {
       case "chat":
         return (
           <View style={styles.content}>
-            <EventMessages eventId={item.data.eventId} />
+            <EventMessages />
           </View>
         );
 

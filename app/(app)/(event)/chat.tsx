@@ -1,4 +1,4 @@
-// app/(app)/(event)/chat/[eventId].tsx - Chat screen route
+// Updated app/(app)/(event)/chat/[id].tsx
 import React, { useState, useRef, useEffect } from "react";
 import {
   View,
@@ -12,26 +12,26 @@ import {
   Platform,
   ActivityIndicator,
 } from "react-native";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import { IconSymbol } from "@/components/ui/IconSymbol";
-import { useMessages, Message } from "@/hooks/useMessages"; // Updated import
+import { useEventMessages, Message } from "@/contexts/EventMessagesContext";
 import { useUserProfile } from "@/contexts/UserProfileContext";
+import log from "@/utils/logger";
 
 export default function ChatScreen() {
-  const { eventId } = useLocalSearchParams<{ eventId: string }>();
   const router = useRouter();
   const { user } = useUserProfile();
   const [inputText, setInputText] = useState("");
   const flatListRef = useRef<FlatList>(null);
 
-  // Updated hook usage - much simpler now!
-  const { messages, loading, sending, sendMessage, loadMoreMessages } =
-    useMessages(eventId!);
+  const { messages, messagesLoading, sending, sendMessage, loadMoreMessages } =
+    useEventMessages();
 
   const handleSend = async () => {
     if (inputText.trim() && !sending) {
       const messageToSend = inputText.trim();
       setInputText("");
+      log.debug("in handleSend");
       await sendMessage(messageToSend);
     }
   };
@@ -43,7 +43,6 @@ export default function ChatScreen() {
   };
 
   useEffect(() => {
-    // Auto-scroll to bottom when new messages arrive
     if (messages.length > 0) {
       setTimeout(scrollToBottom, 100);
     }
@@ -89,7 +88,7 @@ export default function ChatScreen() {
     );
   };
 
-  if (loading) {
+  if (messagesLoading) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.loadingContainer}>
@@ -101,7 +100,6 @@ export default function ChatScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()}>
           <IconSymbol name="chevron.left" size={24} color="#fff" />
@@ -110,7 +108,6 @@ export default function ChatScreen() {
         <View style={{ width: 24 }} />
       </View>
 
-      {/* Messages */}
       <FlatList
         ref={flatListRef}
         data={messages}
@@ -129,7 +126,6 @@ export default function ChatScreen() {
         }
       />
 
-      {/* Input */}
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}

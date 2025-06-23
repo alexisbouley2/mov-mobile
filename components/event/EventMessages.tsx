@@ -1,30 +1,19 @@
-// components/event/EventMessages.tsx - Updated to work with message preview
+// components/event/EventMessages.tsx
 import React from "react";
-import { useCallback } from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { IconSymbol } from "@/components/ui/IconSymbol";
-import { useRouter, useFocusEffect } from "expo-router";
-import { useMessagePreview } from "@/hooks/useMessagePreview"; // Updated import
+import { useRouter } from "expo-router";
+import { useEventMessages } from "@/contexts/EventMessagesContext";
 
-interface EventMessagesProps {
-  eventId: string;
-}
-
-export default function EventMessages({ eventId }: EventMessagesProps) {
+export default function EventMessages() {
   const router = useRouter();
-  const { preview, loading, refetch } = useMessagePreview(eventId); // Updated hook
+  const { preview, previewLoading } = useEventMessages();
 
   const handleOpenChat = () => {
-    router.push(`/(app)/(event)/chat/${eventId}`);
+    router.push(`/(app)/(event)/chat`);
   };
 
-  useFocusEffect(
-    useCallback(() => {
-      refetch();
-    }, [refetch])
-  );
-
-  if (loading) {
+  if (previewLoading) {
     return (
       <View style={styles.container}>
         <TouchableOpacity style={styles.chatButton} disabled>
