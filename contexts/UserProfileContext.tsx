@@ -26,8 +26,6 @@ interface UserProfileContextType {
   user: User | null;
   profileLoading: boolean;
   profileError: string | null;
-  isRefreshing: boolean;
-  lastFetch: number | null;
   createUserProfile: (
     _username: string,
     _photoData?: {
@@ -42,7 +40,6 @@ interface UserProfileContextType {
       profileThumbnailPath?: string;
     }
   ) => Promise<{ error: any }>;
-  refreshUserProfile: () => Promise<void>;
   clearProfileError: () => void;
 }
 
@@ -50,11 +47,8 @@ const UserProfileContext = createContext<UserProfileContextType>({
   user: null,
   profileLoading: false,
   profileError: null,
-  isRefreshing: false,
-  lastFetch: null,
   createUserProfile: async () => ({ error: null }),
   updateUserProfile: async () => ({ error: null }),
-  refreshUserProfile: async () => {},
   clearProfileError: () => {},
 });
 
@@ -69,77 +63,55 @@ export function UserProfileProvider({
   const [user, setUser] = useState<User | null>(null);
   const [profileLoading, setProfileLoading] = useState(false);
   const [profileError, setProfileError] = useState<string | null>(null);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [lastFetch, setLastFetch] = useState<number | null>(null);
 
-  const fetchUserProfile = useCallback(
-    async (userId: string, isRefresh = false) => {
-      try {
-        if (isRefresh) {
-          setIsRefreshing(true);
-        } else {
-          setProfileLoading(true);
-        }
-        setProfileError(null);
+  const fetchUserProfile = useCallback(async (userId: string) => {
+    try {
+      setProfileLoading(true);
+      setProfileError(null);
 
-        // First, get basic profile data from Supabase
-        const { data, error } = await supabase
-          .from("User")
-          .select("*")
-          .eq("id", userId)
-          .single();
+      // First, get basic profile data from Supabase
+      const { data, error } = await supabase
+        .from("User")
+        .select("*")
+        .eq("id", userId)
+        .single();
 
-        if (error && error.code !== "PGRST116") {
-          throw new Error(error.message);
-        }
+      if (error && error.code !== "PGRST116") {
+        throw new Error(error.message);
+      }
 
-        if (data) {
-          // If user has profile images, fetch URLs from API
-          if (data.profileImagePath && data.profileThumbnailPath) {
-            try {
-              const API_BASE_URL = config.EXPO_PUBLIC_API_URL;
-              const response = await fetch(`${API_BASE_URL}/users/${userId}`);
+      if (data) {
+        // If user has profile images, fetch URLs from API
+        if (data.profileImagePath && data.profileThumbnailPath) {
+          try {
+            const API_BASE_URL = config.EXPO_PUBLIC_API_URL;
+            const response = await fetch(`${API_BASE_URL}/users/${userId}`);
 
-              if (response.ok) {
-                const userWithUrls = await response.json();
-                setUser(userWithUrls);
-              } else {
-                // Fallback to basic data if API fails
-                setUser(data);
-              }
-            } catch (apiError) {
-              log.error("Error fetching user profile URLs:", apiError);
+            if (response.ok) {
+              const userWithUrls = await response.json();
+              setUser(userWithUrls);
+            } else {
               // Fallback to basic data if API fails
               setUser(data);
             }
-          } else {
+          } catch (apiError) {
+            log.error("Error fetching user profile URLs:", apiError);
+            // Fallback to basic data if API fails
             setUser(data);
           }
-          setLastFetch(Date.now());
-        }
-      } catch (error) {
-        const errorMessage =
-          error instanceof Error
-            ? error.message
-            : "Failed to fetch user profile";
-        log.error("Error fetching user profile:", error);
-        setProfileError(errorMessage);
-      } finally {
-        if (isRefresh) {
-          setIsRefreshing(false);
         } else {
-          setProfileLoading(false);
+          setUser(data);
         }
       }
-    },
-    []
-  );
-
-  const refreshUserProfile = useCallback(async () => {
-    if (supabaseUser) {
-      await fetchUserProfile(supabaseUser.id, true);
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to fetch user profile";
+      log.error("Error fetching user profile:", error);
+      setProfileError(errorMessage);
+    } finally {
+      setProfileLoading(false);
     }
-  }, [supabaseUser, fetchUserProfile]);
+  }, []);
 
   const createUserProfile = useCallback(
     async (
@@ -264,7 +236,6 @@ export function UserProfileProvider({
       // Clear profile data when user logs out
       setUser(null);
       setProfileError(null);
-      setLastFetch(null);
     }
   }, [isAuthenticated, supabaseUser, fetchUserProfile]);
 
@@ -273,22 +244,16 @@ export function UserProfileProvider({
       user,
       profileLoading,
       profileError,
-      isRefreshing,
-      lastFetch,
       createUserProfile,
       updateUserProfile,
-      refreshUserProfile,
       clearProfileError,
     }),
     [
       user,
       profileLoading,
       profileError,
-      isRefreshing,
-      lastFetch,
       createUserProfile,
       updateUserProfile,
-      refreshUserProfile,
       clearProfileError,
     ]
   );

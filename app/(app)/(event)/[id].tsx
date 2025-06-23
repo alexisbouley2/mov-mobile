@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
 import { useCallback } from "react";
-import { useEventDetail } from "@/hooks/event/useEventDetail";
+import { useEvent } from "@/contexts/EventContext";
 import EventHeader from "@/components/event/EventHeader";
 import EventActions from "@/components/event/EventActions";
 import EventLocation from "@/components/event/EventLocation";
@@ -24,39 +24,26 @@ export default function EventDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { user } = useUserProfile();
-  const {
-    event,
-    loading,
-    refreshing,
-    error,
-    toggleParticipation,
-    refetch,
-    hasInitialData,
-  } = useEventDetail(id!);
+  const { event, eventLoading, error, loadEvent, toggleParticipation } =
+    useEvent();
 
-  // Force refetch when screen comes into focus (e.g., returning from edit screen)
+  // Load event every time we come to this screen
   useFocusEffect(
     useCallback(() => {
-      // Only refetch if we have initial data (prevents infinite loops)
-      if (hasInitialData) {
-        refetch();
+      if (id) {
+        loadEvent(id);
       }
-    }, [hasInitialData, refetch])
+    }, [id, loadEvent])
   );
 
-  // Handler for navigating to edit screen with event data
+  // Handler for navigating to edit screen - no data passing needed!
   const handleEdit = useCallback(() => {
     if (event) {
-      router.push({
-        pathname: `/(app)/(event)/edit/${id}`,
-        params: {
-          eventData: JSON.stringify(event),
-        },
-      });
+      router.push(`/(app)/(event)/edit/${id}`);
     }
   }, [event, id, router]);
 
-  if (loading && !hasInitialData) {
+  if (eventLoading && !event) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#fff" />
@@ -86,7 +73,7 @@ export default function EventDetailScreen() {
       ? [{ type: "information", data: event.information }]
       : []),
     { type: "participants", data: event.participants || [] },
-    { type: "chat", data: { eventId: event.id } }, // Pass eventId to chat
+    { type: "chat", data: { eventId: event.id } },
     {
       type: "gallery",
       data: {
@@ -161,6 +148,12 @@ export default function EventDetailScreen() {
     }
   };
 
+  const handleRefresh = () => {
+    if (id) {
+      loadEvent(id);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#000" />
@@ -171,16 +164,9 @@ export default function EventDetailScreen() {
         keyExtractor={(item, index) => `${item.type}-${index}`}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.flatListContent}
-        refreshing={refreshing}
-        onRefresh={refetch}
+        refreshing={eventLoading}
+        onRefresh={handleRefresh}
       />
-
-      {/* Show a subtle loading indicator when refetching */}
-      {refreshing && (
-        <View style={styles.refetchingIndicator}>
-          <ActivityIndicator size="small" color="#fff" />
-        </View>
-      )}
     </SafeAreaView>
   );
 }
@@ -212,13 +198,5 @@ const styles = StyleSheet.create({
     color: "#ff6b6b",
     fontSize: 16,
     textAlign: "center",
-  },
-  refetchingIndicator: {
-    position: "absolute",
-    top: 60,
-    right: 20,
-    backgroundColor: "rgba(0, 0, 0, 0.7)",
-    padding: 8,
-    borderRadius: 20,
   },
 });

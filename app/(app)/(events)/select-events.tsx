@@ -76,7 +76,7 @@ export default function SelectEventsScreen() {
       // If creating new event, navigate there with job context
       if (includeCreateNew) {
         router.push({
-          pathname: "/(app)/(event)/create",
+          pathname: "/(app)/(events)/create",
           params: {
             jobId,
             selectedEventIds: Array.from(selectedEventIds).join(","),

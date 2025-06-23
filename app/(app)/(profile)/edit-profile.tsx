@@ -10,13 +10,8 @@ import { useProfileForm } from "@/hooks/profile/useProfileForm";
 import log from "@/utils/logger";
 
 export default function EditProfileScreen() {
-  const {
-    user,
-    updateUserProfile,
-    profileLoading,
-    profileError,
-    clearProfileError,
-  } = useUserProfile();
+  const { user, updateUserProfile, profileError, clearProfileError } =
+    useUserProfile();
 
   const { username, setUsername, loading, setLoading, validateUsername } =
     useProfileForm({
@@ -110,7 +105,7 @@ export default function EditProfileScreen() {
         previewImage={previewImage}
         onImagePress={pickImage}
         onSubmit={handleSave}
-        loading={loading || profileLoading}
+        loading={loading}
         submitButtonText="Save"
         loadingButtonText={isUploading ? "Waiting for upload..." : "Saving..."}
         avatarSize={120}

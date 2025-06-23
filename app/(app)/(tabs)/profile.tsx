@@ -7,7 +7,7 @@ import {
   SafeAreaView,
   Image,
 } from "react-native";
-import { router, useFocusEffect } from "expo-router";
+import { router } from "expo-router";
 import { useAuth } from "@/contexts/AuthContext";
 import log from "@/utils/logger";
 import { useDebugLifecycle } from "@/utils/debugLifecycle";
@@ -18,14 +18,7 @@ export default function ProfileScreen() {
 
   const { signOut } = useAuth();
 
-  const { user, refreshUserProfile } = useUserProfile();
-
-  // Refresh profile data when screen comes into focus
-  useFocusEffect(
-    React.useCallback(() => {
-      refreshUserProfile();
-    }, [refreshUserProfile])
-  );
+  const { user } = useUserProfile();
 
   const handleEditProfile = () => {
     router.push("/(app)/(profile)/edit-profile");
