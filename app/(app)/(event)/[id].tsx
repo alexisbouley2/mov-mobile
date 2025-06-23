@@ -135,11 +135,7 @@ export default function EventDetailScreen() {
       case "gallery":
         return (
           <View style={styles.content}>
-            <EventGallery
-              eventId={item.data.eventId}
-              userId={item.data.userId}
-              eventDate={item.data.eventDate}
-            />
+            <EventGallery eventDate={item.data.eventDate} />
           </View>
         );
 

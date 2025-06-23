@@ -1,3 +1,4 @@
+// Updated components/event/VideoViewerModal.tsx
 import React, { useState, useRef, useEffect } from "react";
 import {
   View,
@@ -14,29 +15,17 @@ import {
 import { Video, ResizeMode } from "expo-av";
 import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
+import { useEventVideos } from "@/contexts/EventVideosContext";
 import log from "@/utils/logger";
 
 const { width, height } = Dimensions.get("window");
 
-interface VideoItem {
-  id: string;
-  videoPath: string;
-  thumbnailPath: string;
-  videoUrl: string;
-  thumbnailUrl: string;
-  createdAt: string;
-  user: {
-    id: string;
-    username: string;
-    photo: string | null;
-  };
-}
-
 interface VideoViewerModalProps {
   visible: boolean;
-  videos: VideoItem[];
+  videos: any[];
   initialIndex: number;
   onClose: () => void;
+  onIndexChange?: (_index: number) => void;
 }
 
 export default function VideoViewerModal({
@@ -44,21 +33,30 @@ export default function VideoViewerModal({
   videos,
   initialIndex,
   onClose,
+  onIndexChange,
 }: VideoViewerModalProps) {
-  const [currentIndex, setCurrentIndex] = useState(initialIndex);
+  const {
+    currentVideoIndex,
+    setCurrentVideoIndex,
+    preloadedVideos,
+    closeVideoModal,
+  } = useEventVideos();
+
   const [loadingVideo, setLoadingVideo] = useState(true);
   const flatListRef = useRef<FlatList>(null);
   const videoRef = useRef<Video>(null);
 
+  // Use context index instead of prop
+  const activeIndex = currentVideoIndex;
+
   // Reset loading state when video changes
   useEffect(() => {
     setLoadingVideo(true);
-  }, [currentIndex]);
+  }, [activeIndex]);
 
   // Auto-scroll to initial video when modal opens
   useEffect(() => {
     if (visible && videos.length > 0) {
-      setCurrentIndex(initialIndex);
       setTimeout(() => {
         flatListRef.current?.scrollToIndex({
           index: initialIndex,
@@ -79,7 +77,9 @@ export default function VideoViewerModal({
 
   const onViewableItemsChanged = useRef(({ viewableItems }: any) => {
     if (viewableItems.length > 0) {
-      setCurrentIndex(viewableItems[0].index);
+      const newIndex = viewableItems[0].index;
+      setCurrentVideoIndex(newIndex);
+      onIndexChange?.(newIndex);
     }
   }).current;
 
@@ -87,14 +87,14 @@ export default function VideoViewerModal({
     itemVisiblePercentThreshold: 80,
   }).current;
 
-  const renderVideoItem = ({
-    item,
-    index,
-  }: {
-    item: VideoItem;
-    index: number;
-  }) => {
-    const isActive = index === currentIndex;
+  const handleClose = () => {
+    closeVideoModal();
+    onClose();
+  };
+
+  const renderVideoItem = ({ item, index }: { item: any; index: number }) => {
+    const isActive = index === activeIndex;
+    const isPreloaded = preloadedVideos.has(item.id);
 
     return (
       <View style={styles.videoContainer}>
@@ -113,23 +113,39 @@ export default function VideoViewerModal({
                 onLoadStart={() => setLoadingVideo(true)}
               />
 
-              {/* Loading overlay */}
-              {loadingVideo && (
+              {/* Loading overlay - don't show if preloaded */}
+              {loadingVideo && !isPreloaded && (
                 <View style={styles.loadingOverlay}>
                   <ActivityIndicator size="large" color="white" />
                 </View>
               )}
+
+              {/* Preload indicator */}
+              {isPreloaded && loadingVideo && (
+                <View style={styles.preloadIndicator}>
+                  <Text style={styles.preloadText}>Preloaded</Text>
+                </View>
+              )}
             </>
           ) : (
-            <Image
-              source={{ uri: item.thumbnailUrl }}
-              style={styles.video}
-              contentFit="contain"
-            />
+            <>
+              <Image
+                source={{ uri: item.thumbnailUrl }}
+                style={styles.video}
+                contentFit="contain"
+              />
+
+              {/* Show preload indicator on thumbnails */}
+              {isPreloaded && (
+                <View style={styles.preloadBadge}>
+                  <Text style={styles.preloadBadgeText}>Ready</Text>
+                </View>
+              )}
+            </>
           )}
         </View>
 
-        {/* User info overlay - always visible */}
+        {/* User info overlay */}
         <View style={styles.userOverlay}>
           <View style={styles.userInfo}>
             <Image
@@ -159,20 +175,27 @@ export default function VideoViewerModal({
       visible={visible}
       animationType="slide"
       presentationStyle="fullScreen"
-      onRequestClose={onClose}
+      onRequestClose={handleClose}
     >
       <SafeAreaView style={styles.container}>
         <StatusBar barStyle="light-content" backgroundColor="#000" />
 
         {/* Header with close button */}
         <View style={styles.header}>
-          <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+          <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
             <Ionicons name="close" size={28} color="white" />
           </TouchableOpacity>
 
           <Text style={styles.headerTitle}>
-            {currentIndex + 1} of {videos.length}
+            {activeIndex + 1} of {videos.length}
           </Text>
+
+          {/* Preload status */}
+          <View style={styles.preloadStatus}>
+            <Text style={styles.preloadStatusText}>
+              Preloaded: {preloadedVideos.size}
+            </Text>
+          </View>
         </View>
 
         {/* Video list */}
@@ -187,13 +210,12 @@ export default function VideoViewerModal({
           onViewableItemsChanged={onViewableItemsChanged}
           viewabilityConfig={viewabilityConfig}
           getItemLayout={(data, index) => ({
-            length: height - 60, // Account for header height
+            length: height - 60,
             offset: (height - 60) * index,
             index,
           })}
           initialScrollIndex={initialIndex}
           onScrollToIndexFailed={(info) => {
-            // Fallback if initial scroll fails
             setTimeout(() => {
               flatListRef.current?.scrollToIndex({
                 index: info.index,
@@ -236,9 +258,19 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
   },
+  preloadStatus: {
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  preloadStatusText: {
+    color: "white",
+    fontSize: 12,
+  },
   videoContainer: {
     width: width,
-    height: height - 60, // Account for header
+    height: height - 60,
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#000",
@@ -264,6 +296,35 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "rgba(0, 0, 0, 0.3)",
     zIndex: 1,
+  },
+  preloadIndicator: {
+    position: "absolute",
+    top: 20,
+    right: 20,
+    backgroundColor: "rgba(0, 255, 0, 0.8)",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+    zIndex: 2,
+  },
+  preloadText: {
+    color: "white",
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  preloadBadge: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+    backgroundColor: "rgba(0, 255, 0, 0.8)",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  preloadBadgeText: {
+    color: "white",
+    fontSize: 10,
+    fontWeight: "600",
   },
   userOverlay: {
     position: "absolute",

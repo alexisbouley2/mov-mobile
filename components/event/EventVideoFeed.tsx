@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+// Updated components/event/EventVideoFeed.tsx
+import React from "react";
 import {
   View,
   FlatList,
@@ -10,132 +11,62 @@ import {
 } from "react-native";
 import { Image } from "expo-image";
 import VideoViewerModal from "./VideoViewerModal";
-import { config } from "@/lib/config";
-import log from "@/utils/logger";
+import { useEventVideos } from "@/contexts/EventVideosContext";
 
 const { width } = Dimensions.get("window");
-const GRID_PADDING = 15; // Increased padding from screen edges
-const ITEM_SPACING = 10; // Spacing between thumbnails
-const ITEM_SIZE = (width - GRID_PADDING * 2 - ITEM_SPACING * 2) / 3; // 3 columns with proper spacing
+const GRID_PADDING = 15;
+const ITEM_SPACING = 10;
+const ITEM_SIZE = (width - GRID_PADDING * 2 - ITEM_SPACING * 2) / 3;
 
-interface VideoItem {
-  id: string;
-  videoPath: string;
-  thumbnailPath: string;
-  videoUrl: string;
-  thumbnailUrl: string;
-  createdAt: string;
-  user: {
-    id: string;
-    username: string;
-    photo: string | null;
-  };
-}
+export default function EventVideoFeed() {
+  const {
+    allVideos,
+    userVideos,
+    allVideosLoading,
+    userVideosLoading,
+    allVideosLoadingMore,
+    userVideosLoadingMore,
+    // allVideosHasMore,
+    // userVideosHasMore,
+    loadMoreAllVideos,
+    loadMoreUserVideos,
+    refreshAllVideos,
+    refreshUserVideos,
+    openVideoModal,
+    modalVisible,
+    currentVideoIndex,
+    activeTab,
+    error,
+  } = useEventVideos();
 
-interface VideoFeedResponse {
-  success: boolean;
-  videos: VideoItem[];
-  nextCursor: string | null;
-  hasMore: boolean;
-}
-
-interface EventVideoFeedProps {
-  eventId: string;
-  userId: string;
-  filterByUser?: boolean; // If true, show only current user's videos
-}
-
-const API_BASE_URL = config.EXPO_PUBLIC_API_URL;
-
-export default function EventVideoFeed({
-  eventId,
-  userId,
-  filterByUser = false,
-}: EventVideoFeedProps) {
-  const [videos, setVideos] = useState<VideoItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
-  const [nextCursor, setNextCursor] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  // Modal state
-  const [modalVisible, setModalVisible] = useState(false);
-  const [selectedVideoIndex, setSelectedVideoIndex] = useState(0);
-
-  const fetchVideos = async (cursor?: string, isRefresh = false) => {
-    try {
-      if (isRefresh) {
-        setRefreshing(true);
-        setError(null);
-      } else if (cursor) {
-        setLoadingMore(true);
-      } else {
-        setLoading(true);
-        setError(null);
-      }
-
-      const params = new URLSearchParams({
-        limit: "20",
-        ...(cursor && { cursor }),
-        ...(filterByUser && { userId }),
-      });
-
-      const response = await fetch(
-        `${API_BASE_URL}/videos/feed/${eventId}?${params}`
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch videos");
-      }
-
-      const data: VideoFeedResponse = await response.json();
-
-      if (isRefresh) {
-        setVideos(data.videos);
-      } else {
-        setVideos((prev) => (cursor ? [...prev, ...data.videos] : data.videos));
-      }
-
-      setNextCursor(data.nextCursor);
-      setHasMore(data.hasMore);
-    } catch (err) {
-      log.error("Error fetching videos:", err);
-      setError(err instanceof Error ? err.message : "Failed to fetch videos");
-    } finally {
-      setLoading(false);
-      setLoadingMore(false);
-      setRefreshing(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchVideos();
-  }, [eventId, filterByUser]);
+  // Get current videos based on active tab from context
+  const currentVideos = activeTab === "all" ? allVideos : userVideos;
+  const isLoading = activeTab === "all" ? allVideosLoading : userVideosLoading;
+  const isLoadingMore =
+    activeTab === "all" ? allVideosLoadingMore : userVideosLoadingMore;
+  // const hasMore = activeTab === "all" ? allVideosHasMore : userVideosHasMore;
 
   const handleLoadMore = () => {
-    if (!loadingMore && hasMore && nextCursor) {
-      fetchVideos(nextCursor);
+    if (activeTab === "all") {
+      loadMoreAllVideos();
+    } else {
+      loadMoreUserVideos();
     }
   };
 
   const handleRefresh = () => {
-    fetchVideos(undefined, true);
+    if (activeTab === "all") {
+      refreshAllVideos();
+    } else {
+      refreshUserVideos();
+    }
   };
 
   const handleVideoPress = (index: number) => {
-    setSelectedVideoIndex(index);
-    setModalVisible(true);
+    openVideoModal(index, activeTab);
   };
 
-  const renderVideoItem = ({
-    item,
-    index,
-  }: {
-    item: VideoItem;
-    index: number;
-  }) => {
+  const renderVideoItem = ({ item, index }: { item: any; index: number }) => {
     const isLeftColumn = index % 3 === 0;
     const isRightColumn = index % 3 === 2;
 
@@ -157,7 +88,6 @@ export default function EventVideoFeed({
             transition={200}
           />
 
-          {/* Play indicator */}
           <View style={styles.playIndicator}>
             <View style={styles.playButton}>
               <Text style={styles.playIcon}>▶</Text>
@@ -165,7 +95,6 @@ export default function EventVideoFeed({
           </View>
         </View>
 
-        {/* User info */}
         <View style={styles.userInfo}>
           <Image
             source={{
@@ -184,7 +113,7 @@ export default function EventVideoFeed({
   };
 
   const renderFooter = () => {
-    if (!loadingMore) return null;
+    if (!isLoadingMore) return null;
     return (
       <View style={styles.loadingFooter}>
         <ActivityIndicator size="small" color="#666" />
@@ -193,12 +122,12 @@ export default function EventVideoFeed({
   };
 
   const renderEmpty = () => {
-    if (loading) return null;
+    if (isLoading) return null;
 
     return (
       <View style={styles.emptyContainer}>
         <Text style={styles.emptyText}>
-          {filterByUser
+          {activeTab === "you"
             ? "You haven't uploaded any videos yet"
             : "No videos in this event yet"}
         </Text>
@@ -206,7 +135,7 @@ export default function EventVideoFeed({
     );
   };
 
-  if (loading && videos.length === 0) {
+  if (isLoading && currentVideos.length === 0) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#666" />
@@ -215,14 +144,11 @@ export default function EventVideoFeed({
     );
   }
 
-  if (error && videos.length === 0) {
+  if (error && currentVideos.length === 0) {
     return (
       <View style={styles.errorContainer}>
         <Text style={styles.errorText}>{error}</Text>
-        <TouchableOpacity
-          style={styles.retryButton}
-          onPress={() => fetchVideos()}
-        >
+        <TouchableOpacity style={styles.retryButton} onPress={handleRefresh}>
           <Text style={styles.retryButtonText}>Retry</Text>
         </TouchableOpacity>
       </View>
@@ -232,14 +158,14 @@ export default function EventVideoFeed({
   return (
     <View style={styles.container}>
       <FlatList
-        data={videos}
+        data={currentVideos}
         renderItem={renderVideoItem}
         keyExtractor={(item) => item.id}
         numColumns={3}
         contentContainerStyle={styles.grid}
         onEndReached={handleLoadMore}
         onEndReachedThreshold={0.1}
-        refreshing={refreshing}
+        refreshing={isLoading}
         onRefresh={handleRefresh}
         ListFooterComponent={renderFooter}
         ListEmptyComponent={renderEmpty}
@@ -248,12 +174,12 @@ export default function EventVideoFeed({
         nestedScrollEnabled={true}
       />
 
-      {/* Full Screen Video Modal */}
       <VideoViewerModal
         visible={modalVisible}
-        videos={videos}
-        initialIndex={selectedVideoIndex}
-        onClose={() => setModalVisible(false)}
+        videos={currentVideos}
+        initialIndex={currentVideoIndex}
+        onClose={() => {}}
+        onIndexChange={(_index) => {}}
       />
     </View>
   );

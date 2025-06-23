@@ -1,19 +1,15 @@
-import React, { useState } from "react";
+// Updated components/event/EventGallery.tsx
+import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import EventVideoFeed from "./EventVideoFeed";
+import { useEventVideos } from "@/contexts/EventVideosContext";
 
 interface EventGalleryProps {
-  eventId: string;
-  userId: string;
   eventDate: Date;
 }
 
-export default function EventGallery({
-  eventId,
-  userId,
-  eventDate,
-}: EventGalleryProps) {
-  const [activeTab, setActiveTab] = useState<"all" | "you">("all");
+export default function EventGallery({ eventDate }: EventGalleryProps) {
+  const { activeTab } = useEventVideos();
 
   // Check if event is in the past (allow uploads)
   const isEventPast = new Date() > eventDate;
@@ -33,7 +29,7 @@ export default function EventGallery({
       <View style={styles.tabContainer}>
         <TouchableOpacity
           style={[styles.tab, activeTab === "all" && styles.activeTab]}
-          onPress={() => setActiveTab("all")}
+          onPress={() => {}} // Handled by EventVideoFeed
         >
           <Text
             style={[
@@ -47,7 +43,7 @@ export default function EventGallery({
 
         <TouchableOpacity
           style={[styles.tab, activeTab === "you" && styles.activeTab]}
-          onPress={() => setActiveTab("you")}
+          onPress={() => {}} // Handled by EventVideoFeed
         >
           <Text
             style={[
@@ -60,13 +56,9 @@ export default function EventGallery({
         </TouchableOpacity>
       </View>
 
-      {/* Video Feed - Remove fixed height and negative margins */}
+      {/* Video Feed */}
       <View style={styles.videoFeedContainer}>
-        <EventVideoFeed
-          eventId={eventId}
-          userId={userId}
-          filterByUser={activeTab === "you"}
-        />
+        <EventVideoFeed />
       </View>
     </View>
   );
@@ -74,7 +66,7 @@ export default function EventGallery({
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1, // Changed from no flex to flex: 1
+    flex: 1,
     backgroundColor: "#000",
   },
   header: {
@@ -117,7 +109,6 @@ const styles = StyleSheet.create({
     color: "#000",
   },
   videoFeedContainer: {
-    flex: 1, // Changed from fixed height to flex: 1
-    // Removed negative margins
+    flex: 1,
   },
 });

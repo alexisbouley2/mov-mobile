@@ -5,6 +5,7 @@ import {
   Text,
   StyleSheet,
   Modal,
+  Animated,
   FlatList,
   TouchableOpacity,
   ActivityIndicator,
@@ -12,7 +13,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useEventParticipants } from "@/contexts/EventParticipantsContext";
 import { useBottomSheet } from "@/hooks/event/useBottomSheet";
-import ParticipantListItem from "../ParticipantListItem";
+import ParticipantListItem from "@/components/event/participants/ParticipantListItem";
 
 interface EventParticipantsBottomSheetProps {
   visible: boolean;
@@ -81,10 +82,13 @@ export default function EventParticipantsBottomSheet({
           onPress={closeSheet}
         />
 
-        <View
+        <Animated.View
           style={[
             styles.bottomSheet,
-            { height: BOTTOM_SHEET_HEIGHT, transform: [{ translateY }] },
+            {
+              height: BOTTOM_SHEET_HEIGHT,
+              transform: [{ translateY }],
+            },
           ]}
           {...panResponder.panHandlers}
         >
@@ -118,7 +122,7 @@ export default function EventParticipantsBottomSheet({
               bounces={true}
             />
           )}
-        </View>
+        </Animated.View>
       </View>
     </Modal>
   );

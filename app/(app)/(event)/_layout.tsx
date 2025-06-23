@@ -3,17 +3,20 @@ import { Stack } from "expo-router";
 import { EventProvider } from "@/contexts/EventContext";
 import { EventMessagesProvider } from "@/contexts/EventMessagesContext";
 import { EventParticipantsProvider } from "@/contexts/EventParticipantsContext";
+import { EventVideosProvider } from "@/contexts/EventVideosContext";
 
 export default function EventLayout() {
   return (
     <EventProvider>
       <EventMessagesProvider>
         <EventParticipantsProvider>
-          <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="[id]" />
-            <Stack.Screen name="edit" />
-            <Stack.Screen name="chat" />
-          </Stack>
+          <EventVideosProvider>
+            <Stack screenOptions={{ headerShown: false }}>
+              <Stack.Screen name="[id]" />
+              <Stack.Screen name="edit" />
+              <Stack.Screen name="chat" />
+            </Stack>
+          </EventVideosProvider>
         </EventParticipantsProvider>
       </EventMessagesProvider>
     </EventProvider>
