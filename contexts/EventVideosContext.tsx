@@ -64,6 +64,7 @@ interface EventVideosContextType {
   activeTab: "all" | "you";
 
   // Methods
+  setActiveTab: (_tab: "all" | "you") => void;
   loadAllVideos: (_eventId: string) => Promise<void>;
   loadUserVideos: (_eventId: string, _userId: string) => Promise<void>;
   loadMoreAllVideos: () => Promise<void>;
@@ -98,6 +99,7 @@ const EventVideosContext = createContext<EventVideosContextType>({
   modalVisible: false,
   currentVideoIndex: 0,
   activeTab: "all",
+  setActiveTab: () => {},
   loadAllVideos: async () => {},
   loadUserVideos: async () => {},
   loadMoreAllVideos: async () => {},
@@ -511,6 +513,7 @@ export function EventVideosProvider({
       modalVisible,
       currentVideoIndex,
       activeTab,
+      setActiveTab,
       loadAllVideos,
       loadUserVideos,
       loadMoreAllVideos,
@@ -538,6 +541,7 @@ export function EventVideosProvider({
       modalVisible,
       currentVideoIndex,
       activeTab,
+      setActiveTab,
       loadAllVideos,
       loadUserVideos,
       loadMoreAllVideos,
