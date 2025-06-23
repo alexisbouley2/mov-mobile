@@ -249,6 +249,7 @@ export function EventMessagesProvider({
 
   // Load more messages (pagination)
   const loadMoreMessages = useCallback(async () => {
+    // Only allow loading more if initial load is complete and we're not currently loading
     if (hasMore && !messagesLoading && currentEventId) {
       await loadMessagesPage(currentEventId, page + 1);
     }
@@ -258,13 +259,14 @@ export function EventMessagesProvider({
     setError(null);
   }, []);
 
-  // Auto-load preview when event changes
+  // Auto-load preview and messages when event changes
   useEffect(() => {
     if (event?.id) {
       setCurrentEventId(event.id);
       loadPreview(event.id);
+      loadMessages(event.id);
     }
-  }, [event?.id, loadPreview]);
+  }, [event?.id, loadPreview, loadMessages]);
 
   // Set up real-time subscription for message updates
   useEffect(() => {
