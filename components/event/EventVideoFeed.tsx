@@ -1,4 +1,3 @@
-// Updated components/event/EventVideoFeed.tsx
 import React from "react";
 import {
   View,
@@ -26,8 +25,6 @@ export default function EventVideoFeed() {
     userVideosLoading,
     allVideosLoadingMore,
     userVideosLoadingMore,
-    // allVideosHasMore,
-    // userVideosHasMore,
     loadMoreAllVideos,
     loadMoreUserVideos,
     refreshAllVideos,
@@ -44,7 +41,6 @@ export default function EventVideoFeed() {
   const isLoading = activeTab === "all" ? allVideosLoading : userVideosLoading;
   const isLoadingMore =
     activeTab === "all" ? allVideosLoadingMore : userVideosLoadingMore;
-  // const hasMore = activeTab === "all" ? allVideosHasMore : userVideosHasMore;
 
   const handleLoadMore = () => {
     if (activeTab === "all") {
@@ -179,7 +175,7 @@ export default function EventVideoFeed() {
         videos={currentVideos}
         initialIndex={currentVideoIndex}
         onClose={() => {}}
-        onIndexChange={(_index) => {}}
+        onIndexChange={() => {}}
       />
     </View>
   );

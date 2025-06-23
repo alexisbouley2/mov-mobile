@@ -1,28 +1,22 @@
-// Updated components/event/VideoViewerModal.tsx
-import React, { useState, useRef, useEffect } from "react";
+import React from "react";
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   Modal,
-  FlatList,
-  Dimensions,
   SafeAreaView,
-  ActivityIndicator,
   StatusBar,
 } from "react-native";
-import { Video, ResizeMode } from "expo-av";
 import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
+import VideoCarousel from "./VideoCarousel";
 import { useEventVideos } from "@/contexts/EventVideosContext";
-import log from "@/utils/logger";
-
-const { width, height } = Dimensions.get("window");
+import { VideoItem } from "@/contexts/EventVideosContext";
 
 interface VideoViewerModalProps {
   visible: boolean;
-  videos: any[];
+  videos: VideoItem[];
   initialIndex: number;
   onClose: () => void;
   onIndexChange?: (_index: number) => void;
@@ -35,140 +29,24 @@ export default function VideoViewerModal({
   onClose,
   onIndexChange,
 }: VideoViewerModalProps) {
-  const {
-    currentVideoIndex,
-    setCurrentVideoIndex,
-    preloadedVideos,
-    closeVideoModal,
-  } = useEventVideos();
+  const { currentVideoIndex, setCurrentVideoIndex, closeVideoModal } =
+    useEventVideos();
 
-  const [loadingVideo, setLoadingVideo] = useState(true);
-  const flatListRef = useRef<FlatList>(null);
-  const videoRef = useRef<Video>(null);
-
-  // Use context index instead of prop
-  const activeIndex = currentVideoIndex;
-
-  // Reset loading state when video changes
-  useEffect(() => {
-    setLoadingVideo(true);
-  }, [activeIndex]);
-
-  // Auto-scroll to initial video when modal opens
-  useEffect(() => {
-    if (visible && videos.length > 0) {
-      setTimeout(() => {
-        flatListRef.current?.scrollToIndex({
-          index: initialIndex,
-          animated: false,
-        });
-      }, 100);
-    }
-  }, [visible, initialIndex, videos.length]);
-
-  const handleVideoLoad = () => {
-    setLoadingVideo(false);
+  const handleIndexChange = (index: number) => {
+    setCurrentVideoIndex(index);
+    onIndexChange?.(index);
   };
-
-  const handleVideoError = (error: any) => {
-    log.error("Video playback error:", error);
-    setLoadingVideo(false);
-  };
-
-  const onViewableItemsChanged = useRef(({ viewableItems }: any) => {
-    if (viewableItems.length > 0) {
-      const newIndex = viewableItems[0].index;
-      setCurrentVideoIndex(newIndex);
-      onIndexChange?.(newIndex);
-    }
-  }).current;
-
-  const viewabilityConfig = useRef({
-    itemVisiblePercentThreshold: 80,
-  }).current;
 
   const handleClose = () => {
     closeVideoModal();
     onClose();
   };
 
-  const renderVideoItem = ({ item, index }: { item: any; index: number }) => {
-    const isActive = index === activeIndex;
-    const isPreloaded = preloadedVideos.has(item.id);
+  const currentVideo = videos[currentVideoIndex];
 
-    return (
-      <View style={styles.videoContainer}>
-        <View style={styles.videoWrapper}>
-          {isActive ? (
-            <>
-              <Video
-                ref={videoRef}
-                source={{ uri: item.videoUrl }}
-                style={styles.video}
-                shouldPlay={true}
-                isLooping={true}
-                resizeMode={ResizeMode.CONTAIN}
-                onLoad={handleVideoLoad}
-                onError={handleVideoError}
-                onLoadStart={() => setLoadingVideo(true)}
-              />
-
-              {/* Loading overlay - don't show if preloaded */}
-              {loadingVideo && !isPreloaded && (
-                <View style={styles.loadingOverlay}>
-                  <ActivityIndicator size="large" color="white" />
-                </View>
-              )}
-
-              {/* Preload indicator */}
-              {isPreloaded && loadingVideo && (
-                <View style={styles.preloadIndicator}>
-                  <Text style={styles.preloadText}>Preloaded</Text>
-                </View>
-              )}
-            </>
-          ) : (
-            <>
-              <Image
-                source={{ uri: item.thumbnailUrl }}
-                style={styles.video}
-                contentFit="contain"
-              />
-
-              {/* Show preload indicator on thumbnails */}
-              {isPreloaded && (
-                <View style={styles.preloadBadge}>
-                  <Text style={styles.preloadBadgeText}>Ready</Text>
-                </View>
-              )}
-            </>
-          )}
-        </View>
-
-        {/* User info overlay */}
-        <View style={styles.userOverlay}>
-          <View style={styles.userInfo}>
-            <Image
-              source={{
-                uri:
-                  item.user.photo ||
-                  "https://via.placeholder.com/32/666/666.png",
-              }}
-              style={styles.userAvatar}
-              contentFit="cover"
-            />
-            <Text style={styles.username}>{item.user.username}</Text>
-          </View>
-
-          <Text style={styles.timestamp}>
-            {new Date(item.createdAt).toLocaleDateString()}
-          </Text>
-        </View>
-      </View>
-    );
-  };
-
-  if (!visible) return null;
+  if (!visible || videos.length === 0) {
+    return null;
+  }
 
   return (
     <Modal
@@ -180,53 +58,51 @@ export default function VideoViewerModal({
       <SafeAreaView style={styles.container}>
         <StatusBar barStyle="light-content" backgroundColor="#000" />
 
-        {/* Header with close button */}
+        {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
             <Ionicons name="close" size={28} color="white" />
           </TouchableOpacity>
 
           <Text style={styles.headerTitle}>
-            {activeIndex + 1} of {videos.length}
+            {currentVideoIndex + 1} of {videos.length}
           </Text>
 
-          {/* Preload status */}
-          <View style={styles.preloadStatus}>
-            <Text style={styles.preloadStatusText}>
-              Preloaded: {preloadedVideos.size}
-            </Text>
-          </View>
+          <View style={styles.spacer} />
         </View>
 
-        {/* Video list */}
-        <FlatList
-          ref={flatListRef}
-          data={videos}
-          renderItem={renderVideoItem}
-          keyExtractor={(item) => item.id}
-          horizontal={false}
-          pagingEnabled={true}
-          showsVerticalScrollIndicator={false}
-          onViewableItemsChanged={onViewableItemsChanged}
-          viewabilityConfig={viewabilityConfig}
-          getItemLayout={(data, index) => ({
-            length: height - 60,
-            offset: (height - 60) * index,
-            index,
-          })}
-          initialScrollIndex={initialIndex}
-          onScrollToIndexFailed={(info) => {
-            setTimeout(() => {
-              flatListRef.current?.scrollToIndex({
-                index: info.index,
-                animated: false,
-              });
-            }, 100);
-          }}
-          snapToInterval={height - 60}
-          snapToAlignment="start"
-          decelerationRate="fast"
-        />
+        {/* Video Carousel */}
+        <View style={styles.carouselContainer}>
+          <VideoCarousel
+            videos={videos}
+            initialIndex={initialIndex}
+            onIndexChange={handleIndexChange}
+          />
+
+          {/* User Info Overlay */}
+          {currentVideo && (
+            <View style={styles.userOverlay}>
+              <View style={styles.userInfo}>
+                <Image
+                  source={{
+                    uri:
+                      currentVideo.user.photo ||
+                      "https://via.placeholder.com/32/666/666.png",
+                  }}
+                  style={styles.userAvatar}
+                  contentFit="cover"
+                />
+                <Text style={styles.username}>
+                  {currentVideo.user.username}
+                </Text>
+              </View>
+
+              <Text style={styles.timestamp}>
+                {new Date(currentVideo.createdAt).toLocaleDateString()}
+              </Text>
+            </View>
+          )}
+        </View>
       </SafeAreaView>
     </Modal>
   );
@@ -236,6 +112,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#000",
+    borderWidth: 10,
+    borderColor: "blue",
   },
   header: {
     flexDirection: "row",
@@ -258,79 +136,21 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
   },
-  preloadStatus: {
-    backgroundColor: "rgba(255, 255, 255, 0.1)",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
+  spacer: {
+    width: 40,
   },
-  preloadStatusText: {
-    color: "white",
-    fontSize: 12,
-  },
-  videoContainer: {
-    width: width,
-    height: height - 60,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#000",
-  },
-  videoWrapper: {
-    width: "100%",
-    height: "100%",
-    justifyContent: "center",
-    alignItems: "center",
+  carouselContainer: {
+    flex: 1,
     position: "relative",
-  },
-  video: {
-    width: "100%",
-    height: "100%",
-  },
-  loadingOverlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.3)",
-    zIndex: 1,
-  },
-  preloadIndicator: {
-    position: "absolute",
-    top: 20,
-    right: 20,
-    backgroundColor: "rgba(0, 255, 0, 0.8)",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
-    zIndex: 2,
-  },
-  preloadText: {
-    color: "white",
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  preloadBadge: {
-    position: "absolute",
-    top: 10,
-    right: 10,
-    backgroundColor: "rgba(0, 255, 0, 0.8)",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  preloadBadgeText: {
-    color: "white",
-    fontSize: 10,
-    fontWeight: "600",
+    borderWidth: 10,
+    borderColor: "red",
   },
   userOverlay: {
     position: "absolute",
     bottom: 40,
     left: 20,
     right: 20,
+    zIndex: 10,
   },
   userInfo: {
     flexDirection: "row",

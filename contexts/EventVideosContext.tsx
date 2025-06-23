@@ -1,4 +1,3 @@
-// contexts/EventVideosContext.tsx
 import React, {
   createContext,
   useContext,
@@ -6,12 +5,12 @@ import React, {
   useCallback,
   useMemo,
   useEffect,
-  useRef,
 } from "react";
 import { config } from "@/lib/config";
 import log from "@/utils/logger";
 import { useUserProfile } from "@/contexts/UserProfileContext";
 import { useEvent } from "@/contexts/EventContext";
+import { videoCacheService } from "@/services/video/videoCacheService";
 
 export interface VideoItem {
   id: string;
@@ -32,13 +31,6 @@ export interface VideoFeedResponse {
   videos: VideoItem[];
   nextCursor: string | null;
   hasMore: boolean;
-}
-
-interface PreloadedVideo {
-  id: string;
-  videoUrl: string;
-  isPreloaded: boolean;
-  preloadPromise?: Promise<void>;
 }
 
 interface EventVideosContextType {
@@ -77,9 +69,6 @@ interface EventVideosContextType {
   closeVideoModal: () => void;
   setCurrentVideoIndex: (_index: number) => void;
 
-  // Preloading
-  preloadedVideos: Map<string, PreloadedVideo>;
-
   // Error states
   error: string | null;
   clearError: () => void;
@@ -109,7 +98,6 @@ const EventVideosContext = createContext<EventVideosContextType>({
   openVideoModal: () => {},
   closeVideoModal: () => {},
   setCurrentVideoIndex: () => {},
-  preloadedVideos: new Map(),
   error: null,
   clearError: () => {},
 });
@@ -148,12 +136,6 @@ export function EventVideosProvider({
   const [modalVisible, setModalVisible] = useState(false);
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const [activeTab, setActiveTab] = useState<"all" | "you">("all");
-
-  // Preloading state
-  const [preloadedVideos, setPreloadedVideos] = useState<
-    Map<string, PreloadedVideo>
-  >(new Map());
-  const preloadCache = useRef<Map<string, HTMLVideoElement>>(new Map());
 
   // Error state
   const [error, setError] = useState<string | null>(null);
@@ -199,6 +181,11 @@ export function EventVideosProvider({
         setAllVideos(data.videos);
         setAllVideosNextCursor(data.nextCursor);
         setAllVideosHasMore(data.hasMore);
+
+        // Start preloading first few videos
+        if (data.videos.length > 0) {
+          videoCacheService.preloadVideosAround(data.videos, 0);
+        }
       } catch (err) {
         log.error("Error loading all videos:", err);
         setError("Failed to load videos");
@@ -222,6 +209,11 @@ export function EventVideosProvider({
         setUserVideos(data.videos);
         setUserVideosNextCursor(data.nextCursor);
         setUserVideosHasMore(data.hasMore);
+
+        // Start preloading first few videos
+        if (data.videos.length > 0) {
+          videoCacheService.preloadVideosAround(data.videos, 0);
+        }
       } catch (err) {
         log.error("Error loading user videos:", err);
         setError("Failed to load your videos");
@@ -232,7 +224,7 @@ export function EventVideosProvider({
     [fetchVideos]
   );
 
-  // Load more all videos
+  // Load more functions (simplified)
   const loadMoreAllVideos = useCallback(async () => {
     if (
       !event?.id ||
@@ -245,7 +237,6 @@ export function EventVideosProvider({
     try {
       setAllVideosLoadingMore(true);
       const data = await fetchVideos(event.id, allVideosNextCursor);
-
       setAllVideos((prev) => [...prev, ...data.videos]);
       setAllVideosNextCursor(data.nextCursor);
       setAllVideosHasMore(data.hasMore);
@@ -262,7 +253,6 @@ export function EventVideosProvider({
     fetchVideos,
   ]);
 
-  // Load more user videos
   const loadMoreUserVideos = useCallback(async () => {
     if (
       !event?.id ||
@@ -276,7 +266,6 @@ export function EventVideosProvider({
     try {
       setUserVideosLoadingMore(true);
       const data = await fetchVideos(event.id, userVideosNextCursor, user.id);
-
       setUserVideos((prev) => [...prev, ...data.videos]);
       setUserVideosNextCursor(data.nextCursor);
       setUserVideosHasMore(data.hasMore);
@@ -311,128 +300,6 @@ export function EventVideosProvider({
     }
   }, [event?.id, user?.id, loadUserVideos]);
 
-  // Video preloading functionality
-  const preloadVideo = useCallback(async (video: VideoItem): Promise<void> => {
-    return new Promise((resolve, reject) => {
-      // Check if already preloaded
-      if (preloadCache.current.has(video.id)) {
-        resolve();
-        return;
-      }
-
-      // Create video element for preloading
-      const videoElement = document.createElement("video");
-      videoElement.crossOrigin = "anonymous";
-      videoElement.preload = "auto";
-      videoElement.muted = true; // Required for autoplay policies
-
-      const handleCanPlay = () => {
-        preloadCache.current.set(video.id, videoElement);
-        setPreloadedVideos(
-          (prev) =>
-            new Map(
-              prev.set(video.id, {
-                id: video.id,
-                videoUrl: video.videoUrl,
-                isPreloaded: true,
-              })
-            )
-        );
-        cleanup();
-        resolve();
-      };
-
-      const handleError = () => {
-        log.error(`Failed to preload video: ${video.id}`);
-        cleanup();
-        reject(new Error(`Failed to preload video: ${video.id}`));
-      };
-
-      const cleanup = () => {
-        videoElement.removeEventListener("canplay", handleCanPlay);
-        videoElement.removeEventListener("error", handleError);
-      };
-
-      videoElement.addEventListener("canplay", handleCanPlay);
-      videoElement.addEventListener("error", handleError);
-
-      // Start preloading
-      videoElement.src = video.videoUrl;
-      videoElement.load();
-
-      // Track preloading state
-      setPreloadedVideos(
-        (prev) =>
-          new Map(
-            prev.set(video.id, {
-              id: video.id,
-              videoUrl: video.videoUrl,
-              isPreloaded: false,
-              preloadPromise: new Promise((res) => res()),
-            })
-          )
-      );
-    });
-  }, []);
-
-  // Preload adjacent videos when modal opens or current video changes
-  const preloadAdjacentVideos = useCallback(
-    (index: number, videos: VideoItem[]) => {
-      const indicesToPreload = [];
-
-      // Preload 2 before and 2 after
-      for (
-        let i = Math.max(0, index - 2);
-        i <= Math.min(videos.length - 1, index + 2);
-        i++
-      ) {
-        if (i !== index) {
-          // Don't preload current video
-          indicesToPreload.push(i);
-        }
-      }
-
-      indicesToPreload.forEach((i) => {
-        const video = videos[i];
-        if (video && !preloadCache.current.has(video.id)) {
-          preloadVideo(video).catch((err) => {
-            log.error("Preload failed:", err);
-          });
-        }
-      });
-    },
-    [preloadVideo]
-  );
-
-  // Cleanup old preloaded videos (keep only videos within range of current)
-  const cleanupOldPreloads = useCallback(
-    (currentIndex: number, videos: VideoItem[]) => {
-      const keepRange = 5; // Keep videos within 5 positions
-      // const currentTime = Date.now();
-
-      preloadCache.current.forEach((videoElement, videoId) => {
-        const videoIndex = videos.findIndex((v) => v.id === videoId);
-        const shouldKeep =
-          videoIndex >= 0 && Math.abs(videoIndex - currentIndex) <= keepRange;
-
-        if (!shouldKeep) {
-          // Remove from cache
-          videoElement.src = "";
-          videoElement.load();
-          preloadCache.current.delete(videoId);
-
-          // Remove from state
-          setPreloadedVideos((prev) => {
-            const newMap = new Map(prev);
-            newMap.delete(videoId);
-            return newMap;
-          });
-        }
-      });
-    },
-    []
-  );
-
   // Modal management
   const openVideoModal = useCallback(
     (index: number, tab: "all" | "you") => {
@@ -440,36 +307,26 @@ export function EventVideosProvider({
       setActiveTab(tab);
       setModalVisible(true);
 
-      // Start preloading adjacent videos
+      // Start preloading videos around the opened index
       const videos = tab === "all" ? allVideos : userVideos;
-      preloadAdjacentVideos(index, videos);
+      videoCacheService.preloadVideosAround(videos, index);
     },
-    [allVideos, userVideos, preloadAdjacentVideos]
+    [allVideos, userVideos]
   );
 
   const closeVideoModal = useCallback(() => {
     setModalVisible(false);
-    // Keep preloaded videos for potential reopening
   }, []);
 
   const updateCurrentVideoIndex = useCallback(
     (index: number) => {
       setCurrentVideoIndex(index);
 
-      // Preload adjacent videos for new position
+      // Preload videos around new position
       const videos = activeTab === "all" ? allVideos : userVideos;
-      preloadAdjacentVideos(index, videos);
-
-      // Cleanup old preloads
-      cleanupOldPreloads(index, videos);
+      videoCacheService.preloadVideosAround(videos, index);
     },
-    [
-      activeTab,
-      allVideos,
-      userVideos,
-      preloadAdjacentVideos,
-      cleanupOldPreloads,
-    ]
+    [activeTab, allVideos, userVideos]
   );
 
   const clearError = useCallback(() => {
@@ -486,15 +343,10 @@ export function EventVideosProvider({
     }
   }, [event?.id, user?.id, loadAllVideos, loadUserVideos]);
 
-  // Cleanup on unmount
+  // Cleanup cache on unmount
   useEffect(() => {
     return () => {
-      // Cleanup all preloaded videos
-      preloadCache.current.forEach((videoElement) => {
-        videoElement.src = "";
-        videoElement.load();
-      });
-      preloadCache.current.clear();
+      videoCacheService.clearCache();
     };
   }, []);
 
@@ -523,7 +375,6 @@ export function EventVideosProvider({
       openVideoModal,
       closeVideoModal,
       setCurrentVideoIndex: updateCurrentVideoIndex,
-      preloadedVideos,
       error,
       clearError,
     }),
@@ -551,7 +402,6 @@ export function EventVideosProvider({
       openVideoModal,
       closeVideoModal,
       updateCurrentVideoIndex,
-      preloadedVideos,
       error,
       clearError,
     ]
