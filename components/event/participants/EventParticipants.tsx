@@ -1,66 +1,26 @@
-// components/event/EventParticipants.tsx
+// Updated components/event/EventParticipants.tsx
 import React, { useState } from "react";
-import { View, Text, StyleSheet, Image, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import EventParticipantsBottomSheet from "./EventParticipantsBottomSheet";
-
-interface Participant {
-  id: string;
-  userId: string;
-  user: {
-    id: string;
-    username: string;
-    photoThumbnailUrl: string | null | undefined;
-  };
-  joinedAt: string;
-}
-
-interface EventParticipantsProps {
-  participants: Participant[];
-}
+import ParticipantAvatar from "@/components/ui/ParticipantAvatar";
+import { useEventParticipants } from "@/contexts/EventParticipantsContext";
 
 const MAX_VISIBLE_PARTICIPANTS = 4;
 
-export default function EventParticipants({
-  participants,
-}: EventParticipantsProps) {
+export default function EventParticipants() {
   const [isBottomSheetVisible, setIsBottomSheetVisible] = useState(false);
+  const { previewParticipants } = useEventParticipants();
 
-  if (participants.length === 0) {
+  if (previewParticipants.length === 0) {
     return null;
   }
 
-  const visibleParticipants = participants.slice(0, MAX_VISIBLE_PARTICIPANTS);
-  const hiddenCount = participants.length - MAX_VISIBLE_PARTICIPANTS;
-
-  const renderParticipantAvatar = (
-    participant: Participant,
-    size: number = 40
-  ) => {
-    if (participant.user.photoThumbnailUrl) {
-      return (
-        <Image
-          source={{ uri: participant.user.photoThumbnailUrl }}
-          style={[
-            styles.participantImage,
-            { width: size, height: size, borderRadius: size / 2 },
-          ]}
-        />
-      );
-    }
-    return (
-      <View
-        style={[
-          styles.avatarPlaceholder,
-          { width: size, height: size, borderRadius: size / 2 },
-        ]}
-      >
-        <Text style={[styles.avatarText, { fontSize: size * 0.35 }]}>
-          {participant.user.username.charAt(0).toUpperCase()}
-        </Text>
-      </View>
-    );
-  };
+  const visibleParticipants = previewParticipants.slice(
+    0,
+    MAX_VISIBLE_PARTICIPANTS
+  );
+  const hiddenCount = previewParticipants.length - MAX_VISIBLE_PARTICIPANTS;
 
   return (
     <>
@@ -79,7 +39,7 @@ export default function EventParticipants({
                 { marginLeft: index > 0 ? -8 : 0 },
               ]}
             >
-              {renderParticipantAvatar(participant)}
+              <ParticipantAvatar user={participant.user} size={40} />
             </View>
           ))}
           {hiddenCount > 0 && (
@@ -87,7 +47,7 @@ export default function EventParticipants({
               <Text style={styles.avatarText}>+{hiddenCount}</Text>
             </View>
           )}
-          {participants.length > MAX_VISIBLE_PARTICIPANTS && (
+          {previewParticipants.length > MAX_VISIBLE_PARTICIPANTS && (
             <Ionicons
               name="chevron-forward"
               size={16}
@@ -100,7 +60,6 @@ export default function EventParticipants({
 
       <EventParticipantsBottomSheet
         visible={isBottomSheetVisible}
-        participants={participants}
         onClose={() => setIsBottomSheetVisible(false)}
       />
     </>
@@ -131,15 +90,6 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: "#000",
     overflow: "hidden",
-  },
-  participantImage: {
-    width: "100%",
-    height: "100%",
-  },
-  avatarPlaceholder: {
-    backgroundColor: "#555",
-    justifyContent: "center",
-    alignItems: "center",
   },
   moreParticipants: {
     backgroundColor: "#333",

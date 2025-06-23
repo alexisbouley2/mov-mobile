@@ -15,7 +15,7 @@ import EventHeader from "@/components/event/EventHeader";
 import EventActions from "@/components/event/EventActions";
 import EventLocation from "@/components/event/EventLocation";
 import EventInformation from "@/components/event/EventInformation";
-import EventParticipants from "@/components/event/EventParticipants";
+import EventParticipants from "@/components/event/participants/EventParticipants";
 import EventMessages from "@/components/event/EventMessages";
 import EventGallery from "@/components/event/EventGallery";
 import { useUserProfile } from "@/contexts/UserProfileContext";
@@ -72,7 +72,7 @@ export default function EventDetailScreen() {
     ...(event.information
       ? [{ type: "information", data: event.information }]
       : []),
-    { type: "participants", data: event.participants || [] },
+    { type: "participants", data: {} },
     { type: "chat", data: { eventId: event.id } },
     {
       type: "gallery",
@@ -121,7 +121,7 @@ export default function EventDetailScreen() {
       case "participants":
         return (
           <View style={styles.content}>
-            <EventParticipants participants={item.data} />
+            <EventParticipants />
           </View>
         );
 

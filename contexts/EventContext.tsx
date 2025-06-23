@@ -12,6 +12,7 @@ import log from "@/utils/logger";
 export interface User {
   id: string;
   username: string;
+  profileThumbnailUrl: string | null | undefined;
   //   photo: string | null | undefined;
 }
 

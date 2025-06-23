@@ -9,7 +9,7 @@ import {
   Dimensions,
 } from "react-native";
 import { IconSymbol } from "@/components/ui/IconSymbol";
-import { EventDetail } from "@/hooks/event/useEventDetail";
+import { EventDetail } from "@/contexts/EventContext";
 
 interface EventHeaderProps {
   event: EventDetail;
