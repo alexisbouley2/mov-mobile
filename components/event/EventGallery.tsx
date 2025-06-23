@@ -9,10 +9,15 @@ interface EventGalleryProps {
 }
 
 export default function EventGallery({ eventDate }: EventGalleryProps) {
-  const { activeTab } = useEventVideos();
+  const { activeTab, setActiveTab } = useEventVideos();
 
   // Check if event is in the past (allow uploads)
   const isEventPast = new Date() > eventDate;
+
+  const handleTabPress = (tab: "all" | "you") => {
+    // Update active tab in context - this will trigger preloading for new tab
+    setActiveTab(tab);
+  };
 
   return (
     <View style={styles.container}>
@@ -29,7 +34,7 @@ export default function EventGallery({ eventDate }: EventGalleryProps) {
       <View style={styles.tabContainer}>
         <TouchableOpacity
           style={[styles.tab, activeTab === "all" && styles.activeTab]}
-          onPress={() => {}} // Handled by EventVideoFeed
+          onPress={() => handleTabPress("all")}
         >
           <Text
             style={[
@@ -43,7 +48,7 @@ export default function EventGallery({ eventDate }: EventGalleryProps) {
 
         <TouchableOpacity
           style={[styles.tab, activeTab === "you" && styles.activeTab]}
-          onPress={() => {}} // Handled by EventVideoFeed
+          onPress={() => handleTabPress("you")}
         >
           <Text
             style={[

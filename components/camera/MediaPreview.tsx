@@ -67,7 +67,7 @@ export default function MediaPreview({
 
       // Navigate to event selection immediately
       router.push({
-        pathname: "/(app)/(event)/select-events",
+        pathname: "/(app)/(events)/select-events",
         params: { jobId: newJobId },
       });
     } catch (error) {
