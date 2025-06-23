@@ -11,13 +11,13 @@ import {
 import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
 import { useCallback } from "react";
 import { useEvent } from "@/contexts/EventContext";
-import EventHeader from "@/components/event/EventHeader";
-import EventActions from "@/components/event/EventActions";
-import EventLocation from "@/components/event/EventLocation";
-import EventInformation from "@/components/event/EventInformation";
+import EventHeader from "@/components/event/global/EventHeader";
+import EventActions from "@/components/event/global/EventActions";
+import EventLocation from "@/components/event/global/EventLocation";
+import EventInformation from "@/components/event/global/EventInformation";
 import EventParticipants from "@/components/event/participants/EventParticipants";
 import EventMessages from "@/components/event/EventMessages";
-import EventGallery from "@/components/event/EventGallery";
+import EventGallery from "@/components/event/gallery/EventGallery";
 import { useUserProfile } from "@/contexts/UserProfileContext";
 
 export default function EventDetailScreen() {

@@ -39,6 +39,7 @@ export default function VirtualVideoPlayer({
 
     if (cached?.isReady) {
       // Use cached version immediately
+      console.log("localUri", cached.localUri);
       setVideoSource(cached.localUri);
       setIsLoading(false);
     } else {
