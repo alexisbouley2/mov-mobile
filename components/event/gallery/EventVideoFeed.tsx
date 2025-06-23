@@ -26,7 +26,6 @@ export default function EventVideoFeed() {
     refreshUserVideos,
     openVideoModal,
     modalVisible,
-    currentVideoIndex,
     activeTab,
     error,
   } = useEventVideos();
@@ -100,7 +99,6 @@ export default function EventVideoFeed() {
       <VideoViewerModal
         visible={modalVisible}
         videos={currentVideos}
-        initialIndex={currentVideoIndex}
         onClose={() => {}}
         onIndexChange={() => {}}
       />

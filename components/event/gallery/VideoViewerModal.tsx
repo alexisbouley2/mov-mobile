@@ -11,13 +11,11 @@ import {
 import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 import VideoCarousel from "./VideoCarousel";
-import { useEventVideos } from "@/contexts/EventVideosContext";
-import { VideoItem } from "@/contexts/EventVideosContext";
+import { useEventVideos, VideoItem } from "@/contexts/EventVideosContext";
 
 interface VideoViewerModalProps {
   visible: boolean;
   videos: VideoItem[];
-  initialIndex: number;
   onClose: () => void;
   onIndexChange?: (_index: number) => void;
 }
@@ -25,7 +23,6 @@ interface VideoViewerModalProps {
 export default function VideoViewerModal({
   visible,
   videos,
-  initialIndex,
   onClose,
   onIndexChange,
 }: VideoViewerModalProps) {
@@ -55,31 +52,33 @@ export default function VideoViewerModal({
       presentationStyle="fullScreen"
       onRequestClose={handleClose}
     >
-      <SafeAreaView style={styles.container}>
+      <View style={styles.container}>
         <StatusBar barStyle="light-content" backgroundColor="#000" />
 
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
-            <Ionicons name="close" size={28} color="white" />
-          </TouchableOpacity>
+        {/* Header - Fixed at top with proper z-index */}
+        <SafeAreaView style={styles.headerSafeArea}>
+          <View style={styles.header}>
+            <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
+              <Ionicons name="close" size={28} color="white" />
+            </TouchableOpacity>
 
-          <Text style={styles.headerTitle}>
-            {currentVideoIndex + 1} of {videos.length}
-          </Text>
+            <Text style={styles.headerTitle}>
+              {currentVideoIndex + 1} of {videos.length}
+            </Text>
 
-          <View style={styles.spacer} />
-        </View>
+            <View style={styles.spacer} />
+          </View>
+        </SafeAreaView>
 
-        {/* Video Carousel */}
+        {/* Video Carousel Container */}
         <View style={styles.carouselContainer}>
           <VideoCarousel
             videos={videos}
-            initialIndex={initialIndex}
+            initialIndex={currentVideoIndex}
             onIndexChange={handleIndexChange}
           />
 
-          {/* User Info Overlay */}
+          {/* User Info Overlay - Fixed at bottom */}
           {currentVideo && (
             <View style={styles.userOverlay}>
               <View style={styles.userInfo}>
@@ -103,7 +102,7 @@ export default function VideoViewerModal({
             </View>
           )}
         </View>
-      </SafeAreaView>
+      </View>
     </Modal>
   );
 }
@@ -112,8 +111,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#000",
-    borderWidth: 10,
-    borderColor: "blue",
+  },
+  headerSafeArea: {
+    backgroundColor: "#000",
+    zIndex: 100, // Ensure header stays on top
   },
   header: {
     flexDirection: "row",
@@ -122,35 +123,42 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 15,
     height: 60,
+    backgroundColor: "rgba(0, 0, 0, 0.8)", // Semi-transparent background
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(255, 255, 255, 0.1)",
   },
   closeButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "rgba(255, 255, 255, 0.15)",
     alignItems: "center",
     justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.2)",
   },
   headerTitle: {
     color: "white",
     fontSize: 16,
     fontWeight: "600",
+    textAlign: "center",
   },
   spacer: {
-    width: 40,
+    width: 44, // Same width as close button for balance
   },
   carouselContainer: {
     flex: 1,
     position: "relative",
-    borderWidth: 10,
-    borderColor: "red",
   },
   userOverlay: {
     position: "absolute",
-    bottom: 40,
-    left: 20,
-    right: 20,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    paddingHorizontal: 20,
+    paddingVertical: 30,
     zIndex: 10,
+    backgroundColor: "linear-gradient(transparent, rgba(0,0,0,0.8))", // Gradient background
   },
   userInfo: {
     flexDirection: "row",
@@ -158,24 +166,25 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   userAvatar: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     marginRight: 12,
     borderWidth: 2,
     borderColor: "white",
   },
   username: {
     color: "white",
-    fontSize: 16,
-    fontWeight: "600",
+    fontSize: 18,
+    fontWeight: "700",
     textShadowColor: "rgba(0, 0, 0, 0.8)",
     textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 3,
+    textShadowRadius: 4,
   },
   timestamp: {
     color: "rgba(255, 255, 255, 0.8)",
     fontSize: 14,
+    fontWeight: "500",
     textShadowColor: "rgba(0, 0, 0, 0.8)",
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 3,

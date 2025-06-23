@@ -63,11 +63,15 @@ export default function VirtualVideoPlayer({
 
   // Handle play/pause based on active state
   useEffect(() => {
-    if (videoRef.current) {
-      if (isActive && videoSource) {
-        videoRef.current.playAsync();
+    if (videoRef.current && videoSource) {
+      if (isActive) {
+        videoRef.current.playAsync().catch((error) => {
+          log.error("Failed to play video:", error);
+        });
       } else {
-        videoRef.current.pauseAsync();
+        videoRef.current.pauseAsync().catch((error) => {
+          log.error("Failed to pause video:", error);
+        });
       }
     }
   }, [isActive, videoSource]);
@@ -85,7 +89,11 @@ export default function VirtualVideoPlayer({
   };
 
   if (!video || !videoSource) {
-    return <View style={[styles.container, style]} />;
+    return (
+      <View style={[styles.container, style]}>
+        <View style={styles.emptyState} />
+      </View>
+    );
   }
 
   return (
@@ -96,13 +104,14 @@ export default function VirtualVideoPlayer({
         style={styles.video}
         shouldPlay={isActive}
         isLooping={true}
-        resizeMode={ResizeMode.CONTAIN}
+        resizeMode={ResizeMode.COVER} // Changed to COVER for better full-screen experience
         onLoad={handleVideoLoad}
         onError={handleVideoError}
         onLoadStart={() => {
           console.log("Video load started");
           setIsLoading(true);
         }}
+        useNativeControls={false} // Hide native controls for cleaner look
       />
 
       {isLoading && (
@@ -118,11 +127,17 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#000",
-    borderWidth: 10,
-    borderColor: "green",
+    justifyContent: "center",
+    alignItems: "center",
   },
   video: {
+    width: "100%",
+    height: "100%",
+  },
+  emptyState: {
     flex: 1,
+    backgroundColor: "#111",
+    width: "100%",
   },
   loadingOverlay: {
     position: "absolute",
@@ -132,6 +147,6 @@ const styles = StyleSheet.create({
     bottom: 0,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.3)",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
 });
