@@ -1,9 +1,38 @@
 // components/events/EventCard.tsx
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
-import { Event as EventType } from "@/hooks/useEvents";
 import EventParticipants from "@/components/events/EventParticipants";
 import { CachedImage } from "../ui/CachedImage";
+
+export interface User {
+  id: string;
+  username: string;
+  photo?: string | null;
+  profileThumbnailUrl?: string | null;
+}
+
+export interface EventParticipant {
+  id: string;
+  user: User;
+  joinedAt: string;
+}
+
+export interface EventType {
+  id: string;
+  name: string;
+  information?: string | null;
+  date: string;
+  createdAt: string;
+  location?: string | null;
+  admin: User;
+  participants: EventParticipant[];
+  povCount?: number;
+  photo?: string | null;
+  coverThumbnailUrl?: string | null;
+  _count?: {
+    videos: number;
+  };
+}
 
 interface EventCardProps {
   event: EventType;

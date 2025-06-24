@@ -1,4 +1,4 @@
-import { usePhotoUpload } from "@/hooks/usePhotoUpload";
+import { usePhotoUpload } from "@/hooks/upload/usePhotoUpload";
 
 interface UseProfilePhotoProps {
   initialImageUrl?: string | null;

@@ -1,9 +1,44 @@
 // components/events/EventsContent.tsx
 import React from "react";
 import { ScrollView, View, Text, StyleSheet } from "react-native";
-import { CategorizedEvents } from "@/hooks/useEvents";
 import { useEventsLogic } from "@/hooks/events/useEventsLogic";
 import EventSection from "@/components/events/EventSection";
+
+export interface User {
+  id: string;
+  username: string;
+  photo?: string | null;
+  profileThumbnailUrl?: string | null;
+}
+
+export interface EventParticipant {
+  id: string;
+  user: User;
+  joinedAt: string;
+}
+
+export interface EventType {
+  id: string;
+  name: string;
+  information?: string | null;
+  date: string;
+  createdAt: string;
+  location?: string | null;
+  admin: User;
+  participants: EventParticipant[];
+  povCount?: number;
+  photo?: string | null;
+  coverThumbnailUrl?: string | null;
+  _count?: {
+    videos: number;
+  };
+}
+
+export interface CategorizedEvents {
+  current: EventType[];
+  planned: EventType[];
+  past: EventType[];
+}
 
 interface EventsContentProps {
   events: CategorizedEvents;
@@ -46,7 +81,7 @@ export default function EventsContent({
             <View key={monthYear}>
               <Text style={styles.monthTitle}>{monthYear}</Text>
               <EventSection
-                events={monthEvents}
+                events={monthEvents as EventType[]}
                 type="past"
                 onEventPress={onEventPress}
                 showTitle={false}

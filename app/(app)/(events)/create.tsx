@@ -1,14 +1,18 @@
+// app/(app)/(events)/create.tsx - Updated with context refresh
 import React from "react";
 import { SafeAreaView, StatusBar, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
-import { useCreateEvent } from "@/hooks/useCreateEvent";
+import { useCreateEvent } from "@/hooks/events/useCreateEvent";
+import { useUserEvents } from "@/contexts/UserEventsContext";
 import EventFormHeader from "@/components/event-form/EventFormHeader";
 import EventForm from "@/components/event-form/EventForm";
 import { useUserProfile } from "@/contexts/UserProfileContext";
 
 export default function CreateEventScreen() {
   const { user } = useUserProfile();
+  const { refetch } = useUserEvents();
   const router = useRouter();
+
   const {
     formData,
     loading,
@@ -25,7 +29,9 @@ export default function CreateEventScreen() {
     router.back();
   };
 
-  const handleCreateSuccess = () => {
+  const handleCreateSuccess = async () => {
+    // Refresh events context to show the new event immediately
+    await refetch();
     router.push("/(app)/(tabs)/events");
   };
 

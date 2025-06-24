@@ -1,3 +1,4 @@
+// app/(app)/(events)/select-events.tsx - Updated to use UserEventsContext
 import React, { useState, useEffect } from "react";
 import {
   View,
@@ -12,17 +13,16 @@ import {
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { useEvents } from "@/hooks/useEvents";
+import { useUserEvents } from "@/contexts/UserEventsContext";
 import { mediaUploadManager, type UploadJob } from "@/services/upload";
 import { config } from "@/lib/config";
 import log from "@/utils/logger";
-import { useUserProfile } from "@/contexts/UserProfileContext";
 
 export default function SelectEventsScreen() {
   const router = useRouter();
   const { jobId } = useLocalSearchParams<{ jobId: string }>();
-  const { user } = useUserProfile();
-  const { events, loading } = useEvents(user?.id || "");
+
+  const { events, loading, hasInitialData } = useUserEvents();
 
   const [selectedEventIds, setSelectedEventIds] = useState<Set<string>>(
     new Set()
@@ -151,7 +151,8 @@ export default function SelectEventsScreen() {
   const currentEvents = events.current || [];
   const hasActiveEvents = currentEvents.length > 0;
 
-  if (loading) {
+  // Show loading only if we haven't loaded data yet
+  if (loading && !hasInitialData) {
     return (
       <SafeAreaView style={styles.container}>
         <StatusBar hidden />

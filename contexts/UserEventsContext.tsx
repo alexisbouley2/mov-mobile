@@ -1,4 +1,4 @@
-// contexts/UserEventsContext.tsx
+// contexts/UserEventsContext.tsx - Updated with consolidated types
 import React, {
   createContext,
   useContext,
@@ -12,11 +12,12 @@ import { useAuth } from "./AuthContext";
 import { imageCacheService } from "@/services/imageCacheService";
 import log from "@/utils/logger";
 
-// Re-export types from useEvents for consistency
+// Consolidated types - single source of truth
 export interface User {
   id: string;
   username: string;
   photo?: string | null;
+  profileThumbnailUrl?: string | null;
 }
 
 export interface EventParticipant {
@@ -37,6 +38,7 @@ export interface Event {
   povCount?: number;
   photo?: string | null;
   coverThumbnailUrl?: string | null;
+  coverImageUrl?: string | null; // Added for consistency
   _count?: {
     videos: number;
   };
@@ -112,9 +114,11 @@ export function UserEventsProvider({
         }
 
         // Preload full cover images (used in event details)
-        if (event.photo) {
+        // Check both photo and coverImageUrl for flexibility
+        const fullImageUrl = event.photo || event.coverImageUrl;
+        if (fullImageUrl) {
           imagesToPreload.push({
-            url: event.photo,
+            url: fullImageUrl,
             policy: "cover-image",
           });
         }
@@ -164,6 +168,12 @@ export function UserEventsProvider({
 
         // Preload event cover images in background
         await preloadEventImages(data);
+
+        log.info("Events fetched successfully", {
+          current: data.current.length,
+          planned: data.planned.length,
+          past: data.past.length,
+        });
       } catch (err) {
         const errorMessage =
           err instanceof Error ? err.message : "Failed to fetch events";

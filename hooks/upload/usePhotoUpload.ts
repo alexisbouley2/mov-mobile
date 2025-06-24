@@ -2,7 +2,7 @@ import { useState, useCallback } from "react";
 import { Alert } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { mediaUploadManager } from "@/services/upload";
-import { useUploadStatus } from "@/hooks/useUploadStatus";
+import { useUploadStatus } from "@/hooks/upload/useUploadStatus";
 import { UploadType } from "@/services/upload/types";
 import log from "@/utils/logger";
 import { useAuth } from "@/contexts/AuthContext";

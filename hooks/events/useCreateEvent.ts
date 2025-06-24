@@ -1,8 +1,10 @@
+// hooks/useCreateEvent.ts - Updated to use UserEventsContext
 import { useState } from "react";
 import { Alert } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useEventForm } from "./event/useEventForm";
-import { useEventPhoto } from "./event/useEventPhoto";
+import { useEventForm } from "../event/useEventForm";
+import { useEventPhoto } from "../event/useEventPhoto";
+import { useUserEvents } from "@/contexts/UserEventsContext";
 import { mediaUploadManager } from "@/services/upload";
 import { config } from "@/lib/config";
 import log from "@/utils/logger";
@@ -16,6 +18,9 @@ export function useCreateEvent(userId: string) {
     selectedEventIds?: string;
   }>();
 
+  // Use context to refresh events after creation
+  const { refetch } = useUserEvents();
+
   const { formData, updateField, validateEventDateTime } = useEventForm();
   const [loading, setLoading] = useState(false);
 
@@ -28,12 +33,7 @@ export function useCreateEvent(userId: string) {
     cancelJob,
     pickImage,
     previewImage,
-  } = useEventPhoto({
-    initialImageUrl: formData.coverImageUrl,
-    onImageChange: (imageUri) => {
-      updateField("coverImageUrl", imageUri);
-    },
-  });
+  } = useEventPhoto();
 
   const handleSubmit = async (onSuccess?: () => void) => {
     if (!validateEventDateTime(formData.date)) {
@@ -93,6 +93,9 @@ export function useCreateEvent(userId: string) {
       }
 
       const newEvent = await response.json();
+
+      // Refresh events context to include the new event
+      await refetch();
 
       // If we have a video job, associate it with the new event
       if (jobId) {

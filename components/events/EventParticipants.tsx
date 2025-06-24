@@ -1,8 +1,20 @@
 // components/events/EventParticipants.tsx
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
-import { EventParticipant } from "@/hooks/useEvents";
 import { CachedImage } from "../ui/CachedImage";
+
+export interface User {
+  id: string;
+  username: string;
+  photo?: string | null;
+  profileThumbnailUrl?: string | null;
+}
+
+export interface EventParticipant {
+  id: string;
+  user: User;
+  joinedAt: string;
+}
 
 interface EventParticipantsProps {
   participants: EventParticipant[];
