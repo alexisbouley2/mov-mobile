@@ -11,7 +11,7 @@ export default function EventsHeader({ onCreateEvent }: EventsHeaderProps) {
   return (
     <View style={styles.header}>
       <View style={styles.headerContent}>
-        <Text style={styles.povTitle}>MOV</Text>
+        <Text style={styles.movTitle}>MOV</Text>
         <Text style={styles.subtitle}>Your best memories.</Text>
       </View>
 
@@ -34,7 +34,7 @@ const styles = StyleSheet.create({
   headerContent: {
     flex: 1,
   },
-  povTitle: {
+  movTitle: {
     fontSize: 48,
     fontWeight: "bold",
     color: "#fff",

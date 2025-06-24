@@ -26,7 +26,6 @@ export interface EventType {
   location?: string | null;
   admin: User;
   participants: EventParticipant[];
-  povCount?: number;
   photo?: string | null;
   coverThumbnailUrl?: string | null;
   _count?: {

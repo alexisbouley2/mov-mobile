@@ -35,7 +35,6 @@ export interface Event {
   location?: string | null;
   admin: User;
   participants: EventParticipant[];
-  povCount?: number;
   photo?: string | null;
   coverThumbnailUrl?: string | null;
   coverImageUrl?: string | null; // Added for consistency

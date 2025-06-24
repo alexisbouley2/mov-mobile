@@ -259,9 +259,9 @@ export default function SelectEventsScreen() {
               <Text style={styles.eventName}>New Quick MOV</Text>
             </View>
 
-            <View style={styles.quickPovIcon}>
-              <Text style={styles.quickPovText}>Quick</Text>
-              <Text style={styles.quickPovTextPov}>MOV</Text>
+            <View style={styles.quickMovIcon}>
+              <Text style={styles.quickMovText}>Quick</Text>
+              <Text style={styles.quickMovTextMov}>MOV</Text>
             </View>
           </TouchableOpacity>
         </View>
@@ -402,18 +402,18 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     textAlign: "center",
   },
-  quickPovIcon: {
+  quickMovIcon: {
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 8,
     backgroundColor: "#333",
   },
-  quickPovText: {
+  quickMovText: {
     fontSize: 12,
     fontWeight: "800",
     color: "#ff0080",
   },
-  quickPovTextPov: {
+  quickMovTextMov: {
     fontSize: 12,
     fontWeight: "800",
     color: "#00ffff",

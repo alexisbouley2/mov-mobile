@@ -24,7 +24,7 @@ export default function ProfileScreen() {
     router.push("/(app)/(profile)/edit-profile");
   };
 
-  const handleSharePov = () => {
+  const handleShareMov = () => {
     // TODO: Implement share MOV functionality
     log.info("Share MOV pressed");
   };
@@ -83,7 +83,7 @@ export default function ProfileScreen() {
         <View style={styles.buttonsSection}>
           <TouchableOpacity
             style={styles.actionButton}
-            onPress={handleSharePov}
+            onPress={handleShareMov}
           >
             <Text style={styles.actionButtonIcon}>📤</Text>
             <Text style={styles.actionButtonText}>Share MOV</Text>

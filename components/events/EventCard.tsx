@@ -26,7 +26,6 @@ export interface EventType {
   location?: string | null;
   admin: User;
   participants: EventParticipant[];
-  povCount?: number;
   photo?: string | null;
   coverThumbnailUrl?: string | null;
   _count?: {
@@ -52,7 +51,7 @@ export default function EventCard({ event, type, onPress }: EventCardProps) {
         year: "numeric",
       });
     } else if (type === "past") {
-      const povCount = event.povCount || event._count?.videos || 0;
+      const povCount = event._count?.videos || 0;
       return `You shared ${povCount} POVs`;
     }
     return "";
@@ -84,8 +83,8 @@ export default function EventCard({ event, type, onPress }: EventCardProps) {
         </View>
 
         {type === "past" && (
-          <View style={styles.povBadge}>
-            <Text style={styles.povText}>MOV</Text>
+          <View style={styles.movBadge}>
+            <Text style={styles.movText}>MOV</Text>
           </View>
         )}
 
@@ -143,14 +142,14 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#888",
   },
-  povBadge: {
+  movBadge: {
     backgroundColor: "#ff6b6b",
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
     marginRight: 12,
   },
-  povText: {
+  movText: {
     color: "#fff",
     fontSize: 12,
     fontWeight: "bold",
