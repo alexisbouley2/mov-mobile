@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "pov",
-    "slug": "pov",
+    "name": "mov",
+    "slug": "mov",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "pov",
+    "scheme": "mov",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
@@ -14,7 +14,7 @@
         "NSCameraUsageDescription": "$(PRODUCT_NAME) needs access to your Camera.",
         "NSMicrophoneUsageDescription": "$(PRODUCT_NAME) needs access to your Microphone."
       },
-      "bundleIdentifier": "com.alexisbouley2.pov"
+      "bundleIdentifier": "com.alexisbouley2.mov"
     },
     "android": {
       "adaptiveIcon": {
@@ -26,7 +26,7 @@
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO"
       ],
-      "package": "com.alexisbouley2.pov"
+      "package": "com.alexisbouley2.mov"
     },
     "web": {
       "bundler": "metro",

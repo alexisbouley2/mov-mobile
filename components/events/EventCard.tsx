@@ -85,7 +85,7 @@ export default function EventCard({ event, type, onPress }: EventCardProps) {
 
         {type === "past" && (
           <View style={styles.povBadge}>
-            <Text style={styles.povText}>POV</Text>
+            <Text style={styles.povText}>MOV</Text>
           </View>
         )}
 

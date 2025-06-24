@@ -25,8 +25,8 @@ export default function ProfileScreen() {
   };
 
   const handleSharePov = () => {
-    // TODO: Implement share POV functionality
-    log.info("Share POV pressed");
+    // TODO: Implement share MOV functionality
+    log.info("Share MOV pressed");
   };
 
   const handleTermsAndConditions = () => {
@@ -86,7 +86,7 @@ export default function ProfileScreen() {
             onPress={handleSharePov}
           >
             <Text style={styles.actionButtonIcon}>📤</Text>
-            <Text style={styles.actionButtonText}>Share POV</Text>
+            <Text style={styles.actionButtonText}>Share MOV</Text>
           </TouchableOpacity>
 
           <TouchableOpacity

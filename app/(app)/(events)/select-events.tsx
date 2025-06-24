@@ -256,12 +256,12 @@ export default function SelectEventsScreen() {
             </View>
 
             <View style={styles.eventInfo}>
-              <Text style={styles.eventName}>New Quick POV</Text>
+              <Text style={styles.eventName}>New Quick MOV</Text>
             </View>
 
             <View style={styles.quickPovIcon}>
               <Text style={styles.quickPovText}>Quick</Text>
-              <Text style={styles.quickPovTextPov}>POV</Text>
+              <Text style={styles.quickPovTextPov}>MOV</Text>
             </View>
           </TouchableOpacity>
         </View>

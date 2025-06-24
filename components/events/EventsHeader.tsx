@@ -11,7 +11,7 @@ export default function EventsHeader({ onCreateEvent }: EventsHeaderProps) {
   return (
     <View style={styles.header}>
       <View style={styles.headerContent}>
-        <Text style={styles.povTitle}>POV</Text>
+        <Text style={styles.povTitle}>MOV</Text>
         <Text style={styles.subtitle}>Your best memories.</Text>
       </View>
 

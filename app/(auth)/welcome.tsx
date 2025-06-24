@@ -64,10 +64,10 @@ function AuthScreen() {
       <SafeAreaView style={styles.container}>
         <View style={styles.content}>
           <View style={styles.header}>
-            <Text style={styles.logo}>POV</Text>
-            <Text style={styles.title}>Welcome to POV</Text>
+            <Text style={styles.logo}>MOV</Text>
+            <Text style={styles.title}>Welcome to MOV</Text>
             <Text style={styles.subtitle}>
-              POV lets you capture and share moments with your friends in a
+              MOV lets you capture and share moments with your friends in a
               unique, event-based way. Get started to join the fun!
             </Text>
           </View>
