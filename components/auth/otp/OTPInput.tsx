@@ -1,6 +1,9 @@
+// First install: npx expo install react-native-otp-entry
+
 // components/otp/OTPInput.tsx
 import React, { useRef, useEffect } from "react";
-import { View, Text, TextInput, Pressable, StyleSheet } from "react-native";
+import { View, StyleSheet } from "react-native";
+import { OtpInput } from "react-native-otp-entry";
 
 interface OTPInputProps {
   value: string;
@@ -15,47 +18,51 @@ const OTPInput = ({
   length = 6,
   autoFocus = true,
 }: OTPInputProps) => {
-  const inputRef = useRef<TextInput | null>(null);
+  const otpRef = useRef<any>(null);
 
   useEffect(() => {
     if (autoFocus) {
-      inputRef.current?.focus();
+      // Small delay to ensure component is mounted
+      const timer = setTimeout(() => {
+        otpRef.current?.focus();
+      }, 100);
+      return () => clearTimeout(timer);
     }
   }, [autoFocus]);
 
+  // Clear OTP when value is reset (after error)
+  useEffect(() => {
+    if (value === "" && otpRef.current) {
+      otpRef.current.clear();
+    }
+  }, [value]);
+
   return (
     <View style={styles.container}>
-      {/* Hidden input that handles all the logic */}
-      <TextInput
-        ref={inputRef}
-        value={value}
-        onChangeText={onChangeText}
-        style={styles.hiddenInput}
-        keyboardType="number-pad"
-        textContentType="oneTimeCode"
-        autoComplete="one-time-code"
-        maxLength={length}
-        caretHidden
+      <OtpInput
+        ref={otpRef}
+        numberOfDigits={length}
+        onTextChange={onChangeText}
+        autoFocus={autoFocus}
+        focusColor="#007AFF"
+        focusStickBlinkingDuration={500}
+        onFilled={(_text) => {
+          // The text is already handled by onTextChange
+          // This is just for any additional logic if needed
+        }}
+        textInputProps={{
+          accessibilityLabel: "One time passcode input",
+        }}
+        theme={{
+          containerStyle: styles.otpContainer,
+          inputsContainerStyle: styles.inputsContainer,
+          pinCodeContainerStyle: styles.otpBox,
+          pinCodeTextStyle: styles.otpText,
+          focusStickStyle: styles.focusStick,
+          focusedPinCodeContainerStyle: styles.otpBoxActive,
+          filledPinCodeContainerStyle: styles.otpBoxFilled,
+        }}
       />
-
-      {/* Visual boxes */}
-      <Pressable
-        style={styles.boxesContainer}
-        onPress={() => inputRef.current?.focus()}
-      >
-        {Array.from({ length }).map((_, index) => (
-          <View
-            key={index}
-            style={[
-              styles.otpBox,
-              value[index] && styles.otpBoxFilled,
-              index === value.length && styles.otpBoxActive,
-            ]}
-          >
-            <Text style={styles.otpText}>{value[index] || ""}</Text>
-          </View>
-        ))}
-      </Pressable>
     </View>
   );
 };
@@ -64,18 +71,12 @@ const styles = StyleSheet.create({
   container: {
     marginBottom: 40,
   },
-  hiddenInput: {
-    position: "absolute",
+  otpContainer: {
     width: "100%",
-    height: "100%",
-    color: "transparent",
-    backgroundColor: "transparent",
-    zIndex: 1,
   },
-  boxesContainer: {
+  inputsContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
-    paddingHorizontal: 0,
   },
   otpBox: {
     width: 50,
@@ -99,6 +100,11 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "600",
     color: "#FFFFFF",
+  },
+  focusStick: {
+    backgroundColor: "#007AFF",
+    height: 2,
+    width: 20,
   },
 });
 
