@@ -48,7 +48,7 @@ const OTPResendArea = ({
 const styles = StyleSheet.create({
   container: {
     alignItems: "center",
-    marginBottom: 30,
+    marginBottom: 20,
     minHeight: 40,
     justifyContent: "center",
   },

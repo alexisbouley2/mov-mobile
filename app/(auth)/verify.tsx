@@ -4,12 +4,12 @@ import {
   Text,
   TouchableOpacity,
   SafeAreaView,
-  Keyboard,
-  Pressable,
+  StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
+  View,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { CommonStyles } from "@/styles/common";
-import { ButtonStyles } from "@/styles/buttons";
 import { useOTPTimer } from "@/hooks/otp/useOTPTimer";
 import { useOTPResend } from "@/hooks/otp/useOTPResend";
 import { useOTPVerification } from "@/hooks/otp/useOTPVerification";
@@ -54,46 +54,114 @@ export default function VerifyScreen() {
   const finalCanResend = canResend && isTimerFinished && !isResending;
 
   return (
-    <SafeAreaView style={CommonStyles.container}>
-      <Pressable
-        style={CommonStyles.contentWithTopPadding}
-        onPress={Keyboard.dismiss}
+    <SafeAreaView style={styles.container}>
+      <KeyboardAvoidingView
+        style={styles.keyboardAvoidingView}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
       >
-        <Text style={CommonStyles.title}>Enter the code you received</Text>
-        <Text style={CommonStyles.subtitle}>We sent a code to {phone}</Text>
+        <View style={styles.content}>
+          <Text style={styles.title}>Enter the code you received</Text>
+          <Text style={styles.subtitle}>We sent a code to {phone}</Text>
 
-        <OTPInput
-          value={otp}
-          onChangeText={handleOtpChange}
-          length={OTP_LENGTH}
-        />
+          <OTPInput
+            value={otp}
+            onChangeText={handleOtpChange}
+            length={OTP_LENGTH}
+          />
 
-        <OTPResendArea
-          countdown={countdown}
-          canResend={finalCanResend}
-          isResending={isResending}
-          hasReachedMaxResends={hasReachedMaxResends}
-          onResend={handleResend}
-        />
+          <OTPResendArea
+            countdown={countdown}
+            canResend={finalCanResend}
+            isResending={isResending}
+            hasReachedMaxResends={hasReachedMaxResends}
+            onResend={handleResend}
+          />
+        </View>
 
-        <TouchableOpacity
-          style={[
-            ButtonStyles.primary,
-            !isOtpComplete && ButtonStyles.primaryDisabled,
-          ]}
-          onPress={handleVerify}
-          disabled={!isOtpComplete || isVerifying}
-        >
-          <Text
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity
             style={[
-              ButtonStyles.primaryText,
-              !isOtpComplete && ButtonStyles.primaryTextDisabled,
+              styles.continueButton,
+              !isOtpComplete && styles.continueButtonDisabled,
             ]}
+            onPress={handleVerify}
+            disabled={!isOtpComplete || isVerifying}
           >
-            {isVerifying ? "Verifying..." : "Verify"}
-          </Text>
-        </TouchableOpacity>
-      </Pressable>
+            <Text
+              style={[
+                styles.continueButtonText,
+                !isOtpComplete && styles.continueButtonTextDisabled,
+              ]}
+            >
+              {isVerifying ? "Verifying..." : "Verify"}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#000",
+  },
+  keyboardAvoidingView: {
+    flex: 1,
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: 24,
+    paddingTop: 120,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: "#fff",
+    textAlign: "center",
+    marginBottom: 16,
+    letterSpacing: -0.5,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: "#666",
+    textAlign: "center",
+    lineHeight: 22,
+    marginBottom: 32,
+    paddingHorizontal: 20,
+  },
+  buttonContainer: {
+    paddingHorizontal: 48,
+    paddingBottom: 48,
+  },
+  continueButton: {
+    backgroundColor: "#fff",
+    paddingVertical: 18,
+    paddingHorizontal: 32,
+    borderRadius: 30,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  continueButtonDisabled: {
+    backgroundColor: "#333",
+    shadowOpacity: 0,
+    elevation: 0,
+  },
+  continueButtonText: {
+    color: "#000",
+    fontSize: 17,
+    fontWeight: "600",
+  },
+  continueButtonTextDisabled: {
+    color: "#666",
+  },
+});
