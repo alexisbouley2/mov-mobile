@@ -13,8 +13,8 @@ import { ButtonStyles } from "@/styles/buttons";
 import { useOTPTimer } from "@/hooks/otp/useOTPTimer";
 import { useOTPResend } from "@/hooks/otp/useOTPResend";
 import { useOTPVerification } from "@/hooks/otp/useOTPVerification";
-import OTPInput from "@/components/otp/OTPInput";
-import OTPResendArea from "@/components/otp/OTPResendArea";
+import OTPInput from "@/components/auth/otp/OTPInput";
+import OTPResendArea from "@/components/auth/otp/OTPResendArea";
 import { useDebugLifecycle } from "@/utils/debugLifecycle";
 
 const OTP_LENGTH = 6;

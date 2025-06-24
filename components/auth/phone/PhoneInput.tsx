@@ -1,6 +1,6 @@
 // components/phone/PhoneInput.tsx
 import React, { useState, useEffect } from "react";
-import { View, TextInput, Text, StyleSheet } from "react-native";
+import { View, TextInput, StyleSheet } from "react-native";
 import { countries } from "@/data/countries";
 import { Country } from "@/types/country";
 import CountryPicker from "./CountryPicker";
@@ -71,9 +71,6 @@ export default function PhoneInput({
           maxLength={selectedCountry.maxLength + 5}
         />
       </View>
-      <Text style={styles.hint}>
-        Enter your {selectedCountry.name} mobile number
-      </Text>
     </View>
   );
 }
@@ -94,11 +91,5 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 16,
     paddingVertical: 16,
-  },
-  hint: {
-    color: "#666",
-    fontSize: 14,
-    marginTop: 8,
-    marginLeft: 4,
   },
 });
