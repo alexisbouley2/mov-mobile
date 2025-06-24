@@ -5,13 +5,13 @@ import {
   TouchableOpacity,
   StyleSheet,
   SafeAreaView,
-  Image,
 } from "react-native";
 import { router } from "expo-router";
 import { useAuth } from "@/contexts/AuthContext";
 import log from "@/utils/logger";
 import { useDebugLifecycle } from "@/utils/debugLifecycle";
 import { useUserProfile } from "@/contexts/UserProfileContext";
+import { CachedImage } from "@/components/ui/CachedImage";
 
 export default function ProfileScreen() {
   useDebugLifecycle("ProfileScreen");
@@ -60,13 +60,17 @@ export default function ProfileScreen() {
       <View style={styles.content}>
         <View style={styles.profileSection}>
           <View style={styles.avatarContainer}>
-            {user?.profileImageUrl ? (
-              <Image
-                source={{ uri: user.profileImageUrl }}
-                style={styles.avatar}
-              />
-            ) : (
-              <View style={styles.avatar}>
+            <CachedImage
+              uri={user?.profileImageUrl || ""}
+              cachePolicy="profile-image"
+              style={styles.avatar}
+              fallbackSource={undefined} // We'll handle this with custom fallback
+              showLoading={true}
+              loadingColor="#666"
+            />
+            {/* Custom fallback overlay when no image */}
+            {!user?.profileImageUrl && (
+              <View style={[styles.avatar]}>
                 <Text style={styles.avatarText}>
                   {user?.username?.charAt(0).toUpperCase() || "U"}
                 </Text>

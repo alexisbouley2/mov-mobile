@@ -7,6 +7,7 @@ export interface User {
   id: string;
   username: string;
   photo?: string | null;
+  profileThumbnailUrl?: string | null;
 }
 
 export interface EventParticipant {
@@ -26,6 +27,7 @@ export interface Event {
   participants: EventParticipant[];
   povCount?: number;
   photo?: string | null;
+  coverThumbnailUrl?: string | null;
   _count?: {
     videos: number;
   };

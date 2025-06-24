@@ -13,7 +13,7 @@ import Animated, {
 } from "react-native-reanimated";
 import VirtualVideoPlayer from "./VirtualVideoPlayer";
 import { VideoItem } from "@/contexts/EventVideosContext";
-import { videoCacheService } from "@/services/video/videoCacheService";
+import { videoCacheService } from "@/services/videoCacheService";
 
 const { height } = Dimensions.get("window");
 const SCREEN_HEIGHT = height - 60; // Account for header
@@ -45,8 +45,6 @@ export default function VideoCarousel({
     next: null,
   });
 
-  console.log("videoSlots current", videoSlots.current);
-
   // Update video slots when index changes
   useEffect(() => {
     const updateSlots = () => {
@@ -54,15 +52,6 @@ export default function VideoCarousel({
       const current = videos[currentIndex] || null;
       const next =
         currentIndex < videos.length - 1 ? videos[currentIndex + 1] : null;
-
-      console.log(
-        `Updating slots - currentIndex: ${currentIndex}, total videos: ${videos.length}`
-      );
-      console.log(
-        `Previous: ${previous?.id || "null"}, Current: ${
-          current?.id || "null"
-        }, Next: ${next?.id || "null"}`
-      );
 
       setVideoSlots({
         previous,

@@ -1,7 +1,8 @@
 // components/events/EventParticipants.tsx
 import React from "react";
-import { View, Text, StyleSheet, Image } from "react-native";
+import { View, Text, StyleSheet } from "react-native";
 import { EventParticipant } from "@/hooks/useEvents";
+import { CachedImage } from "../ui/CachedImage";
 
 interface EventParticipantsProps {
   participants: EventParticipant[];
@@ -22,10 +23,14 @@ export default function EventParticipants({
           key={participant.user.id}
           style={[styles.participantAvatar, { marginLeft: index > 0 ? -8 : 0 }]}
         >
-          {participant.user.photo ? (
-            <Image
-              source={{ uri: participant.user.photo }}
+          {participant.user.profileThumbnailUrl ? (
+            <CachedImage
+              uri={participant.user.profileThumbnailUrl}
+              cachePolicy="profile-thumbnail"
               style={styles.participantImage}
+              fallbackSource={undefined}
+              showLoading={true}
+              loadingColor="#666"
             />
           ) : (
             <Text style={styles.avatarText}>

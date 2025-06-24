@@ -2,7 +2,7 @@
 import React from "react";
 import { ScrollView, View, Text, StyleSheet } from "react-native";
 import { CategorizedEvents } from "@/hooks/useEvents";
-import { useEventsLogic } from "@/hooks/useEventsLogic";
+import { useEventsLogic } from "@/hooks/events/useEventsLogic";
 import EventSection from "@/components/events/EventSection";
 
 interface EventsContentProps {

@@ -1,8 +1,9 @@
 // components/events/EventCard.tsx
 import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Image } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { Event as EventType } from "@/hooks/useEvents";
 import EventParticipants from "@/components/events/EventParticipants";
+import { CachedImage } from "../ui/CachedImage";
 
 interface EventCardProps {
   event: EventType;
@@ -32,8 +33,15 @@ export default function EventCard({ event, type, onPress }: EventCardProps) {
     <TouchableOpacity style={styles.eventCard} onPress={onPress}>
       <View style={styles.eventContent}>
         <View style={styles.eventIcon}>
-          {event.photo ? (
-            <Image source={{ uri: event.photo }} style={styles.eventImage} />
+          {event.coverThumbnailUrl ? (
+            <CachedImage
+              uri={event.coverThumbnailUrl}
+              cachePolicy="cover-thumbnail"
+              style={styles.eventImage}
+              fallbackSource={undefined}
+              showLoading={true}
+              loadingColor="#666"
+            />
           ) : (
             <View style={styles.placeholderIcon}>
               <Text style={styles.placeholderText}>{event.name.charAt(0)}</Text>

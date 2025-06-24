@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   Dimensions,
 } from "react-native";
-import { Image } from "expo-image";
+import { CachedImage } from "@/components/ui/CachedImage";
 
 const { width } = Dimensions.get("window");
 const GRID_PADDING = 15;
@@ -20,6 +20,7 @@ interface VideoGridItemProps {
     user: {
       username: string;
       photo?: string;
+      profileThumbnailUrl?: string;
     };
   };
   index: number;
@@ -44,12 +45,13 @@ export default function VideoGridItem({
       activeOpacity={0.8}
     >
       <View style={styles.videoContainer}>
-        <Image
-          source={{ uri: item.thumbnailUrl }}
+        <CachedImage
+          uri={item.thumbnailUrl}
+          cachePolicy="video-thumbnail"
           style={styles.thumbnail}
-          contentFit="cover"
-          placeholder="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
-          transition={200}
+          fallbackSource={undefined}
+          showLoading={true}
+          loadingColor="#666"
         />
 
         <View style={styles.playIndicator}>
@@ -60,14 +62,15 @@ export default function VideoGridItem({
       </View>
 
       <View style={styles.userInfo}>
-        <Image
-          source={{
-            uri:
-              item.user.photo || "https://via.placeholder.com/24/666/666.png",
-          }}
+        <CachedImage
+          uri={item.user.profileThumbnailUrl || ""}
+          cachePolicy="profile-thumbnail"
           style={styles.userAvatar}
-          contentFit="cover"
+          fallbackSource={undefined}
+          showLoading={true}
+          loadingColor="#666"
         />
+
         <Text style={styles.username} numberOfLines={1}>
           {item.user.username}
         </Text>

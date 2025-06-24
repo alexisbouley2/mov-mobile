@@ -1,14 +1,14 @@
-// components/event/EventHeader.tsx
+// components/event/EventHeader.tsx - Updated with cached background
 import React from "react";
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
-  ImageBackground,
   Dimensions,
 } from "react-native";
 import { IconSymbol } from "@/components/ui/IconSymbol";
+import { CachedImage } from "@/components/ui/CachedImage";
 import { EventDetail } from "@/contexts/EventContext";
 
 interface EventHeaderProps {
@@ -40,15 +40,22 @@ export default function EventHeader({ event, onBack }: EventHeaderProps) {
 
   return (
     <View style={styles.container}>
-      <ImageBackground
-        source={
-          event.coverImageUrl
-            ? { uri: event.coverImageUrl }
-            : require("@/assets/images/react-logo.png") // Default placeholder
-        }
-        style={styles.backgroundImage}
-        imageStyle={styles.imageStyle}
-      >
+      {/* Background Image */}
+      {event.coverImageUrl ? (
+        <CachedImage
+          uri={event.coverImageUrl}
+          cachePolicy="cover-image"
+          style={styles.backgroundImage}
+          fallbackSource={require("@/assets/images/react-logo.png")}
+          showLoading={true}
+          loadingColor="#666"
+        />
+      ) : (
+        <View style={[styles.backgroundImage, styles.fallbackBackground]} />
+      )}
+
+      {/* Content Overlay */}
+      <View style={styles.contentOverlay}>
         {/* Back Button */}
         <TouchableOpacity style={styles.backButton} onPress={onBack}>
           <IconSymbol name="chevron.left" size={24} color="#fff" />
@@ -59,7 +66,7 @@ export default function EventHeader({ event, onBack }: EventHeaderProps) {
           <Text style={styles.eventTitle}>{event.name}</Text>
           <Text style={styles.eventDate}>{formatEventDate(event.date)}</Text>
         </View>
-      </ImageBackground>
+      </View>
     </View>
   );
 }
@@ -68,13 +75,23 @@ const styles = StyleSheet.create({
   container: {
     height: 300,
     width: width,
+    position: "relative",
   },
   backgroundImage: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    width: "100%",
+    height: "100%",
+  },
+  fallbackBackground: {
+    backgroundColor: "#333",
+  },
+  contentOverlay: {
     flex: 1,
     justifyContent: "space-between",
-  },
-  imageStyle: {
-    backgroundColor: "#333", // Fallback color
   },
   backButton: {
     position: "absolute",

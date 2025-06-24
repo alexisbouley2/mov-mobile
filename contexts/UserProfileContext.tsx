@@ -1,4 +1,4 @@
-// contexts/UserProfileContext.tsx
+// contexts/UserProfileContext.tsx - Updated with image caching
 import React, {
   createContext,
   useContext,
@@ -10,6 +10,7 @@ import React, {
 import { supabase } from "@/lib/supabase";
 import { config } from "@/lib/config";
 import { useAuth } from "./AuthContext";
+import { imageCacheService } from "@/services/imageCacheService";
 import log from "@/utils/logger";
 
 interface User {
@@ -64,54 +65,94 @@ export function UserProfileProvider({
   const [profileLoading, setProfileLoading] = useState(false);
   const [profileError, setProfileError] = useState<string | null>(null);
 
-  const fetchUserProfile = useCallback(async (userId: string) => {
-    try {
-      setProfileLoading(true);
-      setProfileError(null);
+  const preloadProfileImages = useCallback(async (userData: User) => {
+    const imagesToPreload: Array<{
+      url: string;
+      policy: "profile-image" | "profile-thumbnail";
+    }> = [];
 
-      // First, get basic profile data from Supabase
-      const { data, error } = await supabase
-        .from("User")
-        .select("*")
-        .eq("id", userId)
-        .single();
+    // Preload profile thumbnail (used in most UI components)
+    if (userData.profileThumbnailUrl) {
+      imagesToPreload.push({
+        url: userData.profileThumbnailUrl,
+        policy: "profile-thumbnail",
+      });
+    }
 
-      if (error && error.code !== "PGRST116") {
-        throw new Error(error.message);
-      }
+    // Preload full profile image (used in profile view)
+    if (userData.profileImageUrl) {
+      imagesToPreload.push({
+        url: userData.profileImageUrl,
+        policy: "profile-image",
+      });
+    }
 
-      if (data) {
-        // If user has profile images, fetch URLs from API
-        if (data.profileImagePath && data.profileThumbnailPath) {
-          try {
-            const API_BASE_URL = config.EXPO_PUBLIC_API_URL;
-            const response = await fetch(`${API_BASE_URL}/users/${userId}`);
+    if (imagesToPreload.length > 0) {
+      log.info(`Preloading ${imagesToPreload.length} profile images`);
+      await Promise.all(
+        imagesToPreload.map(({ url, policy }) =>
+          imageCacheService.cache(url, policy)
+        )
+      );
+    }
+  }, []);
 
-            if (response.ok) {
-              const userWithUrls = await response.json();
-              setUser(userWithUrls);
-            } else {
+  const fetchUserProfile = useCallback(
+    async (userId: string) => {
+      try {
+        setProfileLoading(true);
+        setProfileError(null);
+
+        // First, get basic profile data from Supabase
+        const { data, error } = await supabase
+          .from("User")
+          .select("*")
+          .eq("id", userId)
+          .single();
+
+        if (error && error.code !== "PGRST116") {
+          throw new Error(error.message);
+        }
+
+        if (data) {
+          // If user has profile images, fetch URLs from API
+          if (data.profileImagePath && data.profileThumbnailPath) {
+            try {
+              const API_BASE_URL = config.EXPO_PUBLIC_API_URL;
+              const response = await fetch(`${API_BASE_URL}/users/${userId}`);
+
+              if (response.ok) {
+                const userWithUrls = await response.json();
+                setUser(userWithUrls);
+
+                // Preload profile images in background
+                await preloadProfileImages(userWithUrls);
+              } else {
+                // Fallback to basic data if API fails
+                setUser(data);
+              }
+            } catch (apiError) {
+              log.error("Error fetching user profile URLs:", apiError);
               // Fallback to basic data if API fails
               setUser(data);
             }
-          } catch (apiError) {
-            log.error("Error fetching user profile URLs:", apiError);
-            // Fallback to basic data if API fails
+          } else {
             setUser(data);
           }
-        } else {
-          setUser(data);
         }
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error
+            ? error.message
+            : "Failed to fetch user profile";
+        log.error("Error fetching user profile:", error);
+        setProfileError(errorMessage);
+      } finally {
+        setProfileLoading(false);
       }
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Failed to fetch user profile";
-      log.error("Error fetching user profile:", error);
-      setProfileError(errorMessage);
-    } finally {
-      setProfileLoading(false);
-    }
-  }, []);
+    },
+    [preloadProfileImages]
+  );
 
   const createUserProfile = useCallback(
     async (
@@ -147,7 +188,7 @@ export function UserProfileProvider({
           throw new Error(error.message);
         }
 
-        // Fetch the newly created profile
+        // Fetch the newly created profile (which will also preload images)
         await fetchUserProfile(supabaseUser.id);
         return { error: null };
       } catch (error) {
@@ -206,8 +247,7 @@ export function UserProfileProvider({
             `Failed to update profile: ${response.status} - ${errorText}`
           );
         }
-
-        // Refresh profile to get updated data
+        // Refresh profile to get updated data (which will also preload new images)
         await fetchUserProfile(supabaseUser.id);
         return { error: null };
       } catch (error) {

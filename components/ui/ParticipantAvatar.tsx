@@ -1,5 +1,6 @@
 import React from "react";
-import { View, Text, StyleSheet, Image } from "react-native";
+import { View, Text, StyleSheet } from "react-native";
+import { CachedImage } from "./CachedImage";
 
 interface User {
   id: string;
@@ -18,8 +19,9 @@ export default function ParticipantAvatar({
 }: ParticipantAvatarProps) {
   if (user.profileThumbnailUrl) {
     return (
-      <Image
-        source={{ uri: user.profileThumbnailUrl }}
+      <CachedImage
+        uri={user.profileThumbnailUrl}
+        cachePolicy="profile-thumbnail"
         style={[
           styles.image,
           { width: size, height: size, borderRadius: size / 2 },

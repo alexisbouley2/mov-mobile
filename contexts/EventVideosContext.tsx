@@ -10,7 +10,7 @@ import { config } from "@/lib/config";
 import log from "@/utils/logger";
 import { useUserProfile } from "@/contexts/UserProfileContext";
 import { useEvent } from "@/contexts/EventContext";
-import { videoCacheService } from "@/services/video/videoCacheService";
+import { videoCacheService } from "@/services/videoCacheService";
 
 export interface VideoItem {
   id: string;
@@ -23,6 +23,7 @@ export interface VideoItem {
     id: string;
     username: string;
     photo: string | null;
+    profileThumbnailUrl: string | null;
   };
 }
 

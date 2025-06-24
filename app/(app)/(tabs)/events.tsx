@@ -1,4 +1,4 @@
-// app/(tabs)/events.tsx - Fixed version with automatic refresh
+// app/(app)/(tabs)/events.tsx - Updated to use UserEventsContext
 import React from "react";
 import {
   SafeAreaView,
@@ -11,19 +11,17 @@ import {
 } from "react-native";
 import { useRouter, useFocusEffect } from "expo-router";
 import { useCallback } from "react";
-import { useEvents } from "@/hooks/useEvents";
+import { useUserEvents } from "@/contexts/UserEventsContext";
 import EventsHeader from "@/components/events/EventsHeader";
 import EventsContent from "@/components/events/EventsContent";
 import { useDebugLifecycle } from "@/utils/debugLifecycle";
-import { useUserProfile } from "@/contexts/UserProfileContext";
 
 export default function EventsScreen() {
   useDebugLifecycle("EventsScreen");
 
   const router = useRouter();
-  const { user } = useUserProfile();
   const { events, loading, refreshing, error, refetch, hasInitialData } =
-    useEvents(user?.id || "");
+    useUserEvents();
 
   // Refetch events when returning to this screen
   useFocusEffect(
@@ -36,7 +34,7 @@ export default function EventsScreen() {
   );
 
   const handleCreateEvent = () => {
-    router.push("/(app)/(event)/create");
+    router.push("/(app)/(events)/create");
   };
 
   const handleEventPress = (eventId: string) => {

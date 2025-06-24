@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useState } from "react";
 import { View, StyleSheet, ActivityIndicator } from "react-native";
 import { Video, ResizeMode } from "expo-av";
 import { VideoItem } from "@/contexts/EventVideosContext";
-import { videoCacheService } from "@/services/video/videoCacheService";
+import { videoCacheService } from "@/services/videoCacheService";
 import log from "@/utils/logger";
 
 interface VirtualVideoPlayerProps {
@@ -39,7 +39,6 @@ export default function VirtualVideoPlayer({
 
     if (cached?.isReady) {
       // Use cached version immediately
-      console.log("localUri", cached.localUri);
       setVideoSource(cached.localUri);
       setIsLoading(false);
     } else {
@@ -77,7 +76,6 @@ export default function VirtualVideoPlayer({
   }, [isActive, videoSource]);
 
   const handleVideoLoad = () => {
-    console.log("Video loaded");
     setIsLoading(false);
     onLoad?.();
   };
@@ -108,7 +106,6 @@ export default function VirtualVideoPlayer({
         onLoad={handleVideoLoad}
         onError={handleVideoError}
         onLoadStart={() => {
-          console.log("Video load started");
           setIsLoading(true);
         }}
         useNativeControls={false} // Hide native controls for cleaner look

@@ -8,10 +8,10 @@ import {
   SafeAreaView,
   StatusBar,
 } from "react-native";
-import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 import VideoCarousel from "./VideoCarousel";
 import { useEventVideos, VideoItem } from "@/contexts/EventVideosContext";
+import { CachedImage } from "@/components/ui/CachedImage";
 
 interface VideoViewerModalProps {
   visible: boolean;
@@ -82,15 +82,15 @@ export default function VideoViewerModal({
           {currentVideo && (
             <View style={styles.userOverlay}>
               <View style={styles.userInfo}>
-                <Image
-                  source={{
-                    uri:
-                      currentVideo.user.photo ||
-                      "https://via.placeholder.com/32/666/666.png",
-                  }}
+                <CachedImage
+                  uri={currentVideo.user.profileThumbnailUrl || ""}
+                  cachePolicy="profile-thumbnail"
                   style={styles.userAvatar}
-                  contentFit="cover"
+                  fallbackSource={undefined}
+                  showLoading={true}
+                  loadingColor="#666"
                 />
+
                 <Text style={styles.username}>
                   {currentVideo.user.username}
                 </Text>

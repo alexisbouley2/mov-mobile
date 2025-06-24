@@ -16,7 +16,6 @@ import { useRouter } from "expo-router";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { useEventMessages, Message } from "@/contexts/EventMessagesContext";
 import { useUserProfile } from "@/contexts/UserProfileContext";
-import log from "@/utils/logger";
 
 export default function ChatScreen() {
   const router = useRouter();
@@ -31,7 +30,6 @@ export default function ChatScreen() {
     if (inputText.trim() && !sending) {
       const messageToSend = inputText.trim();
       setInputText("");
-      log.debug("in handleSend");
       await sendMessage(messageToSend);
     }
   };
