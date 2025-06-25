@@ -84,7 +84,7 @@ function AuthScreen() {
         <View style={styles.content}>
           <View style={styles.logoContainer}>
             <Image
-              source={require("@/assets/images/logo/mov-logo.png")}
+              source={require("@/assets/images/logo/mov.png")}
               style={styles.logo}
             />
           </View>
