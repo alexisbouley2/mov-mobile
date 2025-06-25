@@ -12,6 +12,7 @@ export default function AppLayout() {
           <Stack.Screen name="(events)" options={{ headerShown: false }} />
           <Stack.Screen name="(event)" options={{ headerShown: false }} />
           <Stack.Screen name="(profile)" options={{ headerShown: false }} />
+          <Stack.Screen name="(media)" options={{ headerShown: false }} />
         </Stack>
       </UserEventsProvider>
     </AuthGuard>

@@ -1,7 +1,6 @@
 // app/(tabs)/index.tsx
 
 import CameraControls from "@/components/camera/CameraControls";
-import MediaPreview from "@/components/camera/MediaPreview";
 import { CameraView } from "expo-camera";
 import React from "react";
 import { Image, StyleSheet, View } from "react-native";
@@ -20,7 +19,6 @@ export default function CameraScreen() {
     cameraType,
     flashMode,
     isRecording,
-    capturedMedia,
     isCameraActive,
     recordingProgress,
     cameraRef,
@@ -28,22 +26,11 @@ export default function CameraScreen() {
     stopRecording,
     toggleCameraType,
     toggleFlash,
-    dismissPreview,
-  } = useCamera();
+  } = useCamera(user?.id);
 
   if (!cameraPermission || !microphonePermission)
     return <View style={styles.container} />;
   if (!cameraPermission.granted) return <View style={styles.container} />;
-
-  if (capturedMedia) {
-    return (
-      <MediaPreview
-        mediaUri={capturedMedia}
-        onDismiss={dismissPreview}
-        userId={user?.id || ""}
-      />
-    );
-  }
 
   return (
     <View style={styles.container}>

@@ -5,10 +5,12 @@ import {
   useMicrophonePermissions,
 } from "expo-camera";
 import { useFocusEffect } from "@react-navigation/native";
+import { useRouter } from "expo-router";
 import type { CameraView as CameraViewType } from "expo-camera";
 
-export const useCamera = () => {
+export const useCamera = (userId?: string) => {
   const MAX_VIDEO_DURATION: number = 6;
+  const router = useRouter();
 
   const [cameraPermission, requestCameraPermission] = useCameraPermissions();
   const [microphonePermission, requestMicrophonePermission] =
@@ -34,6 +36,19 @@ export const useCamera = () => {
     }
   }, [cameraPermission, microphonePermission]);
 
+  // Navigate to MediaPreview screen when media is captured
+  useEffect(() => {
+    if (capturedMedia && userId) {
+      router.push({
+        pathname: "/(app)/(media)/preview",
+        params: {
+          mediaUri: capturedMedia,
+          userId: userId,
+        },
+      });
+    }
+  }, [capturedMedia, userId, router]);
+
   // Cleanup when screen loses focus (tab switch)
   useFocusEffect(
     React.useCallback(() => {
@@ -58,6 +73,16 @@ export const useCamera = () => {
         setIsCameraActive(false);
       };
     }, [])
+  );
+
+  // Reset captured media when screen comes back into focus
+  useFocusEffect(
+    React.useCallback(() => {
+      // Reset captured media when returning from preview screen
+      if (capturedMedia) {
+        setCapturedMedia(null);
+      }
+    }, [capturedMedia])
   );
 
   const startRecording = async () => {

@@ -10,24 +10,18 @@ import {
   View,
   Alert,
 } from "react-native";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { mediaUploadManager } from "@/services/upload";
 import log from "@/utils/logger";
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
-interface MediaPreviewProps {
-  mediaUri: string;
-  userId: string;
-  onDismiss: () => void;
-}
-
-export default function MediaPreview({
-  mediaUri,
-  userId,
-  onDismiss,
-}: MediaPreviewProps) {
+export default function MediaPreviewScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams();
+  const mediaUri = params.mediaUri as string;
+  const userId = params.userId as string;
+
   const [jobId, setJobId] = useState<string | null>(null);
   const videoRef = useRef<Video>(null);
 
@@ -91,16 +85,16 @@ export default function MediaPreview({
           onPress: async () => {
             try {
               mediaUploadManager.cancelJob(jobId);
-              onDismiss();
+              router.back();
             } catch (error) {
               log.error("Failed to cancel job:", error);
-              onDismiss();
+              router.back();
             }
           },
         },
       ]);
     } else {
-      onDismiss();
+      router.back();
     }
   };
 
