@@ -4,10 +4,9 @@ import React from "react";
 import { Platform, Image } from "react-native";
 
 import { HapticTab } from "@/components/HapticTab";
-import TabBarBackground from "@/components/ui/TabBarBackground";
 import { Colors } from "@/constants/Colors";
 
-export const TAB_BAR_HEIGHT = 60;
+export const TAB_BAR_HEIGHT = 50;
 
 export default function TabLayout() {
   return (
@@ -20,35 +19,28 @@ export default function TabLayout() {
         }),
         headerShown: false,
         tabBarButton: HapticTab,
-        tabBarBackground: TabBarBackground,
         tabBarStyle: Platform.select({
           ios: {
             position: "absolute",
-            backgroundColor: "#1C1C1E",
-            borderTopLeftRadius: 16,
-            borderTopRightRadius: 16,
+            backgroundColor: "#000000",
             paddingTop: 0,
             paddingBottom: 0,
             paddingHorizontal: 0,
             height: TAB_BAR_HEIGHT,
             elevation: 0,
-            shadowOpacity: 0,
             overflow: "hidden",
-            opacity: 0.8,
+            borderTopColor: "808080",
           },
           android: {
             position: "absolute",
-            backgroundColor: "#1C1C1E",
-            borderTopLeftRadius: 16,
-            borderTopRightRadius: 16,
+            backgroundColor: "#000000",
             paddingTop: 0,
             paddingBottom: 0,
             paddingHorizontal: 0,
             height: TAB_BAR_HEIGHT,
             elevation: 0,
-            shadowOpacity: 0,
             overflow: "hidden",
-            opacity: 0.8,
+            borderTopColor: "808080",
           },
           default: {},
         }),

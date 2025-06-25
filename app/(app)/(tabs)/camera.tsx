@@ -10,13 +10,11 @@ import {
   useMicrophonePermissions,
 } from "expo-camera";
 import React, { useEffect, useRef, useState } from "react";
-import { Dimensions, StyleSheet, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { StyleSheet, View } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { useDebugLifecycle } from "@/utils/debugLifecycle";
 import { useUserProfile } from "@/contexts/UserProfileContext";
-
-const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
+import { TAB_BAR_HEIGHT } from "./_layout";
 
 export default function CameraScreen() {
   useDebugLifecycle("CameraScreen");
@@ -158,49 +156,39 @@ export default function CameraScreen() {
   const recordingProgress = Math.min(recordingDuration / MAX_VIDEO_DURATION, 1);
 
   return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
-      <View style={styles.cameraWrapper}>
-        {isCameraActive ? (
-          <CameraView
-            ref={cameraRef}
-            style={styles.camera}
-            facing={cameraType}
-            flash={flashMode}
-            enableTorch={isRecording && flashMode === "on"} // torch for video
-            mode="video"
-          />
-        ) : (
-          <View style={styles.camera} />
-        )}
-
-        <CameraControls
-          onStartRecording={startRecording}
-          onStopRecording={stopRecording}
-          onToggleCamera={toggleCameraType}
-          onToggleFlash={toggleFlash}
-          isRecording={isRecording}
-          flashMode={flashMode}
-          recordingProgress={recordingProgress}
+    <View style={styles.container}>
+      {isCameraActive ? (
+        <CameraView
+          ref={cameraRef}
+          style={styles.camera}
+          facing={cameraType}
+          flash={flashMode}
+          enableTorch={isRecording && flashMode === "on"} // torch for video
+          mode="video"
         />
-      </View>
-    </SafeAreaView>
+      ) : (
+        <View style={styles.camera} />
+      )}
+
+      <CameraControls
+        onStartRecording={startRecording}
+        onStopRecording={stopRecording}
+        onToggleCamera={toggleCameraType}
+        onToggleFlash={toggleFlash}
+        isRecording={isRecording}
+        flashMode={flashMode}
+        recordingProgress={recordingProgress}
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "black",
-    borderWidth: 1,
-    borderColor: "red",
+    marginBottom: TAB_BAR_HEIGHT,
   },
   camera: {
     flex: 1,
-    width: screenWidth,
-    height: screenHeight,
-  },
-  cameraWrapper: {
-    flex: 1,
-    // marginBottom: 80,
   },
 });
