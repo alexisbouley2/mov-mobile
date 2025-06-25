@@ -70,13 +70,15 @@ export default function VerifyScreen() {
             length={OTP_LENGTH}
           />
 
-          <OTPResendArea
-            countdown={countdown}
-            canResend={finalCanResend}
-            isResending={isResending}
-            hasReachedMaxResends={hasReachedMaxResends}
-            onResend={handleResend}
-          />
+          <View style={styles.resendContainer}>
+            <OTPResendArea
+              countdown={countdown}
+              canResend={finalCanResend}
+              isResending={isResending}
+              hasReachedMaxResends={hasReachedMaxResends}
+              onResend={handleResend}
+            />
+          </View>
         </View>
 
         <View style={styles.buttonContainer}>

@@ -48,13 +48,11 @@ const OTPResendArea = ({
 const styles = StyleSheet.create({
   container: {
     alignItems: "center",
-    marginBottom: 20,
-    minHeight: 40,
     justifyContent: "center",
   },
   resendText: {
     fontSize: 14,
-    color: "#666",
+    color: "#007AFF",
   },
   resendButtonText: {
     fontSize: 14,

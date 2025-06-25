@@ -29,6 +29,10 @@ export default StyleSheet.create({
     marginBottom: 32,
     paddingHorizontal: 20,
   },
+  resendContainer: {
+    marginTop: 8,
+    paddingHorizontal: 4,
+  },
   buttonContainer: {
     paddingHorizontal: 48,
     paddingBottom: 48,

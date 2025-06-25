@@ -105,20 +105,12 @@ const OTPInput = ({
           </View>
         ))}
       </Pressable>
-
-      {/* Optional: Show helper text */}
-      <Text style={styles.helperText}>
-        {isFocused
-          ? "Tap the code in SMS to autofill"
-          : "Enter the 6-digit code"}
-      </Text>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 40,
     alignItems: "center",
   },
   hiddenInput: {
@@ -169,12 +161,6 @@ const styles = StyleSheet.create({
     height: 24,
     backgroundColor: "#007AFF",
     opacity: 1,
-  },
-  helperText: {
-    marginTop: 12,
-    fontSize: 14,
-    color: "#8E8E93",
-    textAlign: "center",
   },
 });
 
