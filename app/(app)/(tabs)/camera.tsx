@@ -10,7 +10,7 @@ import {
   useMicrophonePermissions,
 } from "expo-camera";
 import React, { useEffect, useRef, useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { Image, StyleSheet, View } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { useDebugLifecycle } from "@/utils/debugLifecycle";
 import { useUserProfile } from "@/contexts/UserProfileContext";
@@ -157,6 +157,13 @@ export default function CameraScreen() {
 
   return (
     <View style={styles.container}>
+      <View style={styles.CTAContainer}>
+        <Image
+          source={require("@/assets/images/logo/start-a-pov.png")}
+          style={styles.CTAImage}
+        />
+      </View>
+
       {isCameraActive ? (
         <CameraView
           ref={cameraRef}
@@ -190,5 +197,19 @@ const styles = StyleSheet.create({
   },
   camera: {
     flex: 1,
+  },
+  CTAContainer: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    justifyContent: "flex-start",
+    alignItems: "center",
+    paddingTop: 30,
+  },
+  CTAImage: {
+    width: 150,
+    height: 150,
+    zIndex: 1000,
   },
 });
