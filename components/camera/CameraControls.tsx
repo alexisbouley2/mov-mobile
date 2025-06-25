@@ -68,19 +68,13 @@ export default function CameraControls({
 
   return (
     <View style={styles.controlsContainer}>
-      {/* Top Controls */}
-      <View style={styles.topControls}></View>
-
       {/* Bottom Controls */}
       <View style={styles.bottomControls}>
-        {/* Toggle Camera Button */}
-        <View style={styles.toggleCameraButton}>
-          <TouchableOpacity style={styles.topButton} onPress={onToggleCamera}>
-            {!isRecording && (
-              <Ionicons name="camera-reverse" size={32} color="white" />
-            )}
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity onPress={onToggleCamera}>
+          {!isRecording && (
+            <Ionicons name="camera-reverse" size={32} color="white" />
+          )}
+        </TouchableOpacity>
 
         {/* Capture Button */}
         <View style={styles.captureButtonContainer}>
@@ -115,8 +109,10 @@ export default function CameraControls({
         </View>
 
         {/* Camera Toggle Flash Button */}
-        <TouchableOpacity style={styles.flashButton} onPress={onToggleFlash}>
-          <Ionicons name={getFlashIcon()} size={28} color="white" />
+        <TouchableOpacity onPress={onToggleFlash}>
+          {!isRecording && (
+            <Ionicons name={getFlashIcon()} size={32} color="white" />
+          )}
         </TouchableOpacity>
       </View>
     </View>
@@ -130,40 +126,17 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    justifyContent: "space-between",
-  },
-  topControls: {
-    flexDirection: "row",
     justifyContent: "flex-end",
-    alignItems: "center",
-    paddingTop: 60,
-    paddingHorizontal: 20,
   },
-  topButton: {
-    width: 44,
-    height: 44,
-    justifyContent: "center",
-    alignItems: "center",
-    marginLeft: 15,
-  },
+
   bottomControls: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     paddingBottom: 40,
-    paddingHorizontal: 30,
-  },
-  toggleCameraButton: {
-    width: 44,
-    height: 44,
+    paddingHorizontal: 60,
   },
 
-  flashButton: {
-    width: 44,
-    height: 44,
-    justifyContent: "center",
-    alignItems: "center",
-  },
   captureButtonContainer: {
     alignItems: "center",
   },
