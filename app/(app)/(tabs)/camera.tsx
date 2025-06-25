@@ -2,142 +2,34 @@
 
 import CameraControls from "@/components/camera/CameraControls";
 import MediaPreview from "@/components/camera/MediaPreview";
-import type { CameraView as CameraViewType } from "expo-camera";
-import {
-  CameraType,
-  CameraView,
-  useCameraPermissions,
-  useMicrophonePermissions,
-} from "expo-camera";
-import React, { useEffect, useRef, useState } from "react";
+import { CameraView } from "expo-camera";
+import React from "react";
 import { Image, StyleSheet, View } from "react-native";
-import { useFocusEffect } from "@react-navigation/native";
 import { useDebugLifecycle } from "@/utils/debugLifecycle";
 import { useUserProfile } from "@/contexts/UserProfileContext";
+import { useCamera } from "@/hooks/camera/useCamera";
 import { TAB_BAR_HEIGHT } from "./_layout";
 
 export default function CameraScreen() {
   useDebugLifecycle("CameraScreen");
 
-  const MAX_VIDEO_DURATION: number = 6;
   const { user } = useUserProfile();
-  const [cameraPermission, requestCameraPermission] = useCameraPermissions();
-  const [microphonePermission, requestMicrophonePermission] =
-    useMicrophonePermissions();
-
-  const [cameraType, setCameraType] = useState<CameraType>("back");
-  const [flashMode, setFlashMode] = useState<"off" | "on">("off");
-  const [isRecording, setIsRecording] = useState(false);
-  const [recordingDuration, setRecordingDuration] = useState(0);
-  const [capturedMedia, setCapturedMedia] = useState<string | null>(null);
-  const [isCameraActive, setIsCameraActive] = useState(true);
-
-  const cameraRef = useRef<CameraViewType>(null);
-  const recordingStartTime = useRef<number | null>(null);
-  const rafId = useRef<number | null>(null);
-
-  useEffect(() => {
-    if (!cameraPermission?.granted) {
-      requestCameraPermission();
-    }
-    if (!microphonePermission?.granted) {
-      requestMicrophonePermission();
-    }
-  }, [cameraPermission, microphonePermission]);
-
-  // Cleanup when screen loses focus (tab switch)
-  useFocusEffect(
-    React.useCallback(() => {
-      // When screen gains focus, activate camera
-      setIsCameraActive(true);
-
-      return () => {
-        // Use refs to get current values instead of closure
-        if (cameraRef.current) {
-          cameraRef.current.stopRecording();
-        }
-        if (rafId.current) {
-          cancelAnimationFrame(rafId.current);
-          rafId.current = null;
-        }
-        // Reset state
-        setIsRecording(false);
-        setRecordingDuration(0);
-        recordingStartTime.current = null;
-
-        // Deactivate camera when screen loses focus
-        setIsCameraActive(false);
-      };
-    }, [])
-  );
-
-  const startRecording = async () => {
-    if (!cameraRef.current) return;
-
-    setIsRecording(true);
-    recordingStartTime.current = Date.now();
-
-    const updateProgress = () => {
-      if (!recordingStartTime.current) return;
-
-      const elapsed = (Date.now() - recordingStartTime.current) / 1000;
-      setRecordingDuration(elapsed);
-
-      if (elapsed >= MAX_VIDEO_DURATION) {
-        stopRecording();
-        return;
-      }
-
-      rafId.current = requestAnimationFrame(updateProgress);
-    };
-
-    rafId.current = requestAnimationFrame(updateProgress);
-
-    try {
-      const video = await cameraRef.current.recordAsync({
-        maxDuration: MAX_VIDEO_DURATION,
-      });
-      setCapturedMedia(video?.uri || null);
-    } catch {
-    } finally {
-      setIsRecording(false);
-    }
-  };
-
-  const stopRecording = () => {
-    if (!cameraRef.current) return;
-    setIsRecording(false);
-
-    if (rafId.current) {
-      cancelAnimationFrame(rafId.current);
-      rafId.current = null;
-    }
-
-    recordingStartTime.current = null;
-    cameraRef.current.stopRecording();
-  };
-
-  const toggleCameraType = () => {
-    if (isRecording) return; // TODO: check undo it, Prevent flipping camera during recording
-    setCameraType((current) => (current === "back" ? "front" : "back"));
-  };
-
-  const toggleFlash = () => {
-    setFlashMode((current) => {
-      switch (current) {
-        case "off":
-          return "on";
-        case "on":
-          return "off";
-        default:
-          return "off";
-      }
-    });
-  };
-
-  const dismissPreview = () => {
-    setCapturedMedia(null);
-  };
+  const {
+    cameraPermission,
+    microphonePermission,
+    cameraType,
+    flashMode,
+    isRecording,
+    capturedMedia,
+    isCameraActive,
+    recordingProgress,
+    cameraRef,
+    startRecording,
+    stopRecording,
+    toggleCameraType,
+    toggleFlash,
+    dismissPreview,
+  } = useCamera();
 
   if (!cameraPermission || !microphonePermission)
     return <View style={styles.container} />;
@@ -152,8 +44,6 @@ export default function CameraScreen() {
       />
     );
   }
-
-  const recordingProgress = Math.min(recordingDuration / MAX_VIDEO_DURATION, 1);
 
   return (
     <View style={styles.container}>
