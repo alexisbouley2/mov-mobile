@@ -138,7 +138,7 @@ const styles = StyleSheet.create({
   },
   title: {
     color: "#fff",
-    fontSize: 20,
+    fontSize: 26,
     fontWeight: "600",
   },
   editButton: {
