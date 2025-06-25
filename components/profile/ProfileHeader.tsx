@@ -32,11 +32,11 @@ const styles = StyleSheet.create({
   },
   backButtonText: {
     color: "#007AFF",
-    fontSize: 16,
+    fontSize: 20,
   },
   title: {
     color: "#fff",
-    fontSize: 20,
+    fontSize: 26,
     fontWeight: "600",
   },
   placeholder: {

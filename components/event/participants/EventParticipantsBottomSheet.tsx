@@ -73,7 +73,6 @@ export default function EventParticipantsBottomSheet({
       transparent
       animationType="none"
       onRequestClose={closeSheet}
-      statusBarTranslucent
     >
       <View style={styles.modalOverlay}>
         <TouchableOpacity

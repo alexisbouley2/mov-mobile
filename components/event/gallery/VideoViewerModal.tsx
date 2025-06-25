@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   Modal,
   SafeAreaView,
-  StatusBar,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import VideoCarousel from "./VideoCarousel";
@@ -53,8 +52,6 @@ export default function VideoViewerModal({
       onRequestClose={handleClose}
     >
       <View style={styles.container}>
-        <StatusBar barStyle="light-content" backgroundColor="#000" />
-
         {/* Header - Fixed at top with proper z-index */}
         <SafeAreaView style={styles.headerSafeArea}>
           <View style={styles.header}>

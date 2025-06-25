@@ -9,6 +9,7 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
+      "statusBar": "light-content",
       "supportsTablet": true,
       "infoPlist": {
         "NSCameraUsageDescription": "$(PRODUCT_NAME) needs access to your Camera.",
@@ -26,7 +27,11 @@
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO"
       ],
-      "package": "com.alexisbouley2.mov"
+      "package": "com.alexisbouley2.mov",
+      "statusBar": {
+        "translucent": true,
+        "backgroundColor": "transparent"
+      }
     },
     "web": {
       "bundler": "metro",

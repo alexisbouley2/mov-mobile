@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   SafeAreaView,
-  StatusBar,
   ActivityIndicator,
   FlatList,
 } from "react-native";
@@ -152,8 +151,6 @@ export default function EventDetailScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#000" />
-
       <FlatList
         data={renderData}
         renderItem={renderItem}

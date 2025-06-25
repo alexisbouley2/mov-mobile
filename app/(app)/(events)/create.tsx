@@ -1,6 +1,6 @@
 // app/(app)/(events)/create.tsx - Updated with context refresh
 import React from "react";
-import { SafeAreaView, StatusBar, StyleSheet } from "react-native";
+import { SafeAreaView, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import { useCreateEvent } from "@/hooks/events/useCreateEvent";
 import { useUserEvents } from "@/contexts/UserEventsContext";
@@ -41,8 +41,6 @@ export default function CreateEventScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#000" />
-
       <EventFormHeader title="Create Event" onBack={onBack} />
 
       <EventForm

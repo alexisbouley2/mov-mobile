@@ -10,7 +10,7 @@ import {
   useMicrophonePermissions,
 } from "expo-camera";
 import React, { useEffect, useRef, useState } from "react";
-import { Dimensions, StatusBar, StyleSheet, View } from "react-native";
+import { Dimensions, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect } from "@react-navigation/native";
 import { useDebugLifecycle } from "@/utils/debugLifecycle";
@@ -160,7 +160,6 @@ export default function CameraScreen() {
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
       <View style={styles.cameraWrapper}>
-        <StatusBar hidden />
         {isCameraActive ? (
           <CameraView
             ref={cameraRef}

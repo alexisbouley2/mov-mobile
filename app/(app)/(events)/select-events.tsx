@@ -5,7 +5,6 @@ import {
   Text,
   StyleSheet,
   SafeAreaView,
-  StatusBar,
   TouchableOpacity,
   ScrollView,
   ActivityIndicator,
@@ -155,7 +154,6 @@ export default function SelectEventsScreen() {
   if (loading && !hasInitialData) {
     return (
       <SafeAreaView style={styles.container}>
-        <StatusBar hidden />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="white" />
         </View>
@@ -165,8 +163,6 @@ export default function SelectEventsScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar hidden />
-
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={handleBack}>

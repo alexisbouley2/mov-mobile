@@ -4,7 +4,6 @@ import React, { useState, useRef, useEffect } from "react";
 import {
   Dimensions,
   SafeAreaView,
-  StatusBar,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -107,8 +106,6 @@ export default function MediaPreview({
 
   return (
     <View style={styles.container}>
-      <StatusBar hidden />
-
       {/* Media Display */}
       <View style={styles.mediaContainer}>
         <Video

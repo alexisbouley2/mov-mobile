@@ -2,7 +2,6 @@
 import React from "react";
 import {
   SafeAreaView,
-  StatusBar,
   ActivityIndicator,
   View,
   Text,
@@ -44,7 +43,6 @@ export default function EventsScreen() {
   if (loading && !hasInitialData) {
     return (
       <SafeAreaView style={styles.container}>
-        <StatusBar barStyle="light-content" backgroundColor="#000" />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#fff" />
         </View>
@@ -55,7 +53,6 @@ export default function EventsScreen() {
   if (error) {
     return (
       <SafeAreaView style={styles.container}>
-        <StatusBar barStyle="light-content" backgroundColor="#000" />
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>Error: {error}</Text>
           <TouchableOpacity style={styles.retryButton} onPress={refetch}>
@@ -68,8 +65,6 @@ export default function EventsScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#000" />
-
       <EventsHeader onCreateEvent={handleCreateEvent} />
 
       <EventsContent events={events} onEventPress={handleEventPress} />

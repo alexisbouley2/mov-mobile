@@ -52,6 +52,7 @@ export default function ProfileForm({
         autoCapitalize="none"
         autoCorrect={false}
         autoFocus={autoFocus}
+        maxLength={20}
       />
 
       <TouchableOpacity
@@ -62,7 +63,12 @@ export default function ProfileForm({
         onPress={onSubmit}
         disabled={!isFormValid || loading}
       >
-        <Text style={styles.buttonText}>
+        <Text
+          style={[
+            styles.buttonText,
+            (!isFormValid || loading) && styles.buttonTextDisabled,
+          ]}
+        >
           {loading ? loadingButtonText : submitButtonText}
         </Text>
       </TouchableOpacity>
@@ -73,34 +79,48 @@ export default function ProfileForm({
 const styles = StyleSheet.create({
   content: {
     flex: 1,
-    paddingHorizontal: 32,
     paddingTop: 60,
     alignItems: "center",
+    paddingHorizontal: 48,
   },
   input: {
     width: "100%",
     backgroundColor: "#1a1a1a",
-    borderRadius: 12,
+    borderRadius: 16,
     paddingHorizontal: 16,
     paddingVertical: 16,
     color: "#fff",
     fontSize: 16,
-    marginBottom: 40,
+    marginTop: 40,
     textAlign: "center",
   },
   button: {
+    marginTop: 70,
     width: "100%",
     backgroundColor: "#fff",
     paddingVertical: 16,
-    borderRadius: 25,
+    borderRadius: 30,
     alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   buttonDisabled: {
     backgroundColor: "#333",
+    shadowOpacity: 0,
+    elevation: 0,
   },
   buttonText: {
     color: "#000",
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: "600",
+  },
+  buttonTextDisabled: {
+    color: "#666",
   },
 });

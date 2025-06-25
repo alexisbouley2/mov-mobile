@@ -37,9 +37,7 @@ export default function AvatarPicker({
 }
 
 const styles = StyleSheet.create({
-  container: {
-    marginBottom: 20,
-  },
+  container: {},
   avatar: {
     backgroundColor: "#1a1a1a",
     borderWidth: 2,
