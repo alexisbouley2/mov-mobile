@@ -1,4 +1,6 @@
-import React, { useState } from "react";
+// Updated AuthScreen with fixed keyboard flickering
+
+import React, { useState, useRef } from "react";
 import {
   Alert,
   SafeAreaView,
@@ -8,13 +10,14 @@ import {
   Text,
   TouchableOpacity,
   Image,
+  TextInput,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useDebugLifecycle } from "@/utils/debugLifecycle";
 import { useAuth } from "@/contexts/AuthContext";
 import { PhoneValidationResult } from "@/utils/phoneValidation";
 import PhoneInput from "@/components/auth/phone/PhoneInput";
-import { styles } from "./welcome.style";
+import styles from "./welcome.style";
 
 type ScreenState = "welcome" | "phone";
 
@@ -29,6 +32,9 @@ function AuthScreen() {
     isValid: false,
   });
   const [phoneLoading, setPhoneLoading] = useState(false);
+
+  // Add this ref for SMS pre-warming
+  const smsPrewarmRef = useRef<TextInput>(null);
 
   const handleContinue = async () => {
     if (!validation.isValid || !validation.formattedNumber) {
@@ -52,6 +58,21 @@ function AuthScreen() {
       });
     }
   };
+
+  // Prewarm after user starts typing phone number
+  React.useEffect(() => {
+    if (currentScreen === "phone" && phoneNumber.length >= 1) {
+      // Prewarm only after user has typed a few digits
+      const prewarmTimer = setTimeout(() => {
+        smsPrewarmRef.current?.focus();
+        setTimeout(() => {
+          smsPrewarmRef.current?.blur();
+        }, 10);
+      }, 1000);
+
+      return () => clearTimeout(prewarmTimer);
+    }
+  }, [currentScreen, phoneNumber]);
 
   const isButtonEnabled =
     validation.isValid && phoneNumber.length > 0 && !phoneLoading;
@@ -97,6 +118,39 @@ function AuthScreen() {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
       >
+        {/* 
+          Hidden OTP input for SMS pre-warming
+          Now with better positioning to avoid any visual interference
+        */}
+        <TextInput
+          ref={smsPrewarmRef}
+          style={{
+            position: "absolute",
+            top: -10000, // Far off screen
+            left: -10000,
+            width: 0,
+            height: 0,
+            opacity: 0,
+            fontSize: 0, // Additional hiding
+          }}
+          textContentType="oneTimeCode"
+          autoComplete="one-time-code"
+          keyboardType="number-pad"
+          maxLength={6}
+          value=""
+          onChangeText={() => {}}
+          accessible={false}
+          importantForAccessibility="no"
+          // Prevent any keyboard from showing
+          showSoftInputOnFocus={false}
+          onFocus={() => {
+            // Immediately blur to minimize keyboard flash
+            setTimeout(() => {
+              smsPrewarmRef.current?.blur();
+            }, 10);
+          }}
+        />
+
         <View style={styles.phoneContent}>
           <Text style={styles.phoneTitle}>Enter your phone number</Text>
 
