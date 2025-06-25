@@ -9,6 +9,8 @@ import TabBarBackground from "@/components/ui/TabBarBackground";
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
 
+export const TAB_BAR_HEIGHT = 60;
+
 export default function TabLayout() {
   const colorScheme = useColorScheme();
 
@@ -22,9 +24,40 @@ export default function TabLayout() {
         tabBarStyle: Platform.select({
           ios: {
             position: "absolute",
+            backgroundColor: "#1C1C1E",
+            borderTopLeftRadius: 16,
+            borderTopRightRadius: 16,
+            paddingTop: 0,
+            paddingBottom: 0,
+            paddingHorizontal: 0,
+            height: TAB_BAR_HEIGHT,
+            elevation: 0,
+            shadowOpacity: 0,
+            overflow: "hidden",
+            opacity: 0.8,
+          },
+          android: {
+            position: "absolute",
+            backgroundColor: "#1C1C1E",
+            borderTopLeftRadius: 16,
+            borderTopRightRadius: 16,
+            paddingTop: 0,
+            paddingBottom: 0,
+            paddingHorizontal: 0,
+            height: TAB_BAR_HEIGHT,
+            elevation: 0,
+            shadowOpacity: 0,
+            overflow: "hidden",
+            opacity: 0.8,
           },
           default: {},
         }),
+        tabBarItemStyle: {
+          flex: 1,
+          borderWidth: 1,
+          borderColor: "red",
+          borderStyle: "solid",
+        },
       }}
     >
       <Tabs.Screen

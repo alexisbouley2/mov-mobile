@@ -191,6 +191,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "black",
+    borderWidth: 1,
+    borderColor: "red",
   },
   camera: {
     flex: 1,
@@ -199,6 +201,6 @@ const styles = StyleSheet.create({
   },
   cameraWrapper: {
     flex: 1,
-    marginBottom: 80,
+    // marginBottom: 80,
   },
 });
