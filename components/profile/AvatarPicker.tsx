@@ -1,5 +1,6 @@
 import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Image } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { CachedImage } from "@/components/ui/CachedImage";
 
 interface AvatarPickerProps {
   imageUri?: string | null;
@@ -15,8 +16,13 @@ export default function AvatarPicker({
   return (
     <TouchableOpacity style={styles.container} onPress={onPress}>
       {imageUri ? (
-        <Image
-          source={{ uri: imageUri }}
+        <CachedImage
+          uri={imageUri}
+          cachePolicy="profile-image"
+          fallbackSource={undefined}
+          showLoading={true}
+          loadingSize="small"
+          loadingColor="#666"
           style={[
             styles.avatar,
             { width: size, height: size, borderRadius: size / 2 },

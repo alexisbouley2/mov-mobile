@@ -1,17 +1,12 @@
 import React from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  SafeAreaView,
-} from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, Image } from "react-native";
 import { router } from "expo-router";
 import { useAuth } from "@/contexts/AuthContext";
 import log from "@/utils/logger";
 import { useDebugLifecycle } from "@/utils/debugLifecycle";
 import { useUserProfile } from "@/contexts/UserProfileContext";
-import { CachedImage } from "@/components/ui/CachedImage";
+import { TAB_BAR_HEIGHT } from "./_layout";
+import AvatarPicker from "@/components/profile/AvatarPicker";
 
 export default function ProfileScreen() {
   useDebugLifecycle("ProfileScreen");
@@ -49,61 +44,63 @@ export default function ProfileScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <View style={styles.header}>
+        <View style={styles.placeholder}></View>
         <Text style={styles.title}>Profile</Text>
         <TouchableOpacity onPress={handleEditProfile} style={styles.editButton}>
-          <Text style={styles.editButtonText}>✏️</Text>
+          <Image
+            source={require("@/assets/images/icon/white-edit.png")}
+            style={styles.editButton}
+          />
         </TouchableOpacity>
       </View>
 
       <View style={styles.content}>
-        <View style={styles.profileSection}>
-          <View style={styles.avatarContainer}>
-            <CachedImage
-              uri={user?.profileImageUrl || ""}
-              cachePolicy="profile-image"
-              style={styles.avatar}
-              fallbackSource={undefined} // We'll handle this with custom fallback
-              showLoading={true}
-              loadingColor="#666"
+        <View style={styles.topSection}>
+          <View style={styles.profileSection}>
+            <AvatarPicker
+              imageUri={user?.profileImageUrl || null}
+              onPress={handleEditProfile}
+              size={120}
             />
-            {/* Custom fallback overlay when no image */}
-            {!user?.profileImageUrl && (
-              <View style={[styles.avatar]}>
-                <Text style={styles.avatarText}>
-                  {user?.username?.charAt(0).toUpperCase() || "U"}
-                </Text>
-              </View>
-            )}
+            <Text style={styles.username}>{user?.username}</Text>
           </View>
-          <Text style={styles.username}>{user?.username || "Unknown"}</Text>
-        </View>
 
-        <View style={styles.buttonsSection}>
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={handleShareMov}
-          >
-            <Text style={styles.actionButtonIcon}>📤</Text>
-            <Text style={styles.actionButtonText}>Share MOV</Text>
-          </TouchableOpacity>
+          <View style={styles.buttonsSection}>
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={handleShareMov}
+            >
+              <Image
+                source={require("@/assets/images/icon/share.png")}
+                style={styles.actionButtonIcon}
+              />
+              <Text style={styles.actionButtonText}>Share MOV</Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={handleTermsAndConditions}
-          >
-            <Text style={styles.actionButtonIcon}>📝</Text>
-            <Text style={styles.actionButtonText}>Terms & Conditions</Text>
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={handleTermsAndConditions}
+            >
+              <Image
+                source={require("@/assets/images/icon/pen.png")}
+                style={styles.actionButtonIcon}
+              />
+              <Text style={styles.actionButtonText}>Terms & Conditions</Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={handlePrivacyPolicy}
-          >
-            <Text style={styles.actionButtonIcon}>🔒</Text>
-            <Text style={styles.actionButtonText}>Privacy Policy</Text>
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={handlePrivacyPolicy}
+            >
+              <Image
+                source={require("@/assets/images/icon/shield.png")}
+                style={styles.actionButtonIcon}
+              />
+              <Text style={styles.actionButtonText}>Privacy Policy</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         <View style={styles.bottomSection}>
@@ -114,78 +111,59 @@ export default function ProfileScreen() {
           <TouchableOpacity onPress={handleDangerousZone}>
             <Text style={styles.dangerousZoneText}>Dangerous Zone</Text>
           </TouchableOpacity>
-
-          <Text style={styles.versionText}>Version 4.6</Text>
         </View>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    marginBottom: TAB_BAR_HEIGHT,
     backgroundColor: "#000",
-    borderWidth: 10,
-    borderColor: "green",
   },
   header: {
+    marginTop: 30,
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 10,
     position: "relative",
+    gap: 10,
+  },
+  placeholder: {
+    width: 32,
+    height: 32,
+  },
+  editButton: {
+    width: 32,
+    height: 32,
   },
   title: {
     color: "#fff",
     fontSize: 26,
     fontWeight: "600",
   },
-  editButton: {
-    position: "absolute",
-    right: 20,
-    padding: 8,
-  },
-  editButtonText: {
-    fontSize: 18,
-  },
   content: {
     flex: 1,
     paddingHorizontal: 20,
+    justifyContent: "space-between",
   },
+  topSection: {},
   profileSection: {
     alignItems: "center",
-    marginTop: 40,
+    marginTop: 20,
     marginBottom: 40,
-  },
-  avatarContainer: {
-    marginBottom: 20,
-  },
-  avatar: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: "#1a1a1a",
-    borderWidth: 2,
-    borderColor: "#333",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  avatarText: {
-    color: "#666",
-    fontSize: 48,
-    fontWeight: "300",
   },
   username: {
     color: "#fff",
     fontSize: 24,
     fontWeight: "500",
+    marginTop: 20,
   },
+
   buttonsSection: {
-    gap: 15,
-    marginBottom: 40,
+    gap: 20,
   },
   actionButton: {
     flexDirection: "row",
@@ -196,41 +174,37 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   actionButtonIcon: {
-    fontSize: 18,
-    marginRight: 15,
+    width: 20,
+    height: 25,
   },
   actionButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "400",
+    color: "#808080",
+    fontSize: 18,
+    fontWeight: "500",
+    marginLeft: 20,
   },
   bottomSection: {
-    flex: 1,
     justifyContent: "flex-end",
     alignItems: "center",
-    paddingBottom: 120, // Increased to avoid tab bar
     gap: 20,
   },
   logoutButton: {
     backgroundColor: "#1a1a1a",
-    paddingHorizontal: 40,
+    paddingHorizontal: 20,
     paddingVertical: 16,
-    borderRadius: 25,
+    borderRadius: 12,
     width: "100%",
     alignItems: "center",
   },
   logoutButtonText: {
     color: "#ff4444",
-    fontSize: 16,
-    fontWeight: "600",
+    fontSize: 18,
+    fontWeight: "500",
   },
   dangerousZoneText: {
     color: "#ff4444",
     fontSize: 14,
     fontWeight: "400",
-  },
-  versionText: {
-    color: "#666",
-    fontSize: 12,
+    marginBottom: 30,
   },
 });
