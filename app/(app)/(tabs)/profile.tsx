@@ -7,6 +7,7 @@ import { useDebugLifecycle } from "@/utils/debugLifecycle";
 import { useUserProfile } from "@/contexts/UserProfileContext";
 import { TAB_BAR_HEIGHT } from "./_layout";
 import AvatarPicker from "@/components/profile/AvatarPicker";
+import { typography } from "@/styles";
 
 export default function ProfileScreen() {
   useDebugLifecycle("ProfileScreen");
@@ -36,7 +37,7 @@ export default function ProfileScreen() {
 
   const handleDangerousZone = () => {
     log.info("in handle dangerous zone");
-    router.push("/(app)/(profile)/dangerous-zone");
+    router.push("/(app)/(profile)/delete-profile");
   };
 
   const handleLogOut = async () => {
@@ -47,7 +48,7 @@ export default function ProfileScreen() {
     <View style={styles.container}>
       <View style={styles.header}>
         <View style={styles.placeholder}></View>
-        <Text style={styles.title}>Profile</Text>
+        <Text style={typography.headerTitle}>Profile</Text>
         <TouchableOpacity onPress={handleEditProfile} style={styles.editButton}>
           <Image
             source={require("@/assets/images/icon/white-edit.png")}
@@ -138,11 +139,6 @@ const styles = StyleSheet.create({
   editButton: {
     width: 32,
     height: 32,
-  },
-  title: {
-    color: "#fff",
-    fontSize: 26,
-    fontWeight: "600",
   },
   content: {
     flex: 1,

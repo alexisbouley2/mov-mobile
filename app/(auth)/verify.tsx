@@ -58,7 +58,7 @@ export default function VerifyScreen() {
       <KeyboardAvoidingView
         style={styles.keyboardAvoidingView}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 40 : 20}
       >
         <View style={styles.content}>
           <Text style={styles.title}>Enter the code you received</Text>

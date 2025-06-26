@@ -1,13 +1,14 @@
 // app/(app)/(profile)/edit-profile.tsx
 import React, { useEffect } from "react";
-import { SafeAreaView, StyleSheet, Alert } from "react-native";
+import { StyleSheet, Alert, View, Text } from "react-native";
 import { router } from "expo-router";
 import { useUserProfile } from "@/contexts/UserProfileContext";
 import ProfileForm from "@/components/profile/ProfileForm";
-import ProfileHeader from "@/components/profile/ProfileHeader";
+import BackButton from "@/components/ui/BackButton";
 import { useProfilePhoto } from "@/hooks/profile/useProfilePhoto";
 import { useProfileForm } from "@/hooks/profile/useProfileForm";
 import log from "@/utils/logger";
+import { typography } from "@/styles";
 
 export default function EditProfileScreen() {
   const { user, updateUserProfile, profileError, clearProfileError } =
@@ -96,8 +97,11 @@ export default function EditProfileScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ProfileHeader title="Edit Profile" onBack={handleBack} />
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <BackButton onPress={handleBack} />
+        <Text style={typography.headerTitle}>{"Edit Profile"}</Text>
+      </View>
 
       <ProfileForm
         username={username}
@@ -110,7 +114,7 @@ export default function EditProfileScreen() {
         loadingButtonText={isUploading ? "Waiting for upload..." : "Saving..."}
         avatarSize={120}
       />
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -118,5 +122,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#000",
+  },
+  header: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingTop: 20,
+    paddingBottom: 20,
   },
 });

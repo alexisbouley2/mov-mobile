@@ -116,7 +116,7 @@ function AuthScreen() {
       <KeyboardAvoidingView
         style={styles.keyboardAvoidingView}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 40 : 20}
       >
         {/* 
           Hidden OTP input for SMS pre-warming
