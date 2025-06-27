@@ -7,12 +7,14 @@ import EventsHeader from "@/components/events/EventsHeader";
 import EventsContent from "@/components/events/EventsContent";
 import { useDebugLifecycle } from "@/utils/debugLifecycle";
 import { TAB_BAR_HEIGHT } from "./_layout";
+import { useUserProfile } from "@/contexts/UserProfileContext";
 
 export default function EventsScreen() {
   useDebugLifecycle("EventsScreen");
 
   const router = useRouter();
   const { events, refetch, hasInitialData } = useUserEvents();
+  const { user } = useUserProfile();
 
   // Refetch events when returning to this screen
   useFocusEffect(
@@ -36,7 +38,11 @@ export default function EventsScreen() {
     <View style={styles.container}>
       <EventsHeader onCreateEvent={handleCreateEvent} />
 
-      <EventsContent events={events} onEventPress={handleEventPress} />
+      <EventsContent
+        events={events}
+        onEventPress={handleEventPress}
+        user={user}
+      />
     </View>
   );
 }

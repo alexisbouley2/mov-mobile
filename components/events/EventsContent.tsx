@@ -3,6 +3,7 @@ import React from "react";
 import { ScrollView, View, Text, StyleSheet } from "react-native";
 import { useEventsLogic } from "@/hooks/events/useEventsLogic";
 import EventSection from "@/components/events/EventSection";
+import typography from "@/styles/typography";
 
 export interface User {
   id: string;
@@ -42,11 +43,13 @@ export interface CategorizedEvents {
 interface EventsContentProps {
   events: CategorizedEvents;
   onEventPress: (_eventId: string) => void;
+  user: User | null;
 }
 
 export default function EventsContent({
   events,
   onEventPress,
+  user,
 }: EventsContentProps) {
   const { pastEventsByMonth } = useEventsLogic(events);
 
@@ -57,6 +60,7 @@ export default function EventsContent({
         <EventSection
           title="Current Events"
           events={events.current}
+          user={user}
           type="current"
           onEventPress={onEventPress}
         />
@@ -67,6 +71,7 @@ export default function EventsContent({
         <EventSection
           title="Planned Events"
           events={events.planned}
+          user={user}
           type="planned"
           onEventPress={onEventPress}
         />
@@ -75,12 +80,13 @@ export default function EventsContent({
       {/* Past Events (Memories) */}
       {Object.keys(pastEventsByMonth).length > 0 && (
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Memories</Text>
+          <Text style={typography.eventSectionTitle}>Memories</Text>
           {Object.entries(pastEventsByMonth).map(([monthYear, monthEvents]) => (
             <View key={monthYear}>
               <Text style={styles.monthTitle}>{monthYear}</Text>
               <EventSection
                 events={monthEvents as EventType[]}
+                user={user}
                 type="past"
                 onEventPress={onEventPress}
                 showTitle={false}
@@ -98,19 +104,12 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 20,
   },
-  section: {
-    marginBottom: 30,
-  },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#fff",
-    marginBottom: 4,
-  },
+  section: {},
   monthTitle: {
     fontSize: 16,
-    color: "#888",
-    marginTop: 20,
+    color: "#fff",
+    fontWeight: "600",
+    marginLeft: 16,
     marginBottom: 12,
   },
 });

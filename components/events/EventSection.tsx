@@ -1,7 +1,8 @@
 // components/events/EventSection.tsx
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text } from "react-native";
 import EventCard from "@/components/events/EventCard";
+import typography from "@/styles/typography";
 
 export interface User {
   id: string;
@@ -35,6 +36,7 @@ export interface EventType {
 interface EventSectionProps {
   title?: string;
   events: EventType[];
+  user: User | null;
   type: "current" | "planned" | "past";
   onEventPress: (_eventId: string) => void;
   showTitle?: boolean;
@@ -43,17 +45,21 @@ interface EventSectionProps {
 export default function EventSection({
   title,
   events,
+  user,
   type,
   onEventPress,
   showTitle = true,
 }: EventSectionProps) {
   return (
-    <View style={styles.section}>
-      {showTitle && title && <Text style={styles.sectionTitle}>{title}</Text>}
+    <View>
+      {showTitle && title && (
+        <Text style={typography.eventSectionTitle}>{title}</Text>
+      )}
       {events.map((event) => (
         <EventCard
           key={event.id}
           event={event}
+          user={user}
           type={type}
           onPress={() => onEventPress(event.id)}
         />
@@ -61,15 +67,3 @@ export default function EventSection({
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  section: {
-    marginBottom: 30,
-  },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#fff",
-    marginBottom: 4,
-  },
-});

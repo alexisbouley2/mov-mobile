@@ -16,4 +16,11 @@ export default StyleSheet.create({
     fontSize: 16,
     textAlign: "center",
   },
+  eventSectionTitle: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#fff",
+    marginBottom: 10,
+    marginLeft: 8,
+  },
 });
