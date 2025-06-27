@@ -1,14 +1,9 @@
 import React from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-} from "react-native";
+import { View, Text, TextInput, StyleSheet } from "react-native";
 import { router } from "expo-router";
 import { useProfileDelete } from "@/hooks/profile/useProfileDelete";
 import BackButton from "@/components/ui/BackButton";
+import SubmitButton from "@/components/ui/SubmitButton";
 import { typography } from "@/styles";
 
 export default function DeleteProfileScreen() {
@@ -40,7 +35,7 @@ export default function DeleteProfileScreen() {
         </Text>
 
         <TextInput
-          style={styles.input}
+          style={[typography.profileTextInput, { marginBottom: 60 }]}
           placeholder="Username"
           placeholderTextColor="#666"
           value={usernameInput}
@@ -49,27 +44,13 @@ export default function DeleteProfileScreen() {
           autoCorrect={false}
         />
 
-        <TouchableOpacity
-          style={[
-            styles.deleteButton,
-            isDeleteEnabled
-              ? styles.deleteButtonEnabled
-              : styles.deleteButtonDisabled,
-          ]}
+        <SubmitButton
           onPress={handleDelete}
           disabled={!isDeleteEnabled}
-        >
-          <Text
-            style={[
-              styles.deleteButtonText,
-              isDeleteEnabled
-                ? styles.deleteButtonTextEnabled
-                : styles.deleteButtonTextDisabled,
-            ]}
-          >
-            {loading ? "Deleting..." : "Delete"}
-          </Text>
-        </TouchableOpacity>
+          loading={loading}
+          submitText="Delete"
+          loadingText="Deleting..."
+        />
       </View>
     </View>
   );
@@ -99,38 +80,5 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginBottom: 20,
     lineHeight: 24,
-  },
-  input: {
-    width: "100%",
-    backgroundColor: "#1a1a1a",
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    color: "#fff",
-    fontSize: 16,
-    marginBottom: 70,
-    textAlign: "center",
-  },
-  deleteButton: {
-    width: "100%",
-    paddingVertical: 16,
-    borderRadius: 25,
-    alignItems: "center",
-  },
-  deleteButtonEnabled: {
-    backgroundColor: "#fff",
-  },
-  deleteButtonDisabled: {
-    backgroundColor: "#666",
-  },
-  deleteButtonText: {
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  deleteButtonTextEnabled: {
-    color: "#000",
-  },
-  deleteButtonTextDisabled: {
-    color: "#333",
   },
 });

@@ -1,12 +1,8 @@
 import React from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-} from "react-native";
+import { View, TextInput, StyleSheet } from "react-native";
 import AvatarPicker from "./AvatarPicker";
+import SubmitButton from "../ui/SubmitButton";
+import { typography } from "@/styles";
 
 interface ProfileFormProps {
   username: string;
@@ -44,7 +40,10 @@ export default function ProfileForm({
       />
 
       <TextInput
-        style={styles.input}
+        style={[
+          typography.profileTextInput,
+          { marginTop: 40, marginBottom: 60 },
+        ]}
         placeholder="Username"
         placeholderTextColor="#666"
         value={username}
@@ -55,23 +54,13 @@ export default function ProfileForm({
         maxLength={20}
       />
 
-      <TouchableOpacity
-        style={[
-          styles.button,
-          (!isFormValid || loading) && styles.buttonDisabled,
-        ]}
+      <SubmitButton
         onPress={onSubmit}
-        disabled={!isFormValid || loading}
-      >
-        <Text
-          style={[
-            styles.buttonText,
-            (!isFormValid || loading) && styles.buttonTextDisabled,
-          ]}
-        >
-          {loading ? loadingButtonText : submitButtonText}
-        </Text>
-      </TouchableOpacity>
+        disabled={!isFormValid}
+        loading={loading}
+        submitText={submitButtonText}
+        loadingText={loadingButtonText}
+      />
     </View>
   );
 }
@@ -82,35 +71,5 @@ const styles = StyleSheet.create({
     paddingTop: 60,
     alignItems: "center",
     paddingHorizontal: 64,
-  },
-  input: {
-    width: "100%",
-    backgroundColor: "#1a1a1a",
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    color: "#fff",
-    fontSize: 16,
-    marginTop: 40,
-    textAlign: "center",
-  },
-  button: {
-    marginTop: 70,
-    width: "100%",
-    backgroundColor: "#fff",
-    paddingVertical: 16,
-    borderRadius: 30,
-    alignItems: "center",
-  },
-  buttonDisabled: {
-    backgroundColor: "#333",
-  },
-  buttonText: {
-    color: "#000",
-    fontSize: 18,
-    fontWeight: "600",
-  },
-  buttonTextDisabled: {
-    color: "#666",
   },
 });

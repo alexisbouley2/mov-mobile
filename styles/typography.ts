@@ -6,4 +6,14 @@ export default StyleSheet.create({
     color: "#fff",
     fontWeight: "600",
   },
+  profileTextInput: {
+    width: "100%",
+    backgroundColor: "#1a1a1a",
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    color: "#fff",
+    fontSize: 16,
+    textAlign: "center",
+  },
 });
