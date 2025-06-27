@@ -25,15 +25,18 @@ export default function EventParticipants({
   participants,
   maxVisible = 3,
 }: EventParticipantsProps) {
-  const visibleParticipants = participants.slice(0, maxVisible);
-  const hiddenCount = participants.length - maxVisible;
+  const visibleParticipants = [...participants.slice(0, maxVisible)];
+  const hiddenCount = Math.min(participants.length - maxVisible, 99);
 
   return (
     <View style={styles.participantsContainer}>
       {visibleParticipants.map((participant, index) => (
         <View
           key={participant.user.id}
-          style={[styles.participantAvatar, { marginLeft: index > 0 ? -8 : 0 }]}
+          style={[
+            styles.participantAvatar,
+            { marginLeft: index > 0 ? -10 : 0 },
+          ]}
         >
           {participant.user.profileThumbnailUrl ? (
             <CachedImage
@@ -82,11 +85,11 @@ const styles = StyleSheet.create({
   },
   moreParticipants: {
     backgroundColor: "#333",
-    marginLeft: -8,
+    marginLeft: -10,
   },
   avatarText: {
     color: "#fff",
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: "bold",
   },
 });

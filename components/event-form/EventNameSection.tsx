@@ -20,7 +20,7 @@ export default function EventNameSection({
         onChangeText={onNameChange}
         placeholder="Enter event name"
         placeholderTextColor="#666"
-        maxLength={50}
+        maxLength={25}
       />
     </View>
   );
