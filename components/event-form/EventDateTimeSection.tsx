@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
+import { components } from "@/styles";
 
 interface EventDateTimeSectionProps {
   date: Date;
@@ -50,29 +51,25 @@ export default function EventDateTimeSection({
   };
 
   return (
-    <View style={styles.section}>
-      <Text style={styles.sectionLabel}>Date & Time</Text>
+    <View style={components.eventFormSection}>
+      <Text style={components.eventFormSectionLabel}>Start Time</Text>
 
       <View style={styles.dateTimeContainer}>
         <TouchableOpacity
           style={styles.dateTimeCard}
           onPress={() => setShowDatePicker(true)}
         >
-          <View style={styles.dateTimeHeader}>
-            <IconSymbol name="calendar" size={20} color="#ff6b6b" />
-            <Text style={styles.dateTimeLabel}>Date</Text>
-          </View>
-          <Text style={styles.dateTimeValue}>{date.toLocaleDateString()}</Text>
+          <IconSymbol name="calendar" size={20} color="#ff6b6b" />
+          <Text style={styles.dateTimeValue}>
+            {date.toLocaleDateString().replaceAll("/", ".")}
+          </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           style={styles.dateTimeCard}
           onPress={() => setShowTimePicker(true)}
         >
-          <View style={styles.dateTimeHeader}>
-            <IconSymbol name="clock" size={20} color="#ff6b6b" />
-            <Text style={styles.dateTimeLabel}>Time</Text>
-          </View>
+          <IconSymbol name="clock" size={20} color="#ff6b6b" />
           <Text style={styles.dateTimeValue}>
             {date.toLocaleTimeString([], {
               hour: "2-digit",
@@ -105,15 +102,6 @@ export default function EventDateTimeSection({
 }
 
 const styles = StyleSheet.create({
-  section: {
-    marginTop: 24,
-  },
-  sectionLabel: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#fff",
-    marginBottom: 8,
-  },
   dateTimeContainer: {
     flexDirection: "row",
     gap: 12,
@@ -122,20 +110,14 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#1a1a1a",
     borderRadius: 12,
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     borderWidth: 1,
     borderColor: "#333",
-  },
-  dateTimeHeader: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 8,
-  },
-  dateTimeLabel: {
-    fontSize: 14,
-    color: "#888",
-    marginLeft: 8,
-    fontWeight: "500",
+    justifyContent: "flex-start",
+    gap: 8,
   },
   dateTimeValue: {
     fontSize: 16,

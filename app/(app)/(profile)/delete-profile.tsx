@@ -2,9 +2,9 @@ import React from "react";
 import { View, Text, TextInput, StyleSheet } from "react-native";
 import { router } from "expo-router";
 import { useProfileDelete } from "@/hooks/profile/useProfileDelete";
-import BackButton from "@/components/ui/BackButton";
-import SubmitButton from "@/components/ui/SubmitButton";
-import { typography } from "@/styles";
+import BackButton from "@/components/ui/button/BackButton";
+import SubmitButton from "@/components/ui/button/SubmitButton";
+import { components, typography } from "@/styles";
 
 export default function DeleteProfileScreen() {
   const {
@@ -21,7 +21,7 @@ export default function DeleteProfileScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
+      <View style={components.header}>
         <BackButton onPress={handleBack} />
         <Text style={[typography.headerTitle, { color: "#ff4444" }]}>
           {"Dangerous Zone"}
@@ -60,13 +60,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#000",
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    paddingTop: 20,
-    paddingBottom: 20,
   },
   content: {
     flex: 1,

@@ -4,6 +4,7 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  View,
 } from "react-native";
 import { EventFormData } from "@/hooks/event/useEventForm";
 import EventPhotoSection from "@/components/event-form/EventPhotoSection";
@@ -12,7 +13,7 @@ import EventInformationSection from "@/components/event-form/EventInformationSec
 import EventDateTimeSection from "@/components/event-form/EventDateTimeSection";
 import EventLocationSection from "@/components/event-form/EventLocationSection";
 import EventInfoSection from "@/components/event-form/EventInfoSection";
-import EventSubmitButton from "@/components/event-form/EventSubmitButton";
+import SubmitButton from "../ui/button/SubmitButton";
 
 interface EventFormProps {
   formData: EventFormData;
@@ -23,7 +24,6 @@ interface EventFormProps {
   mode: "create" | "edit";
   pickImage: () => Promise<void>;
   previewImage: string | null;
-  isUploading: boolean;
 }
 
 export default function EventForm({
@@ -35,13 +35,12 @@ export default function EventForm({
   mode,
   pickImage,
   previewImage,
-  isUploading,
 }: EventFormProps) {
   return (
     <KeyboardAvoidingView
       style={styles.keyboardAvoidingView}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 40 : 0}
     >
       <ScrollView
         style={styles.scrollView}
@@ -49,21 +48,17 @@ export default function EventForm({
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        <EventPhotoSection
-          pickImage={pickImage}
-          previewImage={previewImage}
-          isUploading={isUploading}
-        />
+        <EventPhotoSection pickImage={pickImage} previewImage={previewImage} />
 
         <EventNameSection
           name={formData.name}
           onNameChange={(name: string) => onFieldChange("name", name)}
         />
 
-        <EventInformationSection
-          information={formData.information}
-          onInformationChange={(info: string) =>
-            onFieldChange("information", info)
+        <EventLocationSection
+          location={formData.location}
+          onLocationChange={(location: string) =>
+            onFieldChange("location", location)
           }
         />
 
@@ -74,20 +69,24 @@ export default function EventForm({
           />
         )}
 
-        <EventLocationSection
-          location={formData.location}
-          onLocationChange={(location: string) =>
-            onFieldChange("location", location)
+        <EventInformationSection
+          information={formData.information}
+          onInformationChange={(info: string) =>
+            onFieldChange("information", info)
           }
         />
 
         <EventInfoSection mode={mode} />
 
-        <EventSubmitButton
-          onSubmit={onSubmit}
-          loading={loading}
-          text={submitButtonText}
-        />
+        <View style={styles.submitButtonContainer}>
+          <SubmitButton
+            onPress={onSubmit}
+            disabled={loading}
+            loading={loading}
+            submitText={submitButtonText}
+            loadingText="Submitting..."
+          />
+        </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -103,5 +102,9 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingBottom: 40,
+  },
+  submitButtonContainer: {
+    marginTop: 32,
+    paddingHorizontal: 44,
   },
 });

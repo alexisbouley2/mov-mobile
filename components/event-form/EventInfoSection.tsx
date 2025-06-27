@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { IconSymbol } from "@/components/ui/IconSymbol";
+import { components } from "@/styles";
 
 interface EventInfoSectionProps {
   mode: "create" | "edit";
@@ -13,7 +14,7 @@ export default function EventInfoSection({ mode }: EventInfoSectionProps) {
       : "As the admin, you can update event details. Date cannot be changed once set.";
 
   return (
-    <View style={styles.infoSection}>
+    <View style={components.eventFormSection}>
       <View style={styles.infoItem}>
         <IconSymbol name="info.circle" size={16} color="#666" />
         <Text style={styles.infoText}>{infoText}</Text>
@@ -23,17 +24,15 @@ export default function EventInfoSection({ mode }: EventInfoSectionProps) {
 }
 
 const styles = StyleSheet.create({
-  infoSection: {
-    marginTop: 24,
-    marginBottom: 20,
-  },
   infoItem: {
     flexDirection: "row",
-    alignItems: "flex-start",
+    alignItems: "center",
     paddingHorizontal: 16,
     paddingVertical: 12,
     backgroundColor: "#1a1a1a",
     borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#333",
   },
   infoText: {
     flex: 1,

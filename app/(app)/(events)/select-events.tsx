@@ -12,7 +12,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useSelectEvents } from "@/hooks/events/useSelectEvents";
 import SelectEventCard from "@/components/events/SelectEventCard";
 import typography from "@/styles/typography";
-import SubmitButton from "@/components/ui/SubmitButton";
+import SubmitButton from "@/components/ui/button/SubmitButton";
 
 export default function SelectEventsScreen() {
   const { jobId } = useLocalSearchParams<{ jobId: string }>();

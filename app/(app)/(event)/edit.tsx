@@ -1,9 +1,10 @@
 import React from "react";
-import { SafeAreaView, StyleSheet } from "react-native";
+import { StyleSheet, View, Text } from "react-native";
 import { useRouter } from "expo-router";
 import { useEditEvent } from "@/hooks/event/useEditEvent";
-import EventFormHeader from "@/components/event-form/EventFormHeader";
 import EventForm from "@/components/event-form/EventForm";
+import { components, typography } from "@/styles";
+import BackButton from "@/components/ui/button/BackButton";
 
 export default function EditEventScreen() {
   const router = useRouter();
@@ -16,7 +17,6 @@ export default function EditEventScreen() {
     handleBack,
     pickImage,
     previewImage,
-    isUploading,
   } = useEditEvent();
 
   const onBack = () => {
@@ -33,8 +33,11 @@ export default function EditEventScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <EventFormHeader title="Edit Event" onBack={onBack} />
+    <View style={styles.container}>
+      <View style={components.header}>
+        <BackButton onPress={onBack} />
+        <Text style={typography.headerTitle}>{"Edit Event"}</Text>
+      </View>
 
       <EventForm
         formData={formData}
@@ -45,9 +48,8 @@ export default function EditEventScreen() {
         mode="edit"
         pickImage={pickImage}
         previewImage={previewImage}
-        isUploading={isUploading}
       />
-    </SafeAreaView>
+    </View>
   );
 }
 

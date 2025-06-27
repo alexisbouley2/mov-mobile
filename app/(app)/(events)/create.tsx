@@ -1,12 +1,13 @@
 // app/(app)/(events)/create.tsx - Updated with context refresh
 import React from "react";
-import { SafeAreaView, StyleSheet } from "react-native";
+import { StyleSheet, View, Text } from "react-native";
 import { useRouter } from "expo-router";
 import { useCreateEvent } from "@/hooks/events/useCreateEvent";
 import { useUserEvents } from "@/contexts/UserEventsContext";
-import EventFormHeader from "@/components/event-form/EventFormHeader";
 import EventForm from "@/components/event-form/EventForm";
 import { useUserProfile } from "@/contexts/UserProfileContext";
+import { components, typography } from "@/styles";
+import BackButton from "@/components/ui/button/BackButton";
 
 export default function CreateEventScreen() {
   const { user } = useUserProfile();
@@ -21,7 +22,6 @@ export default function CreateEventScreen() {
     handleBack,
     pickImage,
     previewImage,
-    isUploading,
   } = useCreateEvent(user?.id || "");
 
   const onBack = () => {
@@ -40,8 +40,11 @@ export default function CreateEventScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <EventFormHeader title="Create Event" onBack={onBack} />
+    <View style={styles.container}>
+      <View style={components.header}>
+        <BackButton onPress={onBack} />
+        <Text style={typography.headerTitle}>{"Create Event"}</Text>
+      </View>
 
       <EventForm
         formData={formData}
@@ -52,9 +55,8 @@ export default function CreateEventScreen() {
         mode="create"
         pickImage={pickImage}
         previewImage={previewImage}
-        isUploading={isUploading}
       />
-    </SafeAreaView>
+    </View>
   );
 }
 

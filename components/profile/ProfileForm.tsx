@@ -1,7 +1,7 @@
 import React from "react";
 import { View, TextInput, StyleSheet } from "react-native";
 import AvatarPicker from "./AvatarPicker";
-import SubmitButton from "../ui/SubmitButton";
+import SubmitButton from "../ui/button/SubmitButton";
 import { typography } from "@/styles";
 
 interface ProfileFormProps {
