@@ -130,7 +130,7 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     borderWidth: 2,
     borderColor: "#808080",
-    marginBottom: 12,
+    marginBottom: 8,
   },
   eventContent: {
     flexDirection: "row",

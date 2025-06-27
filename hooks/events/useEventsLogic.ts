@@ -1,6 +1,9 @@
 // hooks/useEventsLogic.ts
 import { useMemo } from "react";
-import { CategorizedEvents, Event as EventType } from "@/hooks/useEvents";
+import {
+  CategorizedEvents,
+  Event as EventType,
+} from "@/contexts/UserEventsContext";
 
 export function useEventsLogic(events: CategorizedEvents) {
   const pastEventsByMonth = useMemo(() => {
@@ -29,5 +32,27 @@ function groupEventsByMonth(events: EventType[]) {
     return acc;
   }, {} as Record<string, EventType[]>);
 
-  return grouped;
+  // Sort months in descending order (most recent first)
+  // Create a mapping of monthYear to the earliest date in that month for sorting
+  const monthYearToDate = new Map<string, Date>();
+
+  Object.entries(grouped).forEach(([monthYear, monthEvents]) => {
+    // Find the earliest date in this month for sorting
+    const earliestDate = monthEvents.reduce((earliest, event) => {
+      const eventDate = new Date(event.date);
+      return eventDate < earliest ? eventDate : earliest;
+    }, new Date(monthEvents[0].date));
+
+    monthYearToDate.set(monthYear, earliestDate);
+  });
+
+  const sortedGrouped = Object.fromEntries(
+    Object.entries(grouped).sort(([monthYearA], [monthYearB]) => {
+      const dateA = monthYearToDate.get(monthYearA)!;
+      const dateB = monthYearToDate.get(monthYearB)!;
+      return dateB.getTime() - dateA.getTime();
+    })
+  );
+
+  return sortedGrouped;
 }
