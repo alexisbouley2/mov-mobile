@@ -12,7 +12,8 @@ export default function EventGallery({ eventDate }: EventGalleryProps) {
   const { activeTab, setActiveTab } = useEventVideos();
 
   // Check if event is in the past (allow uploads)
-  const isEventPast = new Date() > eventDate;
+
+  const isEventFuture = new Date() < eventDate;
 
   const handleTabPress = (tab: "all" | "you") => {
     // Update active tab in context - this will trigger preloading for new tab
@@ -21,15 +22,6 @@ export default function EventGallery({ eventDate }: EventGalleryProps) {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Gallery</Text>
-        {isEventPast && (
-          <Text style={styles.subtitle}>
-            Share your memories from this event
-          </Text>
-        )}
-      </View>
-
       {/* Tab Navigation */}
       <View style={styles.tabContainer}>
         <TouchableOpacity
@@ -61,10 +53,15 @@ export default function EventGallery({ eventDate }: EventGalleryProps) {
         </TouchableOpacity>
       </View>
 
-      {/* Video Feed */}
-      <View style={styles.videoFeedContainer}>
-        <EventVideoFeed />
-      </View>
+      {isEventFuture ? (
+        <Text style={styles.warningText}>
+          Wait for the event to start to give your POV
+        </Text>
+      ) : (
+        <View style={styles.videoFeedContainer}>
+          <EventVideoFeed />
+        </View>
+      )}
     </View>
   );
 }
@@ -74,23 +71,10 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#000",
   },
-  header: {
-    paddingHorizontal: 20,
-    paddingBottom: 20,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#fff",
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: "#666",
-  },
+
   tabContainer: {
     flexDirection: "row",
-    backgroundColor: "#111",
+    backgroundColor: "#1C1C1E",
     marginHorizontal: 20,
     borderRadius: 25,
     padding: 4,
@@ -98,7 +82,7 @@ const styles = StyleSheet.create({
   },
   tab: {
     flex: 1,
-    paddingVertical: 12,
+    paddingVertical: 6,
     alignItems: "center",
     borderRadius: 20,
   },
@@ -112,6 +96,14 @@ const styles = StyleSheet.create({
   },
   activeTabText: {
     color: "#000",
+  },
+  warningText: {
+    fontSize: 24,
+    color: "#808080",
+    marginTop: 20,
+    paddingHorizontal: 20,
+    textAlign: "center",
+    fontWeight: "600",
   },
   videoFeedContainer: {
     flex: 1,

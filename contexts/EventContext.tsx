@@ -33,6 +33,7 @@ export interface EventDetail {
   coverImagePath: string | null;
   coverThumbnailPath: string | null;
   coverImageUrl: string | null;
+  coverThumbnailUrl: string | null;
   adminId: string;
   admin: User;
   participants: EventParticipant[];

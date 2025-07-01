@@ -5,7 +5,7 @@ import { useRouter } from "expo-router";
 import { useEventMessages } from "@/contexts/EventMessagesContext";
 import ParticipantAvatar from "../ui/ParticipantAvatar";
 
-export default function EventMessages() {
+export default function EventMessagePreview() {
   const router = useRouter();
   const { preview, previewLoading } = useEventMessages();
 
