@@ -92,7 +92,7 @@ export default function EventHeader({ event, onBack }: EventHeaderProps) {
       {/* Content Overlay */}
       <View style={styles.contentOverlay}>
         <TouchableOpacity onPress={onBack} style={styles.backButton}>
-          <Ionicons name="chevron-back" size={32} color="#007AFF" />
+          <Ionicons name="chevron-back" size={36} color="#007AFF" />
         </TouchableOpacity>
 
         {/* Event Info */}
@@ -138,7 +138,7 @@ const styles = StyleSheet.create({
   },
   backButton: {
     position: "absolute",
-    left: 5,
+    left: 10,
     top: 15,
     zIndex: 1,
   },
