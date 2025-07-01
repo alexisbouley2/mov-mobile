@@ -1,5 +1,5 @@
 // Updated components/event/EventParticipantsBottomSheet.tsx
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -9,10 +9,10 @@ import {
   FlatList,
   TouchableOpacity,
   ActivityIndicator,
+  Dimensions,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useEventParticipants } from "@/contexts/EventParticipantsContext";
-import { useBottomSheet } from "@/hooks/event/useBottomSheet";
 import ParticipantListItem from "@/components/event/participants/ParticipantListItem";
 
 interface EventParticipantsBottomSheetProps {
@@ -20,12 +20,15 @@ interface EventParticipantsBottomSheetProps {
   onClose: () => void;
 }
 
+const SCREEN_HEIGHT = Dimensions.get("window").height;
+const BOTTOM_SHEET_HEIGHT = SCREEN_HEIGHT * 0.61;
+
 export default function EventParticipantsBottomSheet({
   visible,
   onClose,
 }: EventParticipantsBottomSheetProps) {
   const {
-    bottomSheetParticipants: fakeBottomSheetParticipants,
+    bottomSheetParticipants,
     bottomSheetLoading,
     hasMore,
     totalCount,
@@ -34,31 +37,30 @@ export default function EventParticipantsBottomSheet({
     currentEventId,
   } = useEventParticipants();
 
-  const realBottomSheetParticipantsv1 = [
-    ...fakeBottomSheetParticipants,
-    ...fakeBottomSheetParticipants,
-    ...fakeBottomSheetParticipants,
-  ];
+  // Simple animation values
+  const translateY = useRef(new Animated.Value(BOTTOM_SHEET_HEIGHT)).current;
+  const opacity = useRef(new Animated.Value(0)).current;
 
-  const realBottomSheetParticipantsv2 = [
-    ...realBottomSheetParticipantsv1,
-    ...realBottomSheetParticipantsv1,
-    ...realBottomSheetParticipantsv1,
-    ...realBottomSheetParticipantsv1,
-  ];
-
-  const realBottomSheetParticipantsv3 = [
-    ...realBottomSheetParticipantsv2,
-    ...realBottomSheetParticipantsv2,
-    ...realBottomSheetParticipantsv2,
-    ...realBottomSheetParticipantsv2,
-  ];
-
-  const bottomSheetParticipants = realBottomSheetParticipantsv2;
-  // const bottomSheetParticipants = fakeBottomSheetParticipants;
-
-  const { translateY, opacity, panResponder, closeSheet, BOTTOM_SHEET_HEIGHT } =
-    useBottomSheet(visible, onClose);
+  // Open animation
+  useEffect(() => {
+    if (visible) {
+      Animated.parallel([
+        Animated.timing(translateY, {
+          toValue: 0,
+          duration: 350,
+          useNativeDriver: true,
+        }),
+        Animated.timing(opacity, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    } else {
+      translateY.setValue(BOTTOM_SHEET_HEIGHT);
+      opacity.setValue(0);
+    }
+  }, [visible, translateY, opacity]);
 
   // Load participants when bottom sheet opens
   useEffect(() => {
@@ -71,6 +73,23 @@ export default function EventParticipantsBottomSheet({
     bottomSheetParticipants.length,
     loadBottomSheetParticipants,
   ]);
+
+  const closeSheet = () => {
+    Animated.parallel([
+      Animated.timing(translateY, {
+        toValue: BOTTOM_SHEET_HEIGHT,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.timing(opacity, {
+        toValue: 0,
+        duration: 250,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      onClose();
+    });
+  };
 
   const renderParticipant = ({ item, index }: { item: any; index: number }) => (
     <ParticipantListItem
@@ -112,7 +131,6 @@ export default function EventParticipantsBottomSheet({
               transform: [{ translateY }],
             },
           ]}
-          {...panResponder.panHandlers}
         >
           <View style={styles.handleContainer}>
             <View style={styles.handle} />
@@ -157,14 +175,15 @@ const styles = StyleSheet.create({
   },
   backdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
   bottomSheet: {
     backgroundColor: "#000",
     paddingHorizontal: 20,
-    borderTopWidth: 1,
+    borderTopWidth: 2,
     borderColor: "#fff",
-    borderWidth: 1,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    overflow: "hidden",
   },
   handle: {
     width: 40,
@@ -189,7 +208,7 @@ const styles = StyleSheet.create({
     color: "#fff",
   },
   closeButton: {
-    padding: 4,
+    padding: 8,
   },
   loadingContainer: {
     flex: 1,

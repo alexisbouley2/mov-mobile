@@ -83,9 +83,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   participantAvatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     backgroundColor: "#555",
     justifyContent: "center",
     alignItems: "center",
