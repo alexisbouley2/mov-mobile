@@ -3,7 +3,6 @@ import React from "react";
 import {
   Text,
   TouchableOpacity,
-  SafeAreaView,
   KeyboardAvoidingView,
   Platform,
   View,
@@ -54,7 +53,7 @@ export default function VerifyScreen() {
   const finalCanResend = canResend && isTimerFinished && !isResending;
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <KeyboardAvoidingView
         style={styles.keyboardAvoidingView}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -101,6 +100,6 @@ export default function VerifyScreen() {
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 }

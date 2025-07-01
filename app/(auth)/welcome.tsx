@@ -3,7 +3,6 @@
 import React, { useState, useRef } from "react";
 import {
   Alert,
-  SafeAreaView,
   KeyboardAvoidingView,
   Platform,
   View,
@@ -80,7 +79,7 @@ function AuthScreen() {
   // Render welcome screen
   if (currentScreen === "welcome") {
     return (
-      <SafeAreaView style={styles.container}>
+      <View style={styles.container}>
         <View style={styles.content}>
           <View style={styles.logoContainer}>
             <Image
@@ -106,13 +105,13 @@ function AuthScreen() {
             </TouchableOpacity>
           </View>
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
   // Render phone screen
   return (
-    <SafeAreaView style={styles.phoneContainer}>
+    <View style={styles.phoneContainer}>
       <KeyboardAvoidingView
         style={styles.keyboardAvoidingView}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -194,7 +193,7 @@ function AuthScreen() {
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 }
 

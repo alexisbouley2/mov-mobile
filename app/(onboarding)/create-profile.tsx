@@ -1,6 +1,6 @@
 // app/(onboarding)/create-profile.tsx
 import React, { useEffect } from "react";
-import { SafeAreaView, StyleSheet, Alert } from "react-native";
+import { View, StyleSheet, Alert } from "react-native";
 import { useRouter } from "expo-router";
 import { useUserProfile } from "@/contexts/UserProfileContext";
 import ProfileForm from "@/components/profile/ProfileForm";
@@ -82,7 +82,7 @@ export default function CreateProfileScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <ProfileForm
         username={username}
         onUsernameChange={setUsername}
@@ -96,7 +96,7 @@ export default function CreateProfileScreen() {
         }
         autoFocus
       />
-    </SafeAreaView>
+    </View>
   );
 }
 
