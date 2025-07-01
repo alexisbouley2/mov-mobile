@@ -1,7 +1,7 @@
 // components/event/EventLocation.tsx
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
-import { IconSymbol } from "@/components/ui/IconSymbol";
+import { Image } from "expo-image";
 
 interface EventLocationProps {
   location: string;
@@ -10,7 +10,10 @@ interface EventLocationProps {
 export default function EventLocation({ location }: EventLocationProps) {
   return (
     <View style={styles.container}>
-      <IconSymbol name="location" size={20} color="#888" />
+      <Image
+        source={require("@/assets/images/icon/location.png")}
+        style={styles.locationIcon}
+      />
       <Text style={styles.locationText}>{location}</Text>
     </View>
   );
@@ -20,12 +23,18 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 24,
+    paddingHorizontal: 10,
+    marginBottom: 20,
     gap: 12,
   },
   locationText: {
-    fontSize: 16,
+    fontSize: 14,
     color: "#fff",
+    fontWeight: "500",
     flex: 1,
+  },
+  locationIcon: {
+    width: 24,
+    height: 24,
   },
 });

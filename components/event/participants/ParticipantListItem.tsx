@@ -23,25 +23,13 @@ export default function ParticipantListItem({
   participant,
   isLast = false,
 }: ParticipantListItemProps) {
-  const formatJoinedDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
-  };
-
   return (
     <View style={styles.container}>
       <View style={styles.participantInfo}>
-        <ParticipantAvatar user={participant.user} size={50} />
+        <ParticipantAvatar user={participant.user} size={36} />
         <View style={styles.participantDetails}>
           <Text style={styles.participantName}>
             {participant.user.username}
-          </Text>
-          <Text style={styles.participantJoinDate}>
-            Joined {formatJoinedDate(participant.joinedAt)}
           </Text>
         </View>
       </View>
@@ -52,7 +40,8 @@ export default function ParticipantListItem({
 
 const styles = StyleSheet.create({
   container: {
-    paddingVertical: 12,
+    marginTop: 12,
+    paddingHorizontal: 10,
   },
   participantInfo: {
     flexDirection: "row",
@@ -63,14 +52,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   participantName: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#fff",
-    marginBottom: 2,
-  },
-  participantJoinDate: {
     fontSize: 14,
-    color: "#999",
+    fontWeight: "500",
+    color: "#fff",
   },
   separator: {
     height: 1,

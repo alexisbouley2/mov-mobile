@@ -41,18 +41,18 @@ export default function EventInformation({
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 24,
+    marginBottom: 20,
   },
   title: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: "bold",
     color: "#fff",
     marginBottom: 8,
   },
   description: {
-    fontSize: 16,
+    fontSize: 14,
     color: "#ccc",
-    lineHeight: 22,
+    lineHeight: 20,
   },
   seeMoreButton: {
     marginTop: 8,

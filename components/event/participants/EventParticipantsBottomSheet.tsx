@@ -25,7 +25,7 @@ export default function EventParticipantsBottomSheet({
   onClose,
 }: EventParticipantsBottomSheetProps) {
   const {
-    bottomSheetParticipants,
+    bottomSheetParticipants: fakeBottomSheetParticipants,
     bottomSheetLoading,
     hasMore,
     totalCount,
@@ -33,6 +33,29 @@ export default function EventParticipantsBottomSheet({
     loadMoreParticipants,
     currentEventId,
   } = useEventParticipants();
+
+  const realBottomSheetParticipantsv1 = [
+    ...fakeBottomSheetParticipants,
+    ...fakeBottomSheetParticipants,
+    ...fakeBottomSheetParticipants,
+  ];
+
+  const realBottomSheetParticipantsv2 = [
+    ...realBottomSheetParticipantsv1,
+    ...realBottomSheetParticipantsv1,
+    ...realBottomSheetParticipantsv1,
+    ...realBottomSheetParticipantsv1,
+  ];
+
+  const realBottomSheetParticipantsv3 = [
+    ...realBottomSheetParticipantsv2,
+    ...realBottomSheetParticipantsv2,
+    ...realBottomSheetParticipantsv2,
+    ...realBottomSheetParticipantsv2,
+  ];
+
+  const bottomSheetParticipants = realBottomSheetParticipantsv2;
+  // const bottomSheetParticipants = fakeBottomSheetParticipants;
 
   const { translateY, opacity, panResponder, closeSheet, BOTTOM_SHEET_HEIGHT } =
     useBottomSheet(visible, onClose);
@@ -137,11 +160,11 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
   bottomSheet: {
-    backgroundColor: "#1a1a1a",
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    backgroundColor: "#000",
     paddingHorizontal: 20,
-    paddingBottom: 20,
+    borderTopWidth: 1,
+    borderColor: "#fff",
+    borderWidth: 1,
   },
   handle: {
     width: 40,
@@ -158,11 +181,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 20,
+    marginBottom: 10,
   },
   title: {
     fontSize: 18,
-    fontWeight: "bold",
+    fontWeight: "700",
     color: "#fff",
   },
   closeButton: {

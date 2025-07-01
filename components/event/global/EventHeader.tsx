@@ -120,7 +120,7 @@ const styles = StyleSheet.create({
     height: "100%",
   },
   fallbackBackground: {
-    backgroundColor: "#333",
+    backgroundColor: "#000",
   },
   gradientOverlay: {
     position: "absolute",
@@ -134,6 +134,7 @@ const styles = StyleSheet.create({
   contentOverlay: {
     flex: 1,
     justifyContent: "flex-end",
+    paddingBottom: 20,
   },
   backButton: {
     position: "absolute",

@@ -3,7 +3,7 @@ import { useRef, useEffect } from "react";
 import { Animated, PanResponder, Dimensions } from "react-native";
 
 const SCREEN_HEIGHT = Dimensions.get("window").height;
-const BOTTOM_SHEET_HEIGHT = SCREEN_HEIGHT * 0.7;
+const BOTTOM_SHEET_HEIGHT = SCREEN_HEIGHT * 0.75;
 const SWIPE_THRESHOLD = 100;
 const SWIPE_VELOCITY_THRESHOLD = 0.5;
 
