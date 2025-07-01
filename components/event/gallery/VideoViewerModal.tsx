@@ -6,8 +6,8 @@ import {
   TouchableOpacity,
   Modal,
   SafeAreaView,
+  Image,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
 import VideoCarousel from "./VideoCarousel";
 import { useEventVideos, VideoItem } from "@/contexts/EventVideosContext";
 import { CachedImage } from "@/components/ui/CachedImage";
@@ -38,6 +38,13 @@ export default function VideoViewerModal({
     onClose();
   };
 
+  const formatTime = (date: string) => {
+    const dateObj = new Date(date);
+    const hours = dateObj.getHours().toString().padStart(2, "0");
+    const minutes = dateObj.getMinutes().toString().padStart(2, "0");
+    return `${hours}:${minutes}`;
+  };
+
   const currentVideo = videos[currentVideoIndex];
 
   if (!visible || videos.length === 0) {
@@ -45,122 +52,83 @@ export default function VideoViewerModal({
   }
 
   return (
-    <Modal
-      visible={visible}
-      animationType="slide"
-      presentationStyle="fullScreen"
-      onRequestClose={handleClose}
-    >
-      <View style={styles.container}>
-        {/* Header - Fixed at top with proper z-index */}
-        <SafeAreaView style={styles.headerSafeArea}>
-          <View style={styles.header}>
-            <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
-              <Ionicons name="close" size={28} color="white" />
-            </TouchableOpacity>
+    <Modal visible={visible} animationType="slide" onRequestClose={handleClose}>
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.container}>
+          <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
+            <Image
+              source={require("@/assets/images/icon/cross.png")}
+              style={styles.closeButtonIcon}
+            />
+          </TouchableOpacity>
 
-            <Text style={styles.headerTitle}>
-              {currentVideoIndex + 1} of {videos.length}
-            </Text>
+          {/* User Info Overlay */}
+          {currentVideo && (
+            <View style={styles.userOverlay}>
+              <CachedImage
+                uri={currentVideo.user.profileThumbnailUrl || ""}
+                cachePolicy="profile-thumbnail"
+                style={styles.userAvatar}
+                fallbackSource={undefined}
+                showLoading={true}
+                loadingColor="#666"
+              />
 
-            <View style={styles.spacer} />
-          </View>
-        </SafeAreaView>
+              <View>
+                <Text style={styles.username}>
+                  {currentVideo.user.username}
+                </Text>
 
-        {/* Video Carousel Container */}
-        <View style={styles.carouselContainer}>
+                <Text style={styles.timestamp}>
+                  {formatTime(currentVideo.createdAt)}
+                </Text>
+              </View>
+            </View>
+          )}
+
           <VideoCarousel
             videos={videos}
             initialIndex={currentVideoIndex}
             onIndexChange={handleIndexChange}
           />
-
-          {/* User Info Overlay - Fixed at bottom */}
-          {currentVideo && (
-            <View style={styles.userOverlay}>
-              <View style={styles.userInfo}>
-                <CachedImage
-                  uri={currentVideo.user.profileThumbnailUrl || ""}
-                  cachePolicy="profile-thumbnail"
-                  style={styles.userAvatar}
-                  fallbackSource={undefined}
-                  showLoading={true}
-                  loadingColor="#666"
-                />
-
-                <Text style={styles.username}>
-                  {currentVideo.user.username}
-                </Text>
-              </View>
-
-              <Text style={styles.timestamp}>
-                {new Date(currentVideo.createdAt).toLocaleDateString()}
-              </Text>
-            </View>
-          )}
         </View>
-      </View>
+      </SafeAreaView>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: "#000",
+  },
   container: {
     flex: 1,
     backgroundColor: "#000",
+    borderWidth: 2,
+    borderColor: "red",
   },
-  headerSafeArea: {
-    backgroundColor: "#000",
-    zIndex: 100, // Ensure header stays on top
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-    height: 60,
-    backgroundColor: "rgba(0, 0, 0, 0.8)", // Semi-transparent background
-    borderBottomWidth: 1,
-    borderBottomColor: "rgba(255, 255, 255, 0.1)",
-  },
+
   closeButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: "rgba(255, 255, 255, 0.15)",
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.2)",
+    width: 36,
+    height: 36,
+    position: "absolute",
+    top: 30,
+    right: 30,
+    zIndex: 100,
   },
-  headerTitle: {
-    color: "white",
-    fontSize: 16,
-    fontWeight: "600",
-    textAlign: "center",
+
+  closeButtonIcon: {
+    width: "100%",
+    height: "100%",
   },
-  spacer: {
-    width: 44, // Same width as close button for balance
-  },
-  carouselContainer: {
-    flex: 1,
-    position: "relative",
-  },
+
   userOverlay: {
     position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    paddingHorizontal: 20,
-    paddingVertical: 30,
-    zIndex: 10,
-    backgroundColor: "linear-gradient(transparent, rgba(0,0,0,0.8))", // Gradient background
-  },
-  userInfo: {
+    top: 30,
+    left: 30,
     flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 8,
+    zIndex: 100,
   },
   userAvatar: {
     width: 36,
@@ -168,22 +136,16 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     marginRight: 12,
     borderWidth: 2,
-    borderColor: "white",
+    borderColor: "#fff",
   },
   username: {
-    color: "white",
-    fontSize: 18,
+    color: "#fff",
+    fontSize: 14,
     fontWeight: "700",
-    textShadowColor: "rgba(0, 0, 0, 0.8)",
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 4,
   },
   timestamp: {
-    color: "rgba(255, 255, 255, 0.8)",
-    fontSize: 14,
+    color: "#fff",
+    fontSize: 12,
     fontWeight: "500",
-    textShadowColor: "rgba(0, 0, 0, 0.8)",
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 3,
   },
 });

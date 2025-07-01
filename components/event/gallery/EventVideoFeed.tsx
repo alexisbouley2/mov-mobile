@@ -10,8 +10,6 @@ import {
 } from "./VideoFeedStates";
 import { useEventVideos } from "@/contexts/EventVideosContext";
 
-const GRID_PADDING = 15;
-
 export default function EventVideoFeed() {
   const {
     allVideos,
@@ -84,7 +82,6 @@ export default function EventVideoFeed() {
         renderItem={renderVideoItem}
         keyExtractor={(item) => item.id}
         numColumns={3}
-        contentContainerStyle={styles.grid}
         onEndReached={handleLoadMore}
         onEndReachedThreshold={0.1}
         refreshing={isLoading}
@@ -110,10 +107,5 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#000",
-  },
-  grid: {
-    paddingHorizontal: GRID_PADDING,
-    paddingVertical: 20,
-    paddingBottom: 40,
   },
 });

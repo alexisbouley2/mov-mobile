@@ -78,7 +78,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     borderRadius: 25,
     padding: 4,
-    marginBottom: 20,
+    marginBottom: 30,
   },
   tab: {
     flex: 1,
