@@ -3,13 +3,10 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   ActivityIndicator,
   FlatList,
 } from "react-native";
-import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
-import { useCallback } from "react";
-import { useEvent } from "@/contexts/EventContext";
+import { useRouter } from "expo-router";
 import EventHeader from "@/components/event/global/EventHeader";
 import EventActions from "@/components/event/global/EventActions";
 import EventLocation from "@/components/event/global/EventLocation";
@@ -17,30 +14,25 @@ import EventInformation from "@/components/event/global/EventInformation";
 import EventParticipants from "@/components/event/participants/EventParticipants";
 import EventMessages from "@/components/event/EventMessages";
 import EventGallery from "@/components/event/gallery/EventGallery";
-import { useUserProfile } from "@/contexts/UserProfileContext";
+import { useEventDetail } from "@/hooks/event/useEventDetail";
 
 export default function EventDetailScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { user } = useUserProfile();
-  const { event, eventLoading, error, loadEvent, toggleParticipation } =
-    useEvent();
-
-  // Load event every time we come to this screen
-  useFocusEffect(
-    useCallback(() => {
-      if (id) {
-        loadEvent(id);
-      }
-    }, [id, loadEvent])
-  );
-
-  // Handler for navigating to edit screen - no data passing needed!
-  const handleEdit = useCallback(() => {
-    if (event) {
-      router.push(`/(app)/(event)/edit`);
-    }
-  }, [event, router]);
+  const {
+    event,
+    eventLoading,
+    error,
+    renderData,
+    flatListRef,
+    screenKey,
+    shouldRefresh,
+    handleEdit,
+    handleScroll,
+    handleMomentumScrollEnd,
+    handleRefresh,
+    handleParticipate,
+    handleInvite,
+  } = useEventDetail();
 
   if (eventLoading && !event) {
     return (
@@ -52,36 +44,13 @@ export default function EventDetailScreen() {
 
   if (error || !event) {
     return (
-      <SafeAreaView style={styles.container}>
+      <View style={styles.container}>
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>{error || "Event not found"}</Text>
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
-
-  const isAdmin = event.adminId === user?.id;
-  const isParticipant = event.participants?.some((p) => p.userId === user?.id);
-
-  // Create data array for FlatList to avoid VirtualizedList nesting
-  const renderData = [
-    { type: "header", data: event },
-    { type: "actions", data: { isAdmin, isParticipant } },
-    ...(event.location ? [{ type: "location", data: event.location }] : []),
-    ...(event.information
-      ? [{ type: "information", data: event.information }]
-      : []),
-    { type: "participants", data: {} },
-    { type: "chat", data: { eventId: event.id } },
-    {
-      type: "gallery",
-      data: {
-        eventId: event.id,
-        userId: user?.id || "",
-        eventDate: new Date(event.date),
-      },
-    },
-  ];
 
   const renderItem = ({ item }: { item: any }) => {
     switch (item.type) {
@@ -95,10 +64,8 @@ export default function EventDetailScreen() {
               isAdmin={item.data.isAdmin}
               isParticipant={item.data.isParticipant}
               onUpdate={handleEdit}
-              onParticipate={() => toggleParticipation(user?.id || "")}
-              onInvite={() => {
-                /* TODO: Implement invite */
-              }}
+              onParticipate={handleParticipate}
+              onInvite={handleInvite}
             />
           </View>
         );
@@ -143,24 +110,23 @@ export default function EventDetailScreen() {
     }
   };
 
-  const handleRefresh = () => {
-    if (id) {
-      loadEvent(id);
-    }
-  };
-
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <FlatList
+        ref={flatListRef}
+        key={`event-${screenKey}`}
         data={renderData}
         renderItem={renderItem}
         keyExtractor={(item, index) => `${item.type}-${index}`}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.flatListContent}
-        refreshing={eventLoading}
+        refreshing={eventLoading && shouldRefresh}
         onRefresh={handleRefresh}
+        onScroll={handleScroll}
+        onMomentumScrollEnd={handleMomentumScrollEnd}
+        scrollEventThrottle={16}
       />
-    </SafeAreaView>
+    </View>
   );
 }
 
