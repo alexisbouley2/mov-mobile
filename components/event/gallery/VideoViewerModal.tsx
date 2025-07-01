@@ -5,7 +5,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   Modal,
-  SafeAreaView,
   Image,
 } from "react-native";
 import VideoCarousel from "./VideoCarousel";
@@ -53,67 +52,64 @@ export default function VideoViewerModal({
 
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={handleClose}>
-      <SafeAreaView style={styles.safeArea}>
-        <View style={styles.container}>
-          <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
-            <Image
-              source={require("@/assets/images/icon/cross.png")}
-              style={styles.closeButtonIcon}
+      <View style={styles.container}>
+        <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
+          <Image
+            source={require("@/assets/images/icon/cross.png")}
+            style={styles.closeButtonIcon}
+          />
+        </TouchableOpacity>
+
+        {/* User Info Overlay */}
+        {currentVideo && (
+          <View style={styles.userOverlay}>
+            <CachedImage
+              uri={currentVideo.user.profileThumbnailUrl || ""}
+              cachePolicy="profile-thumbnail"
+              style={styles.userAvatar}
+              fallbackSource={undefined}
+              showLoading={true}
+              loadingColor="#666"
             />
-          </TouchableOpacity>
 
-          {/* User Info Overlay */}
-          {currentVideo && (
-            <View style={styles.userOverlay}>
-              <CachedImage
-                uri={currentVideo.user.profileThumbnailUrl || ""}
-                cachePolicy="profile-thumbnail"
-                style={styles.userAvatar}
-                fallbackSource={undefined}
-                showLoading={true}
-                loadingColor="#666"
-              />
+            <View>
+              <Text style={styles.username}>{currentVideo.user.username}</Text>
 
-              <View>
-                <Text style={styles.username}>
-                  {currentVideo.user.username}
-                </Text>
-
-                <Text style={styles.timestamp}>
-                  {formatTime(currentVideo.createdAt)}
-                </Text>
-              </View>
+              <Text style={styles.timestamp}>
+                {formatTime(currentVideo.createdAt)}
+              </Text>
             </View>
-          )}
+          </View>
+        )}
 
-          <VideoCarousel
-            videos={videos}
-            initialIndex={currentVideoIndex}
-            onIndexChange={handleIndexChange}
+        <VideoCarousel
+          videos={videos}
+          initialIndex={currentVideoIndex}
+          onIndexChange={handleIndexChange}
+        />
+
+        <View style={styles.shareSection}>
+          <Image
+            source={require("@/assets/images/icon/white-share.png")}
+            style={styles.shareIcon}
           />
         </View>
-      </SafeAreaView>
+      </View>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: "#000",
-  },
   container: {
     flex: 1,
     backgroundColor: "#000",
-    borderWidth: 2,
-    borderColor: "red",
   },
 
   closeButton: {
     width: 36,
     height: 36,
     position: "absolute",
-    top: 30,
+    top: 60,
     right: 30,
     zIndex: 100,
   },
@@ -125,7 +121,7 @@ const styles = StyleSheet.create({
 
   userOverlay: {
     position: "absolute",
-    top: 30,
+    top: 60,
     left: 30,
     flexDirection: "row",
     zIndex: 100,
@@ -147,5 +143,18 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 12,
     fontWeight: "500",
+  },
+
+  shareSection: {
+    position: "absolute",
+    bottom: 60,
+    right: 30,
+    zIndex: 100,
+    width: 36,
+    height: 38,
+  },
+  shareIcon: {
+    width: "100%",
+    height: "100%",
   },
 });

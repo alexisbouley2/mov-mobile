@@ -74,7 +74,7 @@ export default function ProfileScreen() {
               onPress={handleShareMov}
             >
               <Image
-                source={require("@/assets/images/icon/share.png")}
+                source={require("@/assets/images/icon/gray-share.png")}
                 style={styles.actionButtonIcon}
               />
               <Text style={styles.actionButtonText}>Share MOV</Text>

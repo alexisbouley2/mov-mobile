@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, StyleSheet, Dimensions } from "react-native";
+import { View, StyleSheet } from "react-native";
 import {
   PanGestureHandler,
   PanGestureHandlerGestureEvent,
@@ -15,9 +15,6 @@ import VirtualVideoPlayer from "./VirtualVideoPlayer";
 import { VideoItem } from "@/contexts/EventVideosContext";
 import { videoCacheService } from "@/services/videoCacheService";
 
-const { height } = Dimensions.get("window");
-const SCREEN_HEIGHT = height - 60; // Account for header
-
 interface VideoCarouselProps {
   videos: VideoItem[];
   initialIndex: number;
@@ -30,6 +27,7 @@ export default function VideoCarousel({
   onIndexChange,
 }: VideoCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
+  const [containerHeight, setContainerHeight] = useState(0);
 
   // Start with the current video centered (translateY = 0 shows the middle slot)
   const translateY = useSharedValue(0);
@@ -69,9 +67,11 @@ export default function VideoCarousel({
   // Initialize position - center the current video
   useEffect(() => {
     setCurrentIndex(initialIndex);
-    // Position to show the middle slot (current video) - offset by one screen height
-    translateY.value = -SCREEN_HEIGHT;
-  }, [initialIndex]);
+    // Position to show the middle slot (current video) - offset by one container height
+    if (containerHeight > 0) {
+      translateY.value = -containerHeight;
+    }
+  }, [initialIndex, containerHeight]);
 
   const changeIndex = (newIndex: number) => {
     if (
@@ -94,7 +94,7 @@ export default function VideoCarousel({
       },
       onEnd: (event) => {
         const { velocityY, translationY } = event;
-        const threshold = SCREEN_HEIGHT * 0.25; // Reduced threshold for easier swiping
+        const threshold = containerHeight * 0.25; // Reduced threshold for easier swiping
 
         let targetIndex = currentIndex;
 
@@ -108,8 +108,8 @@ export default function VideoCarousel({
           }
         }
 
-        // Always return to center position (-SCREEN_HEIGHT = current video visible)
-        translateY.value = withSpring(-SCREEN_HEIGHT, {
+        // Always return to center position (-containerHeight = current video visible)
+        translateY.value = withSpring(-containerHeight, {
           damping: 20,
           stiffness: 300,
         });
@@ -122,51 +122,61 @@ export default function VideoCarousel({
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: translateY.value }],
+    height: containerHeight * 3, // Total height for 3 video slots
   }));
 
+  const handleLayout = (event: any) => {
+    const { height } = event.nativeEvent.layout;
+    setContainerHeight(height);
+  };
+
   return (
-    <PanGestureHandler onGestureEvent={gestureHandler}>
-      <Animated.View style={[styles.container, animatedStyle]}>
-        {/* Previous video slot - positioned above */}
-        <View style={styles.videoSlot}>
-          <VirtualVideoPlayer
-            key={`previous-${videoSlots.previous?.id || "empty"}`}
-            video={videoSlots.previous}
-            isActive={false} // Only current video should be active
-            style={styles.video}
-          />
-        </View>
+    <View style={styles.container} onLayout={handleLayout}>
+      <PanGestureHandler onGestureEvent={gestureHandler}>
+        <Animated.View style={[styles.animatedContainer, animatedStyle]}>
+          {/* Previous video slot - positioned above the container */}
+          <View style={[styles.videoSlot, { height: containerHeight }]}>
+            <VirtualVideoPlayer
+              key={`previous-${videoSlots.previous?.id || "empty"}`}
+              video={videoSlots.previous}
+              isActive={false}
+              style={styles.video}
+            />
+          </View>
 
-        {/* Current video slot - this should be visible by default */}
-        <View style={styles.videoSlot}>
-          <VirtualVideoPlayer
-            key={`current-${videoSlots.current?.id || "empty"}`}
-            video={videoSlots.current}
-            isActive={true}
-            style={styles.video}
-          />
-        </View>
+          {/* Current video slot - fits perfectly in the container */}
+          <View style={[styles.videoSlot, { height: containerHeight }]}>
+            <VirtualVideoPlayer
+              key={`current-${videoSlots.current?.id || "empty"}`}
+              video={videoSlots.current}
+              isActive={true}
+              style={styles.video}
+            />
+          </View>
 
-        {/* Next video slot - positioned below */}
-        <View style={styles.videoSlot}>
-          <VirtualVideoPlayer
-            key={`next-${videoSlots.next?.id || "empty"}`}
-            video={videoSlots.next}
-            isActive={false} // Only current video should be active
-            style={styles.video}
-          />
-        </View>
-      </Animated.View>
-    </PanGestureHandler>
+          {/* Next video slot - positioned below the container */}
+          <View style={[styles.videoSlot, { height: containerHeight }]}>
+            <VirtualVideoPlayer
+              key={`next-${videoSlots.next?.id || "empty"}`}
+              video={videoSlots.next}
+              isActive={false}
+              style={styles.video}
+            />
+          </View>
+        </Animated.View>
+      </PanGestureHandler>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    // Remove the static transform - we'll handle positioning with animated translateY
+    flex: 1,
+  },
+  animatedContainer: {
+    width: "100%",
   },
   videoSlot: {
-    height: SCREEN_HEIGHT,
     width: "100%",
   },
   video: {
