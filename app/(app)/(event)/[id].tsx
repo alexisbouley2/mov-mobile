@@ -61,6 +61,7 @@ export default function EventDetailScreen() {
         return (
           <View style={styles.content}>
             <EventActions
+              event={item.data.event}
               isAdmin={item.data.isAdmin}
               isParticipant={item.data.isParticipant}
               onUpdate={handleEdit}
@@ -139,7 +140,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
   content: {
-    padding: 20,
+    paddingHorizontal: 20,
   },
   loadingContainer: {
     flex: 1,

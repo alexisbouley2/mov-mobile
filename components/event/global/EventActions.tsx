@@ -2,8 +2,12 @@
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { IconSymbol } from "@/components/ui/IconSymbol";
+import { Image } from "expo-image";
+import ParticipantAvatar from "@/components/ui/ParticipantAvatar";
+import { EventDetail } from "@/contexts/EventContext";
 
 interface EventActionsProps {
+  event: EventDetail;
   isAdmin: boolean;
   isParticipant: boolean;
   onUpdate: () => void;
@@ -12,47 +16,80 @@ interface EventActionsProps {
 }
 
 export default function EventActions({
+  event,
   isAdmin,
   isParticipant,
   onUpdate,
   onParticipate,
   onInvite,
 }: EventActionsProps) {
+  const adminName =
+    event.admin.username.length > 10
+      ? event.admin.username.slice(0, 10) + "..."
+      : event.admin.username;
+
   return (
-    <View style={styles.container}>
-      {isAdmin ? (
-        <TouchableOpacity style={styles.primaryButton} onPress={onUpdate}>
-          <IconSymbol name="pencil" size={16} color="#000" />
-          <Text style={styles.primaryButtonText}>Update</Text>
-        </TouchableOpacity>
-      ) : (
-        <TouchableOpacity
-          style={[
-            styles.primaryButton,
-            isParticipant && styles.participatingButton,
-          ]}
-          onPress={onParticipate}
-        >
-          <IconSymbol
-            name={isParticipant ? "checkmark" : "person.badge.plus"}
-            size={16}
-            color={isParticipant ? "#fff" : "#000"}
-          />
-          <Text
-            style={[
-              styles.primaryButtonText,
-              isParticipant && styles.participatingButtonText,
-            ]}
+    <View
+      style={[
+        styles.container,
+        isAdmin && {
+          justifyContent: "center",
+        },
+      ]}
+    >
+      {isAdmin && (
+        <>
+          <TouchableOpacity
+            style={[styles.button, styles.whiteButton]}
+            onPress={onUpdate}
           >
-            {isParticipant ? "Participating" : "Participate"}
-          </Text>
-        </TouchableOpacity>
+            <Image
+              source={require("@/assets/images/icon/black-edit.png")}
+              style={styles.icon}
+            />
+            <Text style={[styles.buttonText, { color: "#000" }]}>
+              Manage Event
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.button, styles.blackButton]}
+            onPress={onInvite}
+          >
+            <IconSymbol name="person.badge.plus" size={20} color="#fff" />
+            <Text style={[styles.buttonText, { color: "#fff" }]}>Invite</Text>
+          </TouchableOpacity>
+        </>
       )}
 
-      <TouchableOpacity style={styles.secondaryButton} onPress={onInvite}>
-        <IconSymbol name="person.badge.plus" size={16} color="#fff" />
-        <Text style={styles.secondaryButtonText}>Invite</Text>
-      </TouchableOpacity>
+      {!isAdmin && (
+        <>
+          <View style={styles.adminContainer}>
+            <View style={styles.avatarContainer}>
+              <ParticipantAvatar user={event.admin} size={40} />
+            </View>
+            <Text style={styles.adminText}>{adminName} invited you</Text>
+          </View>
+          <TouchableOpacity
+            style={[
+              styles.button,
+              isParticipant && styles.whiteButton,
+              !isParticipant && styles.blackButton,
+            ]}
+            onPress={onParticipate}
+          >
+            <Text
+              style={[
+                styles.buttonText,
+                isParticipant && { color: "#000" },
+                !isParticipant && { color: "#fff" },
+              ]}
+            >
+              {isParticipant ? "Participating" : "ìnvited"}
+            </Text>
+          </TouchableOpacity>
+        </>
+      )}
     </View>
   );
 }
@@ -60,45 +97,48 @@ export default function EventActions({
 const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
-    gap: 12,
-    marginBottom: 24,
+    justifyContent: "space-between",
+    gap: 20,
+    marginTop: 10,
+    marginBottom: 10,
   },
-  primaryButton: {
-    flex: 1,
+  adminContainer: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#fff",
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 25,
-    gap: 8,
+    gap: 12,
   },
-  participatingButton: {
-    backgroundColor: "#4CAF50",
-  },
-  primaryButtonText: {
-    color: "#000",
-    fontSize: 16,
+  adminText: {
+    color: "#fff",
+    fontSize: 12,
     fontWeight: "600",
   },
-  participatingButtonText: {
-    color: "#fff",
+  icon: {
+    width: 24,
+    height: 24,
   },
-  secondaryButton: {
+  avatarContainer: {
+    borderWidth: 1,
+    borderColor: "#FFF",
+    borderRadius: 20,
+  },
+  button: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
+    gap: 8,
+    paddingVertical: 6,
+    paddingHorizontal: 20,
+    borderRadius: 24,
+  },
+  whiteButton: {
+    backgroundColor: "#fff",
+  },
+  blackButton: {
     backgroundColor: "transparent",
     borderWidth: 1,
     borderColor: "#fff",
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 25,
-    gap: 8,
   },
-  secondaryButtonText: {
-    color: "#fff",
+  buttonText: {
     fontSize: 16,
     fontWeight: "600",
   },

@@ -114,7 +114,7 @@ export const useEventDetail = () => {
 
     return [
       { type: "header", data: event },
-      { type: "actions", data: { isAdmin, isParticipant } },
+      { type: "actions", data: { isAdmin, isParticipant, event: event } },
       ...(event.location ? [{ type: "location", data: event.location }] : []),
       ...(event.information
         ? [{ type: "information", data: event.information }]

@@ -109,8 +109,6 @@ const styles = StyleSheet.create({
   container: {
     width: width,
     position: "relative",
-    borderWidth: 1,
-    borderColor: "red",
   },
   backgroundImage: {
     position: "absolute",

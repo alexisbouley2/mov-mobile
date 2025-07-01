@@ -69,6 +69,7 @@ export default function EventParticipants() {
 const styles = StyleSheet.create({
   container: {
     marginBottom: 24,
+    marginTop: 10,
   },
   title: {
     fontSize: 20,
