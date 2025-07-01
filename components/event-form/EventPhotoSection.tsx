@@ -1,5 +1,12 @@
 import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Image } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Image,
+  Dimensions,
+} from "react-native";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 
 interface EventPhotoSectionProps {
@@ -11,8 +18,17 @@ export default function EventPhotoSection({
   pickImage,
   previewImage,
 }: EventPhotoSectionProps) {
+  // Calculate height based on 16:9 aspect ratio
+  // Account for horizontal padding (20px on each side from EventForm)
+  const screenWidth = Dimensions.get("window").width;
+  const containerWidth = screenWidth - 40; // 20px padding on each side
+  const containerHeight = (containerWidth * 9) / 16; // 16:9 aspect ratio
+
   return (
-    <TouchableOpacity style={styles.photoContainer} onPress={pickImage}>
+    <TouchableOpacity
+      style={[styles.photoContainer, { height: containerHeight }]}
+      onPress={pickImage}
+    >
       {previewImage ? (
         <Image source={{ uri: previewImage }} style={styles.eventPhoto} />
       ) : (
@@ -28,7 +44,6 @@ export default function EventPhotoSection({
 const styles = StyleSheet.create({
   photoContainer: {
     width: "100%",
-    height: 160, // 16:9 aspect ratio container
     borderRadius: 12,
     overflow: "hidden",
     position: "relative",

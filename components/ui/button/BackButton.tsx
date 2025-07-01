@@ -15,9 +15,8 @@ const styles = StyleSheet.create({
   backButton: {
     flexDirection: "row",
     alignItems: "center",
-    paddingLeft: 10,
     position: "absolute",
-    left: 0,
+    left: 10,
   },
   backButtonText: {
     color: "#007AFF",

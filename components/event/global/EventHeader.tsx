@@ -1,4 +1,4 @@
-// components/event/EventHeader.tsx - Updated with cached background
+// components/event/EventHeader.tsx
 import React from "react";
 import {
   View,
@@ -7,9 +7,10 @@ import {
   TouchableOpacity,
   Dimensions,
 } from "react-native";
-import { IconSymbol } from "@/components/ui/IconSymbol";
+import { LinearGradient } from "expo-linear-gradient";
 import { CachedImage } from "@/components/ui/CachedImage";
 import { EventDetail } from "@/contexts/EventContext";
+import { Ionicons } from "@expo/vector-icons";
 
 interface EventHeaderProps {
   event: EventDetail;
@@ -19,6 +20,9 @@ interface EventHeaderProps {
 const { width } = Dimensions.get("window");
 
 export default function EventHeader({ event, onBack }: EventHeaderProps) {
+  // Calculate height based on 16:9 aspect ratio using full screen width
+  const containerHeight = (width * 9) / 16;
+
   const formatEventDate = (dateString: string) => {
     const eventDate = new Date(dateString);
     const now = new Date();
@@ -30,16 +34,29 @@ export default function EventHeader({ event, onBack }: EventHeaderProps) {
       return "NOW";
     }
 
-    // If event is in the past or future, show the date
-    return eventDate.toLocaleDateString("en-US", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    });
+    // Format date part
+    const datePart = eventDate
+      .toLocaleDateString("en-US", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      })
+      .replaceAll("/", ".");
+
+    // Format time part
+    const timePart = eventDate
+      .toLocaleTimeString("en-US", {
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      })
+      .toLowerCase();
+
+    return `${datePart} - ${timePart}`;
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { height: containerHeight }]}>
       {/* Background Image */}
       {event.coverImageUrl ? (
         <CachedImage
@@ -54,15 +71,32 @@ export default function EventHeader({ event, onBack }: EventHeaderProps) {
         <View style={[styles.backgroundImage, styles.fallbackBackground]} />
       )}
 
+      {/* Gradient Overlay */}
+      <LinearGradient
+        colors={[
+          "rgba(0,0,0,0.1)",
+          "rgba(0,0,0,0.2)",
+          "rgba(0,0,0,0.3)",
+          "rgba(0,0,0,0.4)",
+          "rgba(0,0,0,0.5)",
+          "rgba(0,0,0,0.6)",
+          "rgba(0,0,0,0.7)",
+          "rgba(0,0,0,0.8)",
+          "rgba(0,0,0,0.9)",
+          "rgba(0,0,0,1)",
+        ]}
+        locations={[0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]}
+        style={styles.gradientOverlay}
+      />
+
       {/* Content Overlay */}
       <View style={styles.contentOverlay}>
-        {/* Back Button */}
-        <TouchableOpacity style={styles.backButton} onPress={onBack}>
-          <IconSymbol name="chevron.left" size={24} color="#fff" />
+        <TouchableOpacity onPress={onBack} style={styles.backButton}>
+          <Ionicons name="chevron-back" size={32} color="#007AFF" />
         </TouchableOpacity>
 
-        {/* Event Info Overlay */}
-        <View style={styles.overlay}>
+        {/* Event Info */}
+        <View style={styles.eventInfo}>
           <Text style={styles.eventTitle}>{event.name}</Text>
           <Text style={styles.eventDate}>{formatEventDate(event.date)}</Text>
         </View>
@@ -73,9 +107,10 @@ export default function EventHeader({ event, onBack }: EventHeaderProps) {
 
 const styles = StyleSheet.create({
   container: {
-    height: 300,
     width: width,
     position: "relative",
+    borderWidth: 1,
+    borderColor: "red",
   },
   backgroundImage: {
     position: "absolute",
@@ -89,38 +124,39 @@ const styles = StyleSheet.create({
   fallbackBackground: {
     backgroundColor: "#333",
   },
+  gradientOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    width: "100%",
+    height: "100%",
+  },
   contentOverlay: {
     flex: 1,
-    justifyContent: "space-between",
+    justifyContent: "flex-end",
   },
   backButton: {
     position: "absolute",
-    top: 50,
-    left: 20,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    justifyContent: "center",
-    alignItems: "center",
+    left: 5,
+    top: 15,
     zIndex: 1,
   },
-  overlay: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    padding: 20,
+  eventInfo: {
+    alignItems: "center",
+    padding: 10,
   },
   eventTitle: {
     fontSize: 28,
-    fontWeight: "bold",
+    fontWeight: "700",
     color: "#fff",
     marginBottom: 4,
+    textAlign: "center",
   },
   eventDate: {
     fontSize: 16,
+    fontWeight: "500",
     color: "#fff",
     opacity: 0.9,
   },
