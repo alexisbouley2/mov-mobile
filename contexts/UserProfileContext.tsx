@@ -1,4 +1,4 @@
-// contexts/UserProfileContext.tsx - Updated with image caching
+// contexts/UserProfileContext.tsx - Updated with API types
 import React, {
   createContext,
   useContext,
@@ -8,20 +8,11 @@ import React, {
   useMemo,
 } from "react";
 import { supabase } from "@/lib/supabase";
-import { config } from "@/lib/config";
+import { usersApi } from "@/services/api";
 import { useAuth } from "./AuthContext";
 import { imageCacheService } from "@/services/imageCacheService";
 import log from "@/utils/logger";
-
-interface User {
-  id: string;
-  phone: string;
-  username: string;
-  profileImagePath?: string;
-  profileThumbnailPath?: string;
-  profileImageUrl?: string;
-  profileThumbnailUrl?: string;
-}
+import { User, UpdateUserRequest, UpdateUserResponse } from "@movapp/types";
 
 interface UserProfileContextType {
   user: User | null;
@@ -118,11 +109,9 @@ export function UserProfileProvider({
           // If user has profile images, fetch URLs from API
           if (data.profileImagePath && data.profileThumbnailPath) {
             try {
-              const API_BASE_URL = config.EXPO_PUBLIC_API_URL;
-              const response = await fetch(`${API_BASE_URL}/users/${userId}`);
+              const userWithUrls = await usersApi.getUser(userId);
 
-              if (response.ok) {
-                const userWithUrls = await response.json();
+              if (userWithUrls) {
                 setUser(userWithUrls);
 
                 // Preload profile images in background
@@ -222,34 +211,28 @@ export function UserProfileProvider({
         setProfileError(null);
 
         // Use API for updates to handle image URLs properly
-        const API_BASE_URL = config.EXPO_PUBLIC_API_URL;
-        const updateData: any = { ...data };
+        const updateData: UpdateUserRequest = {
+          username: data.username,
+          phone: data.phone ?? undefined,
+        };
 
         if (photoData) {
           updateData.profileImagePath = photoData.profileImagePath;
           updateData.profileThumbnailPath = photoData.profileThumbnailPath;
         }
 
-        const response = await fetch(
-          `${API_BASE_URL}/users/${supabaseUser.id}`,
-          {
-            method: "PATCH",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(updateData),
-          }
+        const response: UpdateUserResponse = await usersApi.updateUser(
+          supabaseUser.id,
+          updateData
         );
 
-        if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(
-            `Failed to update profile: ${response.status} - ${errorText}`
-          );
+        if (response.success) {
+          // Refresh profile to get updated data (which will also preload new images)
+          await fetchUserProfile(supabaseUser.id);
+          return { error: null };
+        } else {
+          throw new Error(response.message || "Failed to update profile");
         }
-        // Refresh profile to get updated data (which will also preload new images)
-        await fetchUserProfile(supabaseUser.id);
-        return { error: null };
       } catch (error) {
         const errorMessage =
           error instanceof Error

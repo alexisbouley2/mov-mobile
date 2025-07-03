@@ -3,39 +3,11 @@ import React from "react";
 import { View, Text } from "react-native";
 import EventCard from "@/components/events/EventCard";
 import typography from "@/styles/typography";
-
-export interface User {
-  id: string;
-  username: string;
-  photo?: string | null;
-  profileThumbnailUrl?: string | null;
-}
-
-export interface EventParticipant {
-  id: string;
-  user: User;
-  joinedAt: string;
-}
-
-export interface EventType {
-  id: string;
-  name: string;
-  information?: string | null;
-  date: string;
-  createdAt: string;
-  location?: string | null;
-  admin: User;
-  participants: EventParticipant[];
-  photo?: string | null;
-  coverThumbnailUrl?: string | null;
-  _count?: {
-    videos: number;
-  };
-}
+import { EventForList, User } from "@movapp/types";
 
 interface EventSectionProps {
   title?: string;
-  events: EventType[];
+  events: EventForList[];
   user: User | null;
   type: "current" | "planned" | "past";
   onEventPress: (_eventId: string) => void;

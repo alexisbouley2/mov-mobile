@@ -5,6 +5,7 @@ import { useEventForm } from "./useEventForm";
 import { useEventPhoto } from "./useEventPhoto";
 import { useEvent } from "@/contexts/EventContext";
 import log from "@/utils/logger";
+import { UpdateEventRequest } from "@movapp/types";
 
 export function useEditEvent() {
   const { event, updateEvent } = useEvent(); // Get from context
@@ -60,10 +61,10 @@ export function useEditEvent() {
       }
 
       // Prepare update data
-      const eventUpdateData: any = {
+      const eventUpdateData: UpdateEventRequest = {
         name: formData.name.trim(),
-        information: formData.information.trim() || undefined,
-        location: formData.location.trim() || undefined,
+        information: formData.information.trim(),
+        location: formData.location.trim(),
         // Note: Don't include date in edit - it can't be changed
       };
 

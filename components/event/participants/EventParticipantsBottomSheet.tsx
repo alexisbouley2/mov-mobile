@@ -14,6 +14,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useEventParticipants } from "@/contexts/EventParticipantsContext";
 import ParticipantListItem from "@/components/event/participants/ParticipantListItem";
+import { Participant } from "@movapp/types";
 
 interface EventParticipantsBottomSheetProps {
   visible: boolean;
@@ -91,7 +92,13 @@ export default function EventParticipantsBottomSheet({
     });
   };
 
-  const renderParticipant = ({ item, index }: { item: any; index: number }) => (
+  const renderParticipant = ({
+    item,
+    index,
+  }: {
+    item: Participant;
+    index: number;
+  }) => (
     <ParticipantListItem
       participant={item}
       isLast={index === bottomSheetParticipants.length - 1}

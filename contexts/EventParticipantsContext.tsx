@@ -7,32 +7,11 @@ import React, {
   useMemo,
   useEffect,
 } from "react";
-import { config } from "@/lib/config";
+import { eventsApi } from "@/services/api";
 import log from "@/utils/logger";
 import { useUserProfile } from "@/contexts/UserProfileContext";
 import { useEvent } from "@/contexts/EventContext";
-
-export interface Participant {
-  id: string;
-  userId: string;
-  user: {
-    id: string;
-    username: string;
-    profileThumbnailUrl: string | null | undefined;
-  };
-  joinedAt: string;
-}
-
-export interface EventParticipantsResponse {
-  participants: Participant[];
-  hasMore: boolean;
-  page: number;
-  total: number;
-  event: {
-    id: string;
-    name: string | null;
-  };
-}
+import { EventParticipantsResponse, Participant } from "@movapp/types";
 
 interface EventParticipantsContextType {
   // Preview data (from EventContext)
@@ -93,38 +72,25 @@ export function EventParticipantsProvider({
       if (!user?.id) return;
 
       try {
-        const response = await fetch(
-          `${config.EXPO_PUBLIC_API_URL}/events/${eventId}/participants/user/${user.id}?page=${pageNum}&limit=20`,
-          {
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
-        );
+        const data: EventParticipantsResponse =
+          await eventsApi.getEventParticipants(eventId, user.id, pageNum, 20);
 
-        if (response.ok) {
-          const data: EventParticipantsResponse = await response.json();
-
-          if (pageNum === 1) {
-            setBottomSheetParticipants(data.participants);
-          } else {
-            // Deduplicate participants when loading more
-            setBottomSheetParticipants((prev) => {
-              const existingIds = new Set(prev.map((p) => p.id));
-              const newParticipants = data.participants.filter(
-                (p: Participant) => !existingIds.has(p.id)
-              );
-              return [...prev, ...newParticipants];
-            });
-          }
-
-          setHasMore(data.hasMore);
-          setPage(pageNum);
-          setCurrentEventId(eventId);
+        if (pageNum === 1) {
+          setBottomSheetParticipants(data.participants);
         } else {
-          log.error("Failed to load participants:", response.statusText);
-          setError("Failed to load participants");
+          // Deduplicate participants when loading more
+          setBottomSheetParticipants((prev) => {
+            const existingIds = new Set(prev.map((p) => p.id));
+            const newParticipants = data.participants.filter(
+              (p: Participant) => !existingIds.has(p.id)
+            );
+            return [...prev, ...newParticipants];
+          });
         }
+
+        setHasMore(data.hasMore);
+        setPage(pageNum);
+        setCurrentEventId(eventId);
       } catch (err) {
         log.error("Error loading participants:", err);
         setError("Failed to load participants");

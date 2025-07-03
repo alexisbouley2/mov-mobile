@@ -2,17 +2,7 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import ParticipantAvatar from "@/components/ui/ParticipantAvatar";
-
-interface Participant {
-  id: string;
-  userId: string;
-  user: {
-    id: string;
-    username: string;
-    profileThumbnailUrl: string | null | undefined;
-  };
-  joinedAt: string;
-}
+import { Participant } from "@movapp/types";
 
 interface ParticipantListItemProps {
   participant: Participant;

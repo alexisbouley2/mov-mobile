@@ -3,38 +3,10 @@ import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Image } from "react-native";
 import EventParticipants from "@/components/events/EventParticipants";
 import { CachedImage } from "../ui/CachedImage";
-
-export interface User {
-  id: string;
-  username: string;
-  photo?: string | null;
-  profileThumbnailUrl?: string | null;
-}
-
-export interface EventParticipant {
-  id: string;
-  user: User;
-  joinedAt: string;
-}
-
-export interface EventType {
-  id: string;
-  name: string;
-  information?: string | null;
-  date: string;
-  createdAt: string;
-  location?: string | null;
-  admin: User;
-  participants: EventParticipant[];
-  photo?: string | null;
-  coverThumbnailUrl?: string | null;
-  _count?: {
-    videos: number;
-  };
-}
+import { User, EventForList } from "@movapp/types";
 
 interface EventCardProps {
-  event: EventType;
+  event: EventForList;
   type: "current" | "planned" | "past";
   onPress: () => void;
   user: User | null;
@@ -87,7 +59,7 @@ export default function EventCard({
             ) : (
               <View style={styles.placeholderIcon}>
                 <Text style={styles.placeholderText}>
-                  {event.name.charAt(0)}
+                  {event.name?.charAt(0)}
                 </Text>
               </View>
             )}

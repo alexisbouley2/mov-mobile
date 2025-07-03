@@ -1,4 +1,4 @@
-// contexts/UserEventsContext.tsx - Updated with consolidated types
+// contexts/UserEventsContext.tsx - Updated with API types
 import React, {
   createContext,
   useContext,
@@ -7,47 +7,15 @@ import React, {
   useCallback,
   useMemo,
 } from "react";
-import { config } from "@/lib/config";
+import { eventsApi } from "@/services/api";
 import { useAuth } from "./AuthContext";
 import { imageCacheService } from "@/services/imageCacheService";
 import log from "@/utils/logger";
+import { CategorizedEventsResponse, EventForList } from "@movapp/types";
 
-// Consolidated types - single source of truth
-export interface User {
-  id: string;
-  username: string;
-  photo?: string | null;
-  profileThumbnailUrl?: string | null;
-}
-
-export interface EventParticipant {
-  id: string;
-  user: User;
-  joinedAt: string;
-}
-
-export interface Event {
-  id: string;
-  name: string;
-  information?: string | null;
-  date: string;
-  createdAt: string;
-  location?: string | null;
-  admin: User;
-  participants: EventParticipant[];
-  photo?: string | null;
-  coverThumbnailUrl?: string | null;
-  coverImageUrl?: string | null; // Added for consistency
-  _count?: {
-    videos: number;
-  };
-}
-
-export interface CategorizedEvents {
-  current: Event[];
-  planned: Event[];
-  past: Event[];
-}
+// Use the types from the API instead of defining our own
+export type Event = EventForList;
+export type CategorizedEvents = CategorizedEventsResponse;
 
 interface UserEventsContextType {
   events: CategorizedEvents;
@@ -87,8 +55,6 @@ export function UserEventsProvider({
   const [error, setError] = useState<string | null>(null);
   const [hasInitialData, setHasInitialData] = useState(false);
 
-  const API_BASE_URL = config.EXPO_PUBLIC_API_URL;
-
   const preloadEventImages = useCallback(
     async (eventsData: CategorizedEvents) => {
       const imagesToPreload: Array<{
@@ -114,7 +80,7 @@ export function UserEventsProvider({
 
         // Preload full cover images (used in event details)
         // Check both photo and coverImageUrl for flexibility
-        const fullImageUrl = event.photo || event.coverImageUrl;
+        const fullImageUrl = event.coverImageUrl;
         if (fullImageUrl) {
           imagesToPreload.push({
             url: fullImageUrl,
@@ -152,15 +118,9 @@ export function UserEventsProvider({
         setError(null);
 
         log.info(`Fetching events for user: ${supabaseUser.id}`);
-        const response = await fetch(
-          `${API_BASE_URL}/events/user/${supabaseUser.id}`
+        const data: CategorizedEventsResponse = await eventsApi.getUserEvents(
+          supabaseUser.id
         );
-
-        if (!response.ok) {
-          throw new Error(`Failed to fetch events: ${response.status}`);
-        }
-
-        const data: CategorizedEvents = await response.json();
 
         setEvents(data);
         setHasInitialData(true);
@@ -186,7 +146,7 @@ export function UserEventsProvider({
         }
       }
     },
-    [supabaseUser?.id, API_BASE_URL, preloadEventImages]
+    [supabaseUser?.id, preloadEventImages]
   );
 
   const refetch = useCallback(async () => {

@@ -2,22 +2,10 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { CachedImage } from "../ui/CachedImage";
-
-export interface User {
-  id: string;
-  username: string;
-  photo?: string | null;
-  profileThumbnailUrl?: string | null;
-}
-
-export interface EventParticipant {
-  id: string;
-  user: User;
-  joinedAt: string;
-}
+import { Participant } from "@movapp/types";
 
 interface EventParticipantsProps {
-  participants: EventParticipant[];
+  participants: Participant[];
   maxVisible?: number;
 }
 

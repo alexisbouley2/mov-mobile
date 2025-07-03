@@ -1,4 +1,4 @@
-// hooks/useCreateEvent.ts - Updated to use UserEventsContext
+// hooks/useCreateEvent.ts - Updated to use API
 import { useState } from "react";
 import { Alert } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -6,10 +6,9 @@ import { useEventForm } from "../event/useEventForm";
 import { useEventPhoto } from "../event/useEventPhoto";
 import { useUserEvents } from "@/contexts/UserEventsContext";
 import { mediaUploadManager } from "@/services/upload";
-import { config } from "@/lib/config";
+import { eventsApi, videosApi } from "@/services/api";
 import log from "@/utils/logger";
-
-const API_BASE_URL = config.EXPO_PUBLIC_API_URL;
+import { CreateEventRequest, AssociateEventsRequest } from "@movapp/types";
 
 export function useCreateEvent(userId: string) {
   const router = useRouter();
@@ -68,10 +67,10 @@ export function useCreateEvent(userId: string) {
       }
 
       // Create event data
-      const eventData = {
+      const eventData: CreateEventRequest = {
         name: formData.name.trim(),
         information: formData.information.trim() || undefined,
-        date: formData.date.toISOString(),
+        date: formData.date,
         location: formData.location.trim() || undefined,
         adminId: userId,
         ...(photoData && {
@@ -80,19 +79,7 @@ export function useCreateEvent(userId: string) {
         }),
       };
 
-      const response = await fetch(`${API_BASE_URL}/events`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(eventData),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to create event");
-      }
-
-      const newEvent = await response.json();
+      const newEvent = await eventsApi.create(eventData);
 
       // Refresh events context to include the new event
       await refetch();
@@ -156,19 +143,13 @@ export function useCreateEvent(userId: string) {
       throw new Error("Video not ready for association");
     }
 
-    const response = await fetch(`${API_BASE_URL}/videos/associate-events`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        fileName: job.uploadResult.videoPath,
-        userId: job.userId,
-        eventIds,
-      }),
-    });
+    const associationData: AssociateEventsRequest = {
+      fileName: job.uploadResult.videoPath,
+      userId: job.userId,
+      eventIds,
+    };
 
-    if (!response.ok) {
-      throw new Error("Failed to associate events");
-    }
+    await videosApi.associateEvents(associationData);
 
     // Clean up the job
     mediaUploadManager.cleanupJob(jobId);

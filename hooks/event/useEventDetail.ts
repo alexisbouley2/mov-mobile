@@ -110,7 +110,9 @@ export const useEventDetail = () => {
     if (!event || !user) return [];
 
     const isAdmin = event.adminId === user.id;
-    const isParticipant = event.participants?.some((p) => p.userId === user.id);
+    const isParticipant = event.participants?.some(
+      (p) => p.user.id === user.id
+    );
 
     return [
       { type: "header", data: event },

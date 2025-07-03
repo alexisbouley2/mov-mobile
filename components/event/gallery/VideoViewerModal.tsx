@@ -76,7 +76,7 @@ export default function VideoViewerModal({
               <Text style={styles.username}>{currentVideo.user.username}</Text>
 
               <Text style={styles.timestamp}>
-                {formatTime(currentVideo.createdAt)}
+                {formatTime(currentVideo.createdAt.toISOString())}
               </Text>
             </View>
           </View>

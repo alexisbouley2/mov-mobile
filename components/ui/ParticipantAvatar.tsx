@@ -1,15 +1,10 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { CachedImage } from "./CachedImage";
-
-interface User {
-  id: string;
-  username: string;
-  profileThumbnailUrl?: string | null | undefined;
-}
+import { Participant } from "@movapp/types";
 
 interface ParticipantAvatarProps {
-  user: User;
+  user: Participant["user"];
   size?: number;
 }
 

@@ -1,6 +1,7 @@
 import React from "react";
 import { View, StyleSheet, TouchableOpacity, Dimensions } from "react-native";
 import { CachedImage } from "@/components/ui/CachedImage";
+import { User } from "@movapp/types";
 
 const { width } = Dimensions.get("window");
 const ITEM_WIDTH = width / 3;
@@ -9,11 +10,7 @@ interface VideoGridItemProps {
   item: {
     id: string;
     thumbnailUrl: string;
-    user: {
-      username: string;
-      photo?: string;
-      profileThumbnailUrl?: string;
-    };
+    user: User;
   };
   index: number;
   onPress: (_index: number) => void;

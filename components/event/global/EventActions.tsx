@@ -4,10 +4,10 @@ import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { Image } from "expo-image";
 import ParticipantAvatar from "@/components/ui/ParticipantAvatar";
-import { EventDetail } from "@/contexts/EventContext";
+import { EventWithDetails } from "@movapp/types";
 
 interface EventActionsProps {
-  event: EventDetail;
+  event: EventWithDetails;
   isAdmin: boolean;
   isParticipant: boolean;
   onUpdate: () => void;

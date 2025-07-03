@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Alert } from "react-native";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/contexts/UserProfileContext";
-import { config } from "@/lib/config";
+import { usersApi } from "@/services/api";
 
 export const useProfileDelete = () => {
   const { supabaseUser, signOut } = useAuth();
@@ -46,19 +46,7 @@ export const useProfileDelete = () => {
     setLoading(true);
 
     try {
-      const API_BASE_URL = config.EXPO_PUBLIC_API_URL;
-
-      const response = await fetch(`${API_BASE_URL}/users/${supabaseUser.id}`, {
-        method: "DELETE",
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(
-          `Failed to delete account: ${response.status} - ${errorText}`
-        );
-      }
-
+      await usersApi.deleteUser(supabaseUser.id);
       await signOut();
     } catch (error) {
       Alert.alert(

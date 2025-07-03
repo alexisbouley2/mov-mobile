@@ -6,50 +6,18 @@ import React, {
   useCallback,
   useMemo,
 } from "react";
-import { config } from "@/lib/config";
 import log from "@/utils/logger";
-
-export interface User {
-  id: string;
-  username: string;
-  profileThumbnailUrl: string | null | undefined;
-  //   photo: string | null | undefined;
-}
-
-export interface EventParticipant {
-  id: string;
-  userId: string;
-  user: User;
-  joinedAt: string;
-}
-
-export interface EventDetail {
-  id: string;
-  name: string;
-  information: string | null;
-  date: string;
-  createdAt: string;
-  location: string | null;
-  coverImagePath: string | null;
-  coverThumbnailPath: string | null;
-  coverImageUrl: string | null;
-  coverThumbnailUrl: string | null;
-  adminId: string;
-  admin: User;
-  participants: EventParticipant[];
-  _count?: {
-    videos: number;
-  };
-}
+import { EventWithDetails, UpdateEventRequest } from "@movapp/types";
+import { eventsApi } from "@/services/api/events";
 
 interface EventContextType {
-  event: EventDetail | null;
+  event: EventWithDetails | null;
   eventLoading: boolean;
   error: string | null;
   loadEvent: (_eventId: string) => Promise<void>;
   updateEvent: (
     _eventId: string,
-    _data: Partial<EventDetail>,
+    _data: UpdateEventRequest,
     _photoData?: {
       coverImagePath?: string;
       coverThumbnailPath?: string;
@@ -73,10 +41,8 @@ const EventContext = createContext<EventContextType>({
 
 export const useEvent = () => useContext(EventContext);
 
-const API_BASE_URL = config.EXPO_PUBLIC_API_URL;
-
 export function EventProvider({ children }: { children: React.ReactNode }) {
-  const [event, setEvent] = useState<EventDetail | null>(null);
+  const [event, setEvent] = useState<EventWithDetails | null>(null);
   const [eventLoading, seteventLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -85,14 +51,13 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
       seteventLoading(true);
       setError(null);
 
-      const response = await fetch(`${API_BASE_URL}/events/${eventId}`);
+      const response = await eventsApi.getEvent(eventId);
 
-      if (!response.ok) {
+      if (!response) {
         throw new Error("Failed to fetch event");
       }
 
-      const data = await response.json();
-      setEvent(data);
+      setEvent(response);
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Failed to fetch event";
@@ -106,7 +71,7 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
   const updateEvent = useCallback(
     async (
       eventId: string,
-      updateData: Partial<EventDetail>,
+      updateData: UpdateEventRequest,
       photoData?: {
         coverImagePath?: string;
         coverThumbnailPath?: string;
@@ -117,7 +82,7 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
         setError(null);
 
         // Prepare update data
-        const eventUpdateData: any = { ...updateData };
+        const eventUpdateData: UpdateEventRequest = { ...updateData };
 
         // Include photo data if provided
         if (photoData) {
@@ -125,20 +90,7 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
           eventUpdateData.coverThumbnailPath = photoData.coverThumbnailPath;
         }
 
-        const response = await fetch(`${API_BASE_URL}/events/${eventId}`, {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(eventUpdateData),
-        });
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(
-            `Failed to update event: ${response.status} - ${errorText}`
-          );
-        }
+        await eventsApi.update(eventId, eventUpdateData);
 
         // Reload event to get updated data
         await loadEvent(eventId);

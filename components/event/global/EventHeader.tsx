@@ -9,11 +9,11 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { CachedImage } from "@/components/ui/CachedImage";
-import { EventDetail } from "@/contexts/EventContext";
+import { EventWithDetails } from "@movapp/types";
 import { Ionicons } from "@expo/vector-icons";
 
 interface EventHeaderProps {
-  event: EventDetail;
+  event: EventWithDetails;
   onBack: () => void;
 }
 
@@ -98,7 +98,9 @@ export default function EventHeader({ event, onBack }: EventHeaderProps) {
         {/* Event Info */}
         <View style={styles.eventInfo}>
           <Text style={styles.eventTitle}>{event.name}</Text>
-          <Text style={styles.eventDate}>{formatEventDate(event.date)}</Text>
+          <Text style={styles.eventDate}>
+            {formatEventDate(event.date.toISOString())}
+          </Text>
         </View>
       </View>
     </View>

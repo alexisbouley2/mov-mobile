@@ -13,8 +13,6 @@ export default function EventMessagePreview() {
     router.push(`/(app)/(event)/chat`);
   };
 
-  const hasMessagePreview = preview?.hasMessages && preview.lastMessage;
-
   return (
     <View style={styles.container}>
       <TouchableOpacity
@@ -22,13 +20,10 @@ export default function EventMessagePreview() {
         onPress={handleOpenChat}
         disabled={previewLoading}
       >
-        {hasMessagePreview ? (
+        {preview?.hasMessages && preview.lastMessage ? (
           <>
             <View style={styles.avatarContainer}>
-              <ParticipantAvatar
-                user={preview?.lastMessage?.sender as any}
-                size={40}
-              />
+              <ParticipantAvatar user={preview.lastMessage.sender} size={40} />
             </View>
             <View style={styles.messagePreview}>
               <Text style={styles.senderName}>

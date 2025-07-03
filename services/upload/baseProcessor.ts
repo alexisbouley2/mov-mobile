@@ -1,10 +1,9 @@
 import * as FileSystem from "expo-file-system";
 import * as ImageManipulator from "expo-image-manipulator";
-import { config } from "@/lib/config";
+import { mediaApi } from "@/services/api";
 import log from "@/utils/logger";
 import { UploadOptions } from "./types";
-
-const API_BASE_URL = config.EXPO_PUBLIC_API_URL;
+import { GetUploadUrlsResponse, MediaEntityType } from "@movapp/types";
 
 // Abstract base class for upload processors
 export abstract class UploadProcessor {
@@ -74,26 +73,9 @@ export abstract class UploadProcessor {
 
   protected async getUploadUrls(
     userId: string,
-    entityType: "video" | "user" | "event"
-  ): Promise<{
-    urls: Array<{
-      uploadUrl: string;
-      fileName: string;
-      type: "thumbnail" | "image" | "video";
-    }>;
-  }> {
-    const response = await fetch(
-      `${API_BASE_URL}/media/upload-urls?userId=${userId}&entityType=${entityType}`
-    );
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(
-        `Failed to get upload URLs: ${response.status} - ${errorText}`
-      );
-    }
-
-    return await response.json();
+    entityType: MediaEntityType
+  ): Promise<GetUploadUrlsResponse> {
+    return await mediaApi.getUploadUrls(userId, entityType);
   }
 
   protected async safeDeleteFile(fileUri: string): Promise<void> {

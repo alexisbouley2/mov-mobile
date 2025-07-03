@@ -6,33 +6,15 @@ import React, {
   useMemo,
   useEffect,
 } from "react";
-import { config } from "@/lib/config";
+import { videosApi } from "@/services/api";
 import log from "@/utils/logger";
 import { useUserProfile } from "@/contexts/UserProfileContext";
 import { useEvent } from "@/contexts/EventContext";
 import { videoCacheService } from "@/services/videoCacheService";
+import { VideoFeedResponse, VideoWithUrls } from "@movapp/types";
 
-export interface VideoItem {
-  id: string;
-  videoPath: string;
-  thumbnailPath: string;
-  videoUrl: string;
-  thumbnailUrl: string;
-  createdAt: string;
-  user: {
-    id: string;
-    username: string;
-    photo: string | null;
-    profileThumbnailUrl: string | null;
-  };
-}
-
-export interface VideoFeedResponse {
-  success: boolean;
-  videos: VideoItem[];
-  nextCursor: string | null;
-  hasMore: boolean;
-}
+// Use the VideoWithUrls type from the API instead of defining our own
+export type VideoItem = VideoWithUrls;
 
 interface EventVideosContextType {
   // Video data for both tabs
@@ -141,61 +123,35 @@ export function EventVideosProvider({
   // Error state
   const [error, setError] = useState<string | null>(null);
 
-  const API_BASE_URL = config.EXPO_PUBLIC_API_URL;
+  // Load all videos
+  const loadAllVideos = useCallback(async (eventId: string) => {
+    if (!eventId) return;
 
-  // Generic fetch function
-  const fetchVideos = useCallback(
-    async (
-      eventId: string,
-      cursor?: string,
-      userId?: string
-    ): Promise<VideoFeedResponse> => {
-      const params = new URLSearchParams({
-        limit: "20",
-        ...(cursor && { cursor }),
-        ...(userId && { userId }),
-      });
+    try {
+      setAllVideosLoading(true);
+      setError(null);
 
-      const response = await fetch(
-        `${API_BASE_URL}/videos/feed/${eventId}?${params}`
+      const data: VideoFeedResponse = await videosApi.getEventVideoFeed(
+        eventId,
+        undefined,
+        20
       );
 
-      if (!response.ok) {
-        throw new Error("Failed to fetch videos");
+      setAllVideos(data.videos);
+      setAllVideosNextCursor(data.nextCursor);
+      setAllVideosHasMore(data.hasMore);
+
+      // Start preloading first few videos
+      if (data.videos.length > 0) {
+        videoCacheService.preloadVideosAround(data.videos, 0);
       }
-
-      return response.json();
-    },
-    [API_BASE_URL]
-  );
-
-  // Load all videos
-  const loadAllVideos = useCallback(
-    async (eventId: string) => {
-      if (!eventId) return;
-
-      try {
-        setAllVideosLoading(true);
-        setError(null);
-
-        const data = await fetchVideos(eventId);
-        setAllVideos(data.videos);
-        setAllVideosNextCursor(data.nextCursor);
-        setAllVideosHasMore(data.hasMore);
-
-        // Start preloading first few videos
-        if (data.videos.length > 0) {
-          videoCacheService.preloadVideosAround(data.videos, 0);
-        }
-      } catch (err) {
-        log.error("Error loading all videos:", err);
-        setError("Failed to load videos");
-      } finally {
-        setAllVideosLoading(false);
-      }
-    },
-    [fetchVideos]
-  );
+    } catch (err) {
+      log.error("Error loading all videos:", err);
+      setError("Failed to load videos");
+    } finally {
+      setAllVideosLoading(false);
+    }
+  }, []);
 
   // Load user videos
   const loadUserVideos = useCallback(
@@ -206,7 +162,13 @@ export function EventVideosProvider({
         setUserVideosLoading(true);
         setError(null);
 
-        const data = await fetchVideos(eventId, undefined, userId);
+        const data: VideoFeedResponse = await videosApi.getEventVideoFeed(
+          eventId,
+          undefined,
+          20,
+          userId
+        );
+
         setUserVideos(data.videos);
         setUserVideosNextCursor(data.nextCursor);
         setUserVideosHasMore(data.hasMore);
@@ -222,7 +184,7 @@ export function EventVideosProvider({
         setUserVideosLoading(false);
       }
     },
-    [fetchVideos]
+    []
   );
 
   // Load more functions (simplified)
@@ -237,7 +199,11 @@ export function EventVideosProvider({
 
     try {
       setAllVideosLoadingMore(true);
-      const data = await fetchVideos(event.id, allVideosNextCursor);
+      const data: VideoFeedResponse = await videosApi.getEventVideoFeed(
+        event.id,
+        allVideosNextCursor,
+        20
+      );
       setAllVideos((prev) => [...prev, ...data.videos]);
       setAllVideosNextCursor(data.nextCursor);
       setAllVideosHasMore(data.hasMore);
@@ -246,13 +212,7 @@ export function EventVideosProvider({
     } finally {
       setAllVideosLoadingMore(false);
     }
-  }, [
-    event?.id,
-    allVideosLoadingMore,
-    allVideosHasMore,
-    allVideosNextCursor,
-    fetchVideos,
-  ]);
+  }, [event?.id, allVideosLoadingMore, allVideosHasMore, allVideosNextCursor]);
 
   const loadMoreUserVideos = useCallback(async () => {
     if (
@@ -266,7 +226,12 @@ export function EventVideosProvider({
 
     try {
       setUserVideosLoadingMore(true);
-      const data = await fetchVideos(event.id, userVideosNextCursor, user.id);
+      const data: VideoFeedResponse = await videosApi.getEventVideoFeed(
+        event.id,
+        userVideosNextCursor,
+        20,
+        user.id
+      );
       setUserVideos((prev) => [...prev, ...data.videos]);
       setUserVideosNextCursor(data.nextCursor);
       setUserVideosHasMore(data.hasMore);
@@ -281,7 +246,6 @@ export function EventVideosProvider({
     userVideosLoadingMore,
     userVideosHasMore,
     userVideosNextCursor,
-    fetchVideos,
   ]);
 
   // Refresh functions

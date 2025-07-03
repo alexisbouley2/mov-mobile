@@ -65,7 +65,7 @@ export default function EventForm({
         {mode === "create" && (
           <EventDateTimeSection
             date={formData.date}
-            onDateChange={(date: any) => onFieldChange("date", date)}
+            onDateChange={(date: Date) => onFieldChange("date", date)}
           />
         )}
 

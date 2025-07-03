@@ -4,44 +4,10 @@ import { ScrollView, View, Text, StyleSheet } from "react-native";
 import { useEventsLogic } from "@/hooks/events/useEventsLogic";
 import EventSection from "@/components/events/EventSection";
 import typography from "@/styles/typography";
-
-export interface User {
-  id: string;
-  username: string;
-  photo?: string | null;
-  profileThumbnailUrl?: string | null;
-}
-
-export interface EventParticipant {
-  id: string;
-  user: User;
-  joinedAt: string;
-}
-
-export interface EventType {
-  id: string;
-  name: string;
-  information?: string | null;
-  date: string;
-  createdAt: string;
-  location?: string | null;
-  admin: User;
-  participants: EventParticipant[];
-  photo?: string | null;
-  coverThumbnailUrl?: string | null;
-  _count?: {
-    videos: number;
-  };
-}
-
-export interface CategorizedEvents {
-  current: EventType[];
-  planned: EventType[];
-  past: EventType[];
-}
+import { CategorizedEventsResponse, User } from "@movapp/types";
 
 interface EventsContentProps {
-  events: CategorizedEvents;
+  events: CategorizedEventsResponse;
   onEventPress: (_eventId: string) => void;
   user: User | null;
 }
@@ -85,7 +51,7 @@ export default function EventsContent({
             <View key={monthYear}>
               <Text style={styles.monthTitle}>{monthYear}</Text>
               <EventSection
-                events={monthEvents as EventType[]}
+                events={monthEvents}
                 user={user}
                 type="past"
                 onEventPress={onEventPress}

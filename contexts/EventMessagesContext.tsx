@@ -8,37 +8,19 @@ import React, {
   useEffect,
 } from "react";
 import { supabase } from "@/lib/supabase";
-import { config } from "@/lib/config";
+import { messagesApi } from "@/services/api";
 import log from "@/utils/logger";
 import { useUserProfile } from "@/contexts/UserProfileContext";
 import { useEvent } from "@/contexts/EventContext";
+import {
+  MessagePreviewResponse,
+  EventMessagesResponse,
+  SendMessageResponse,
+} from "@movapp/types";
 
-export interface MessagePreview {
-  hasMessages: boolean;
-  messageCount: number;
-  lastMessage?: {
-    content: string;
-    sender: {
-      id: string;
-      username: string;
-      profileThumbnailPath?: string | null;
-    };
-    createdAt: string;
-    type: string;
-  } | null;
-}
-
-export interface Message {
-  id: string;
-  content: string;
-  createdAt: string;
-  type: string;
-  sender: {
-    id: string;
-    username: string;
-    profileThumbnailPath?: string | null;
-  };
-}
+// Use the types from the API instead of defining our own
+export type MessagePreview = MessagePreviewResponse;
+export type Message = SendMessageResponse;
 
 interface EventMessagesContextType {
   // Preview data
@@ -114,22 +96,8 @@ export function EventMessagesProvider({
         setPreviewLoading(true);
         setError(null);
 
-        const response = await fetch(
-          `${config.EXPO_PUBLIC_API_URL}/messages/preview/event/${eventId}/user/${user.id}`,
-          {
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
-        );
-
-        if (response.ok) {
-          const data = await response.json();
-          setPreview(data);
-        } else {
-          log.error("Failed to fetch message preview:", response.statusText);
-          setError("Failed to load message preview");
-        }
+        const data = await messagesApi.getMessagePreview(eventId, user.id);
+        setPreview(data);
       } catch (err) {
         log.error("Error fetching message preview:", err);
         setError("Failed to load message preview");
@@ -146,39 +114,30 @@ export function EventMessagesProvider({
       if (!user?.id) return;
 
       try {
-        const response = await fetch(
-          `${config.EXPO_PUBLIC_API_URL}/messages/event/${eventId}/user/${user.id}?page=${pageNum}&limit=30`,
-          {
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
+        const data: EventMessagesResponse = await messagesApi.getMessages(
+          eventId,
+          user.id,
+          pageNum,
+          30
         );
 
-        if (response.ok) {
-          const data = await response.json();
-
-          if (pageNum === 1) {
-            setMessages(data.messages);
-          } else {
-            // Deduplicate messages when loading more
-            setMessages((prev) => {
-              const existingIds = new Set(prev.map((m) => m.id));
-              const newMessages = data.messages.filter(
-                (m: Message) => !existingIds.has(m.id)
-              );
-              return [...newMessages, ...prev];
-            });
-          }
-
-          setHasMore(data.hasMore);
-          setTotal(data.total);
-          setPage(pageNum);
-          setCurrentEventId(eventId);
+        if (pageNum === 1) {
+          setMessages(data.messages);
         } else {
-          log.error("Failed to load messages:", response.statusText);
-          setError("Failed to load messages");
+          // Deduplicate messages when loading more
+          setMessages((prev) => {
+            const existingIds = new Set(prev.map((m) => m.id));
+            const newMessages = data.messages.filter(
+              (m: Message) => !existingIds.has(m.id)
+            );
+            return [...newMessages, ...prev];
+          });
         }
+
+        setHasMore(data.hasMore);
+        setTotal(data.total);
+        setPage(pageNum);
+        setCurrentEventId(eventId);
       } catch (err) {
         log.error("Error loading messages:", err);
         setError("Failed to load messages");
@@ -206,37 +165,26 @@ export function EventMessagesProvider({
 
       setSending(true);
       try {
-        const response = await fetch(
-          `${config.EXPO_PUBLIC_API_URL}/messages/event/${currentEventId}/user/${user.id}`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ content: content.trim(), type: "text" }),
-          }
+        const newMessage = await messagesApi.sendMessage(
+          currentEventId,
+          user.id,
+          { content: content.trim(), type: "text" }
         );
 
-        if (response.ok) {
-          const newMessage = await response.json();
-          setMessages((prev) => [...prev, newMessage]);
-          setTotal((prev) => prev + 1);
+        setMessages((prev) => [...prev, newMessage]);
+        setTotal((prev) => prev + 1);
 
-          // Update preview with new message
-          setPreview((prev) => ({
-            hasMessages: true,
-            messageCount: (prev?.messageCount || 0) + 1,
-            lastMessage: {
-              content: newMessage.content,
-              sender: newMessage.sender,
-              createdAt: newMessage.createdAt,
-              type: newMessage.type,
-            },
-          }));
-        } else {
-          log.error("Failed to send message:", response.statusText);
-          setError("Failed to send message");
-        }
+        // Update preview with new message
+        setPreview((prev) => ({
+          hasMessages: true,
+          messageCount: (prev?.messageCount || 0) + 1,
+          lastMessage: {
+            content: newMessage.content,
+            sender: newMessage.sender,
+            createdAt: newMessage.createdAt,
+            type: newMessage.type,
+          },
+        }));
       } catch (err) {
         log.error("Error sending message:", err);
         setError("Failed to send message");
@@ -298,6 +246,7 @@ export function EventMessagesProvider({
               id: newMessage.senderId,
               username: "User", // Placeholder - ideally fetch from API
               profileThumbnailPath: null,
+              profileThumbnailUrl: null,
             },
           };
 

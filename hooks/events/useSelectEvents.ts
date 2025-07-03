@@ -3,8 +3,9 @@ import { Alert } from "react-native";
 import { useRouter } from "expo-router";
 import { useUserEvents } from "@/contexts/UserEventsContext";
 import { mediaUploadManager, type UploadJob } from "@/services/upload";
-import { config } from "@/lib/config";
+import { videosApi } from "@/services/api";
 import log from "@/utils/logger";
+import { AssociateEventsRequest } from "@movapp/types";
 
 interface UseSelectEventsProps {
   jobId: string;
@@ -68,20 +69,13 @@ export const useSelectEvents = ({ jobId }: UseSelectEventsProps) => {
       throw new Error("Video not ready for association");
     }
 
-    const API_BASE_URL = config.EXPO_PUBLIC_API_URL;
-    const response = await fetch(`${API_BASE_URL}/videos/associate-events`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        fileName: job.uploadResult.videoPath,
-        userId: job.userId,
-        eventIds,
-      }),
-    });
+    const associationData: AssociateEventsRequest = {
+      fileName: job.uploadResult.videoPath,
+      userId: job.userId,
+      eventIds,
+    };
 
-    if (!response.ok) {
-      throw new Error("Failed to associate events");
-    }
+    await videosApi.associateEvents(associationData);
 
     // Clean up the job
     mediaUploadManager.cleanupJob(jobId);

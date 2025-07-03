@@ -2,7 +2,8 @@ import * as VideoThumbnails from "expo-video-thumbnails";
 import log from "@/utils/logger";
 import { UploadProcessor } from "./baseProcessor";
 import { UploadOptions } from "./types";
-import { config } from "@/lib/config";
+import { videosApi } from "@/services/api";
+import { ConfirmUploadRequest } from "@movapp/types";
 
 // Video upload processor
 export class VideoUploadProcessor extends UploadProcessor {
@@ -92,30 +93,16 @@ export class VideoUploadProcessor extends UploadProcessor {
     userId: string
   ) {
     try {
-      const API_BASE_URL = config.EXPO_PUBLIC_API_URL;
-      const response = await fetch(`${API_BASE_URL}/videos/confirm-upload`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          videoPath: videoPath,
-          thumbnailPath: thumbnailPath,
-          userId,
-        }),
-      });
+      const uploadData: ConfirmUploadRequest = {
+        videoPath: videoPath,
+        thumbnailPath: thumbnailPath,
+        userId,
+      };
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(
-          `Failed to confirm upload: ${response.status} - ${errorText}`
-        );
-      }
+      const response = await videosApi.confirmUpload(uploadData);
+      log.info("Upload confirmed:", response.video.id);
 
-      const data = await response.json();
-      log.info("Upload confirmed:", data.video.id);
-
-      return data;
+      return response;
     } catch (error) {
       log.error("Error confirming upload:", error);
       throw error;

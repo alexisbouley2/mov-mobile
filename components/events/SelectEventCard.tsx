@@ -2,19 +2,10 @@ import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Image } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import EventParticipants from "@/components/events/EventParticipants";
-
-interface Event {
-  id: string;
-  name?: string;
-  date: string;
-  admin: {
-    username: string;
-  };
-  participants: any[];
-}
+import { EventForList } from "@movapp/types";
 
 interface SelectEventCardProps {
-  event?: Event;
+  event?: EventForList;
   isSelected: boolean;
   onPress: () => void;
   formatEventTime?: (_date: string) => string;
@@ -32,7 +23,7 @@ export default function SelectEventCard({
     <View style={styles.eventContainer}>
       {!isQuickMov && formatEventTime && event && (
         <Text style={styles.eventInformation}>
-          {formatEventTime(event.date)} by {event.admin.username}
+          {formatEventTime(event.date.toISOString())} by {event.admin.username}
         </Text>
       )}
       <TouchableOpacity
