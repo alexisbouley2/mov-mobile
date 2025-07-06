@@ -4,6 +4,7 @@ import { Alert } from "react-native";
 import { useRouter } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
 import { mediaUploadManager } from "@/services/upload";
+import { useUserEvents } from "@/contexts/UserEventsContext";
 import log from "@/utils/logger";
 
 interface UseMediaPreviewProps {
@@ -13,6 +14,7 @@ interface UseMediaPreviewProps {
 
 export function useMediaPreview({ mediaUri, userId }: UseMediaPreviewProps) {
   const router = useRouter();
+  const { events } = useUserEvents();
   const [jobId, setJobId] = useState<string | null>(null);
   const videoRef = useRef<Video>(null);
 
@@ -68,11 +70,28 @@ export function useMediaPreview({ mediaUri, userId }: UseMediaPreviewProps) {
         log.debug(`Video upload progress: ${progress}%`);
       });
 
-      // Navigate to event selection immediately
-      router.push({
-        pathname: "/(app)/(events)/select-events",
-        params: { jobId: newJobId },
-      });
+      // Check if there are current events available
+      const currentEvents = events.current || [];
+
+      if (currentEvents.length === 0) {
+        // No current events, go directly to create event
+        log.info(
+          "=== MediaPreview: No current events, navigating to create event ==="
+        );
+        router.push({
+          pathname: "/(app)/(events)/create",
+          params: { jobId: newJobId },
+        });
+      } else {
+        // Current events available, go to select events
+        log.info(
+          "=== MediaPreview: Current events available, navigating to select events ==="
+        );
+        router.push({
+          pathname: "/(app)/(events)/select-events",
+          params: { jobId: newJobId },
+        });
+      }
     } catch (error) {
       log.error("=== MediaPreview: Failed to create job ===", error);
       Alert.alert("Error", "Failed to start upload. Please try again.");
