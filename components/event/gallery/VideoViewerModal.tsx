@@ -10,6 +10,7 @@ import {
 import VideoCarousel from "./VideoCarousel";
 import { useEventVideos, VideoItem } from "@/contexts/EventVideosContext";
 import { CachedImage } from "@/components/ui/CachedImage";
+import ThreeDotsButton from "@/components/ui/ThreeDotsButton";
 
 interface VideoViewerModalProps {
   visible: boolean;
@@ -24,8 +25,12 @@ export default function VideoViewerModal({
   onClose,
   onIndexChange,
 }: VideoViewerModalProps) {
-  const { currentVideoIndex, setCurrentVideoIndex, closeVideoModal } =
-    useEventVideos();
+  const {
+    currentVideoIndex,
+    setCurrentVideoIndex,
+    closeVideoModal,
+    reportVideo,
+  } = useEventVideos();
 
   const handleIndexChange = (index: number) => {
     setCurrentVideoIndex(index);
@@ -86,6 +91,15 @@ export default function VideoViewerModal({
           videos={videos}
           initialIndex={currentVideoIndex}
           onIndexChange={handleIndexChange}
+        />
+
+        <ThreeDotsButton
+          onPress={() => {
+            if (currentVideo) {
+              reportVideo(currentVideo.id);
+            }
+          }}
+          style={styles.deleteButton}
         />
 
         <View style={styles.shareSection}>
@@ -156,5 +170,15 @@ const styles = StyleSheet.create({
   shareIcon: {
     width: "100%",
     height: "100%",
+  },
+  deleteButton: {
+    position: "absolute",
+    bottom: 60,
+    left: 30,
+    zIndex: 100,
+    width: 36,
+    height: 36,
+    flexDirection: "row",
+    alignItems: "center",
   },
 });

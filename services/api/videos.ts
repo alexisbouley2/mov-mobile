@@ -9,6 +9,9 @@ import {
   DeleteVideoRequest,
   DeleteVideoResponse,
   DeleteVideoResponseSchema,
+  ReportVideoRequest,
+  ReportVideoResponse,
+  ReportVideoResponseSchema,
   VideoFeedResponse,
   VideoFeedResponseSchema,
 } from "@movapp/types";
@@ -53,4 +56,8 @@ export const videosApi = {
   // Delete video from R2 and database (only if no event associations)
   deleteVideo: (deleteData: DeleteVideoRequest): Promise<DeleteVideoResponse> =>
     api.post("/videos/delete", deleteData, DeleteVideoResponseSchema),
+
+  // Report video from an event (removes it from the event and marks as reported)
+  reportVideo: (reportData: ReportVideoRequest): Promise<ReportVideoResponse> =>
+    api.post("/videos/report", reportData, ReportVideoResponseSchema),
 };

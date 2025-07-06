@@ -6,6 +6,7 @@ import React, {
   useMemo,
   useEffect,
 } from "react";
+import { Alert } from "react-native";
 import { videosApi } from "@/services/api";
 import log from "@/utils/logger";
 import { useUserProfile } from "@/contexts/UserProfileContext";
@@ -55,6 +56,9 @@ interface EventVideosContextType {
   // Error states
   error: string | null;
   clearError: () => void;
+
+  // Video actions
+  reportVideo: (_videoId: string) => Promise<void>;
 }
 
 const EventVideosContext = createContext<EventVideosContextType>({
@@ -83,6 +87,7 @@ const EventVideosContext = createContext<EventVideosContextType>({
   setCurrentVideoIndex: () => {},
   error: null,
   clearError: () => {},
+  reportVideo: async () => {},
 });
 
 export const useEventVideos = () => useContext(EventVideosContext);
@@ -298,6 +303,54 @@ export function EventVideosProvider({
     setError(null);
   }, []);
 
+  // Report video functionality
+  const reportVideo = useCallback(
+    async (videoId: string) => {
+      if (!event?.id || !user?.id) {
+        setError("Unable to report video: missing event or user data");
+        return;
+      }
+
+      Alert.alert(
+        "Report Video",
+        "Are you sure you want to report this video? It will be removed from this event permanently.",
+        [
+          { text: "Cancel", style: "cancel" },
+          {
+            text: "Report",
+            style: "destructive",
+            onPress: async () => {
+              try {
+                await videosApi.reportVideo({
+                  videoId,
+                  userId: user.id,
+                  eventId: event.id,
+                });
+
+                // Remove the video from both feeds
+                setAllVideos((prev) =>
+                  prev.filter((video) => video.id !== videoId)
+                );
+                setUserVideos((prev) =>
+                  prev.filter((video) => video.id !== videoId)
+                );
+
+                // Close modal since user was viewing the reported video
+                if (modalVisible) {
+                  closeVideoModal();
+                }
+              } catch (error) {
+                log.error("Error reporting video:", error);
+                setError("Failed to report video. Please try again.");
+              }
+            },
+          },
+        ]
+      );
+    },
+    [event?.id, user?.id, modalVisible, closeVideoModal]
+  );
+
   // Auto-load videos when event changes
   useEffect(() => {
     if (event?.id) {
@@ -342,6 +395,7 @@ export function EventVideosProvider({
       setCurrentVideoIndex: updateCurrentVideoIndex,
       error,
       clearError,
+      reportVideo,
     }),
     [
       allVideos,
@@ -369,6 +423,7 @@ export function EventVideosProvider({
       updateCurrentVideoIndex,
       error,
       clearError,
+      reportVideo,
     ]
   );
 

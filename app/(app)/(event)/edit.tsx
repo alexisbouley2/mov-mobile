@@ -39,7 +39,7 @@ export default function EditEventScreen() {
       <View style={components.header}>
         <BackButton onPress={onBack} />
         <Text style={typography.headerTitle}>{"Manage Event"}</Text>
-        <ThreeDotsButton onPress={deleteEvent} />
+        <ThreeDotsButton onPress={deleteEvent} style={styles.deleteButton} />
       </View>
 
       <EventForm
@@ -60,5 +60,13 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#000",
+  },
+  deleteButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    position: "absolute",
+    right: 20,
+    top: 0,
+    bottom: 0,
   },
 });

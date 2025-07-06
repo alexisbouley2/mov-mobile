@@ -6,14 +6,11 @@ import { useEventPhoto } from "./useEventPhoto";
 import { useEvent } from "@/contexts/EventContext";
 import log from "@/utils/logger";
 import { UpdateEventRequest } from "@movapp/types";
-import { eventsApi } from "@/services/api/events";
-import { useRouter } from "expo-router";
 
 export function useEditEvent() {
-  const { event, updateEvent } = useEvent(); // Get from context
+  const { event, updateEvent, deleteEvent } = useEvent(); // Get from context
   const { formData, updateField, setFormData } = useEventForm();
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
   // Initialize photo with event's current image
   const {
     previewImage,
@@ -92,31 +89,6 @@ export function useEditEvent() {
 
   const handleBack = () => {
     cancelJob();
-  };
-
-  const deleteEvent = () => {
-    Alert.alert(
-      "Delete Event",
-      "Are you sure you want to delete this event? This action cannot be undone.",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => {
-            if (!event) return;
-            try {
-              await eventsApi.delete(event.id, event.adminId);
-              // Optionally, navigate away or show a success message
-              router.push("/(app)/(tabs)/events");
-            } catch (error) {
-              log.error("Error deleting event:", error);
-              Alert.alert("Error", "Failed to delete event. Please try again.");
-            }
-          },
-        },
-      ]
-    );
   };
 
   return {

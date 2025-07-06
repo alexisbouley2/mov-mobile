@@ -6,6 +6,8 @@ import React, {
   useCallback,
   useMemo,
 } from "react";
+import { Alert } from "react-native";
+import { router } from "expo-router";
 import log from "@/utils/logger";
 import { EventWithDetails, UpdateEventRequest } from "@movapp/types";
 import { eventsApi } from "@/services/api/events";
@@ -24,6 +26,7 @@ interface EventContextType {
     }
   ) => Promise<{ error: any }>;
   toggleParticipation: (_userId: string) => Promise<void>;
+  deleteEvent: () => void;
   clearEventError: () => void;
   clearEvent: () => void;
 }
@@ -35,6 +38,7 @@ const EventContext = createContext<EventContextType>({
   loadEvent: async () => {},
   updateEvent: async () => ({ error: null }),
   toggleParticipation: async () => {},
+  deleteEvent: () => {},
   clearEventError: () => {},
   clearEvent: () => {},
 });
@@ -133,6 +137,32 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
     setError(null);
   }, []);
 
+  const deleteEvent = useCallback(() => {
+    if (!event) return;
+
+    Alert.alert(
+      "Delete Event",
+      "Are you sure you want to delete this event? This action cannot be undone.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await eventsApi.delete(event.id, event.adminId);
+              // Navigate away after successful deletion
+              router.push("/(app)/(tabs)/events");
+            } catch (error) {
+              log.error("Error deleting event:", error);
+              setError("Failed to delete event. Please try again.");
+            }
+          },
+        },
+      ]
+    );
+  }, [event]);
+
   const contextValue = useMemo(
     () => ({
       event,
@@ -141,6 +171,7 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
       loadEvent,
       updateEvent,
       toggleParticipation,
+      deleteEvent,
       clearEventError,
       clearEvent,
     }),
@@ -151,6 +182,7 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
       loadEvent,
       updateEvent,
       toggleParticipation,
+      deleteEvent,
       clearEventError,
       clearEvent,
     ]
