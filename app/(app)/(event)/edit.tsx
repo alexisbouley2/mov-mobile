@@ -5,6 +5,7 @@ import { useEditEvent } from "@/hooks/event/useEditEvent";
 import EventForm from "@/components/event-form/EventForm";
 import { components, typography } from "@/styles";
 import BackButton from "@/components/ui/button/BackButton";
+import ThreeDotsButton from "@/components/ui/ThreeDotsButton";
 
 export default function EditEventScreen() {
   const router = useRouter();
@@ -17,6 +18,7 @@ export default function EditEventScreen() {
     handleBack,
     pickImage,
     previewImage,
+    deleteEvent,
   } = useEditEvent();
 
   const onBack = () => {
@@ -36,7 +38,8 @@ export default function EditEventScreen() {
     <View style={styles.container}>
       <View style={components.header}>
         <BackButton onPress={onBack} />
-        <Text style={typography.headerTitle}>{"Edit Event"}</Text>
+        <Text style={typography.headerTitle}>{"Manage Event"}</Text>
+        <ThreeDotsButton onPress={deleteEvent} />
       </View>
 
       <EventForm

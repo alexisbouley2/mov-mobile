@@ -12,6 +12,8 @@ import {
   EventParticipantsResponseSchema,
   UpdateEventResponse,
   UpdateEventResponseSchema,
+  DeleteEventResponse,
+  DeleteEventResponseSchema,
 } from "@movapp/types";
 
 export const eventsApi = {
@@ -52,4 +54,11 @@ export const eventsApi = {
 
     return api.get(endpoint, EventParticipantsResponseSchema);
   },
+
+  // Delete an event
+  delete: (eventId: string, userId: string): Promise<DeleteEventResponse> =>
+    api.delete(
+      `/events/${eventId}?userId=${userId}`,
+      DeleteEventResponseSchema
+    ),
 };
