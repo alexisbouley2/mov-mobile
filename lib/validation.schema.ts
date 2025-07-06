@@ -3,7 +3,7 @@ import { z } from "zod";
 // Mobile environment schema
 export const mobileEnvSchema = z.object({
   NODE_ENV: z
-    .enum(["development", "production", "staging"])
+    .enum(["development", "preview", "production"])
     .default("development"),
 
   EXPO_PUBLIC_API_URL: z.string().url().default("http://localhost:3000"),

@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { Alert } from "react-native";
+import { Alert, Linking } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { mediaUploadManager } from "@/services/upload";
 import { useUploadStatus } from "@/hooks/upload/useUploadStatus";
@@ -47,7 +47,11 @@ export function usePhotoUpload({
       if (status !== "granted") {
         Alert.alert(
           "Permission needed",
-          "We need camera roll permissions to select photos"
+          "We need camera roll permissions to select photos. Please enable it in Settings.",
+          [
+            { text: "Cancel", style: "cancel" },
+            { text: "Open Settings", onPress: () => Linking.openSettings() },
+          ]
         );
         return;
       }
