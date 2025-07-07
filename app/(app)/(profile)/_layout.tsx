@@ -5,6 +5,8 @@ export default function ProfileLayout() {
     <Stack>
       <Stack.Screen name="edit-profile" options={{ headerShown: false }} />
       <Stack.Screen name="delete-profile" options={{ headerShown: false }} />
+      <Stack.Screen name="terms" options={{ headerShown: false }} />
+      <Stack.Screen name="privacy" options={{ headerShown: false }} />
     </Stack>
   );
 }

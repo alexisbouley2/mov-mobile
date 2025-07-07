@@ -1,5 +1,13 @@
 import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Image } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Image,
+  Share,
+  Alert,
+} from "react-native";
 import { router } from "expo-router";
 import { useAuth } from "@/contexts/AuthContext";
 import log from "@/utils/logger";
@@ -20,19 +28,25 @@ export default function ProfileScreen() {
     router.push("/(app)/(profile)/edit-profile");
   };
 
-  const handleShareMov = () => {
-    // TODO: Implement share MOV functionality
-    log.info("Share MOV pressed");
+  const handleShareMov = async () => {
+    try {
+      const smartLink = "https://getmovapp.com";
+
+      await Share.share({
+        url: smartLink,
+      });
+    } catch (error) {
+      log.error("Share error:", error);
+      Alert.alert("Error", "Could not share the app");
+    }
   };
 
   const handleTermsAndConditions = () => {
-    // TODO: Implement terms and conditions
-    log.info("Terms & Conditions pressed");
+    router.push("/(app)/(profile)/terms");
   };
 
   const handlePrivacyPolicy = () => {
-    // TODO: Implement privacy policy
-    log.info("Privacy Policy pressed");
+    router.push("/(app)/(profile)/privacy");
   };
 
   const handleDangerousZone = () => {
