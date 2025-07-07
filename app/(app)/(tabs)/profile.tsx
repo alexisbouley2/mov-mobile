@@ -16,6 +16,7 @@ import { useUserProfile } from "@/contexts/UserProfileContext";
 import { TAB_BAR_HEIGHT } from "./_layout";
 import AvatarPicker from "@/components/profile/AvatarPicker";
 import { typography } from "@/styles";
+import { config } from "@/lib/config";
 
 export default function ProfileScreen() {
   useDebugLifecycle("ProfileScreen");
@@ -30,10 +31,10 @@ export default function ProfileScreen() {
 
   const handleShareMov = async () => {
     try {
-      const smartLink = "https://getmovapp.com";
+      const sharelink = `${config.EXPO_PUBLIC_WEB_URL}`;
 
       await Share.share({
-        url: smartLink,
+        url: sharelink,
       });
     } catch (error) {
       log.error("Share error:", error);

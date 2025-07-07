@@ -2,10 +2,10 @@ import React from "react";
 import { View, StyleSheet, TouchableOpacity, Image } from "react-native";
 import { WebView } from "react-native-webview";
 import { router } from "expo-router";
-// import { TAB_BAR_HEIGHT } from "../(tabs)/_layout";
+import { config } from "@/lib/config";
 
 export default function TermsScreen() {
-  const termsUrl = "https://getmovapp.com/terms/mobile";
+  const termsUrl = `${config.EXPO_PUBLIC_WEB_URL}/terms/mobile`;
   const handleClose = () => {
     router.back();
   };

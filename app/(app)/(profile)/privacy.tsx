@@ -2,9 +2,10 @@ import React from "react";
 import { View, StyleSheet, TouchableOpacity, Image } from "react-native";
 import { WebView } from "react-native-webview";
 import { router } from "expo-router";
+import { config } from "@/lib/config";
 
 export default function PrivacyScreen() {
-  const privacyPolicyUrl = "https://getmovapp.com/privacy/mobile";
+  const privacyPolicyUrl = `${config.EXPO_PUBLIC_WEB_URL}/privacy/mobile`;
 
   const handleClose = () => {
     router.back();
