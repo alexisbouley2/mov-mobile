@@ -13,6 +13,8 @@ import { useEffect } from "react";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { UserProfileProvider } from "@/contexts/UserProfileContext";
+import { InviteProvider } from "@/contexts/InviteContext";
+import { useDeepLinkHandler } from "@/hooks/useDeepLinkHandler";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -24,6 +26,9 @@ export default function RootLayout() {
   const [loaded] = useFonts({
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
   });
+
+  // Initialize deep link handler
+  useDeepLinkHandler();
 
   useEffect(() => {
     if (loaded) {
@@ -39,26 +44,35 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaView style={{ flex: 1, backgroundColor: "black" }}>
         <AuthProvider>
-          <UserProfileProvider>
-            <ThemeProvider
-              value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
-            >
-              <Stack
-                screenOptions={{
-                  headerShown: false,
-                }}
+          <InviteProvider>
+            <UserProfileProvider>
+              <ThemeProvider
+                value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
               >
-                <Stack.Screen name="index" options={{ headerShown: false }} />
-                <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-                <Stack.Screen
-                  name="(onboarding)"
-                  options={{ headerShown: false }}
-                />
-                <Stack.Screen name="(app)" options={{ headerShown: false }} />
-              </Stack>
-              <StatusBar style="light" />
-            </ThemeProvider>
-          </UserProfileProvider>
+                <Stack
+                  screenOptions={{
+                    headerShown: false,
+                  }}
+                >
+                  <Stack.Screen name="index" options={{ headerShown: false }} />
+                  <Stack.Screen
+                    name="(auth)"
+                    options={{ headerShown: false }}
+                  />
+                  <Stack.Screen
+                    name="(onboarding)"
+                    options={{ headerShown: false }}
+                  />
+                  <Stack.Screen name="(app)" options={{ headerShown: false }} />
+                  <Stack.Screen
+                    name="invite"
+                    options={{ headerShown: false }}
+                  />
+                </Stack>
+                <StatusBar style="light" />
+              </ThemeProvider>
+            </UserProfileProvider>
+          </InviteProvider>
         </AuthProvider>
       </SafeAreaView>
     </GestureHandlerRootView>

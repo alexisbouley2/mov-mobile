@@ -10,6 +10,8 @@ import React, {
 import { supabase } from "@/lib/supabase";
 import { usersApi } from "@/services/api";
 import { useAuth } from "./AuthContext";
+import { useInvite } from "./InviteContext";
+import { useRouter } from "expo-router";
 import { imageCacheService } from "@/services/imageCacheService";
 import log from "@/utils/logger";
 import { User, UpdateUserRequest, UpdateUserResponse } from "@movapp/types";
@@ -52,6 +54,8 @@ export function UserProfileProvider({
   children: React.ReactNode;
 }) {
   const { supabaseUser, isAuthenticated } = useAuth();
+  const { processPendingInvite } = useInvite();
+  const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [profileLoading, setProfileLoading] = useState(false);
   const [profileError, setProfileError] = useState<string | null>(null);
@@ -261,6 +265,25 @@ export function UserProfileProvider({
       setProfileError(null);
     }
   }, [isAuthenticated, supabaseUser, fetchUserProfile]);
+
+  // Process pending invite when user profile is loaded
+  useEffect(() => {
+    if (user && processPendingInvite) {
+      processPendingInvite(user.id)
+        .then((result) => {
+          if (result.success && result.eventId) {
+            // Add events tab to stack without showing it, then navigate to event
+            router.push("/(app)/(tabs)/events");
+            router.push(`/(app)/(event)/${result.eventId}`);
+          } else {
+          }
+        })
+        .catch((error) => {
+          log.error("Error processing invite:", error);
+        });
+    } else {
+    }
+  }, [user, processPendingInvite]);
 
   const contextValue = useMemo(
     () => ({

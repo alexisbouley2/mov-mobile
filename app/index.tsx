@@ -8,7 +8,6 @@ export default function Index() {
   const { session, loading } = useAuth();
   const { user, profileLoading } = useUserProfile();
 
-  // Wait for both auth AND profile to finish loading
   if (loading || profileLoading) {
     return (
       <View style={styles.loadingContainer}>

@@ -13,17 +13,20 @@ export function AuthGuard({ children, requireProfile = true }: AuthGuardProps) {
   const { session, supabaseUser, loading } = useAuth();
   const router = useRouter();
   const segments = useSegments();
+  const isInAuthFlow = segments.join("/").includes("(auth)");
 
   useEffect(() => {
     if (loading) return;
 
-    // Not authenticated at all
+    if (isInAuthFlow && !session) {
+      return; // Let auth screens handle their own flow
+    }
+
     if (!session) {
       router.replace("/(auth)/welcome");
       return;
     }
 
-    // Authenticated but no profile (and profile is required)
     if (requireProfile && !supabaseUser) {
       router.replace("/(onboarding)/create-profile");
       return;

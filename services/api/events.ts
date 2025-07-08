@@ -16,6 +16,11 @@ import {
   DeleteEventResponseSchema,
   GenerateInviteResponse,
   GenerateInviteResponseSchema,
+  ValidateInviteResponse,
+  ValidateInviteResponseSchema,
+  AcceptInviteResponse,
+  AcceptInviteResponseSchema,
+  AcceptInviteRequest,
 } from "@movapp/types";
 
 export const eventsApi = {
@@ -73,5 +78,24 @@ export const eventsApi = {
       `/events/${eventId}/invite`,
       { userId },
       GenerateInviteResponseSchema
+    ),
+
+  // Validate event invite
+  validateInvite: (token: string): Promise<ValidateInviteResponse> =>
+    api.post(
+      `/events/invite/validate`,
+      { token },
+      ValidateInviteResponseSchema
+    ),
+
+  // Accept event invite
+  acceptInvite: ({
+    token,
+    userId,
+  }: AcceptInviteRequest): Promise<AcceptInviteResponse> =>
+    api.post(
+      `/events/invite/accept`,
+      { token, userId },
+      AcceptInviteResponseSchema
     ),
 };
