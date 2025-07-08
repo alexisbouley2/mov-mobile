@@ -2,16 +2,21 @@
 
 import CameraControls from "@/components/camera/CameraControls";
 import { CameraView } from "expo-camera";
-import React from "react";
+import React, { useEffect } from "react";
 import { Image, StyleSheet, View } from "react-native";
 import { useDebugLifecycle } from "@/utils/debugLifecycle";
 import { useUserProfile } from "@/contexts/UserProfileContext";
 import { useCamera } from "@/hooks/media/useCamera";
+import { useTabContext } from "@/hooks/tab/useTabContext";
+import log from "@/utils/logger";
 
 export default function CameraScreen() {
   useDebugLifecycle("CameraScreen");
 
   const { user } = useUserProfile();
+  const { isTabActive } = useTabContext();
+  const isCameraTabActive = isTabActive(1); // Camera tab is at index 1
+
   const {
     cameraPermission,
     microphonePermission,
@@ -25,7 +30,20 @@ export default function CameraScreen() {
     stopRecording,
     toggleCameraType,
     toggleFlash,
+    activateCamera,
+    deactivateCamera,
   } = useCamera(user?.id);
+
+  // Activate/deactivate camera based on tab visibility
+  useEffect(() => {
+    if (isCameraTabActive) {
+      log.info("Camera tab became active - activating camera");
+      activateCamera();
+    } else {
+      log.info("Camera tab became inactive - deactivating camera");
+      deactivateCamera();
+    }
+  }, [isCameraTabActive, activateCamera, deactivateCamera]);
 
   if (!cameraPermission || !microphonePermission)
     return <View style={styles.container} />;
@@ -40,7 +58,8 @@ export default function CameraScreen() {
         />
       </View>
 
-      {isCameraActive ? (
+      {/* Only render camera when this tab is active */}
+      {isCameraTabActive && isCameraActive ? (
         <CameraView
           ref={cameraRef}
           style={styles.camera}
@@ -53,15 +72,18 @@ export default function CameraScreen() {
         <View style={styles.camera} />
       )}
 
-      <CameraControls
-        onStartRecording={startRecording}
-        onStopRecording={stopRecording}
-        onToggleCamera={toggleCameraType}
-        onToggleFlash={toggleFlash}
-        isRecording={isRecording}
-        flashMode={flashMode}
-        recordingProgress={recordingProgress}
-      />
+      {/* Only show camera controls when this tab is active */}
+      {isCameraTabActive && (
+        <CameraControls
+          onStartRecording={startRecording}
+          onStopRecording={stopRecording}
+          onToggleCamera={toggleCameraType}
+          onToggleFlash={toggleFlash}
+          isRecording={isRecording}
+          flashMode={flashMode}
+          recordingProgress={recordingProgress}
+        />
+      )}
     </View>
   );
 }

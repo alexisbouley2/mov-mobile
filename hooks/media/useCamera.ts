@@ -1,12 +1,12 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   CameraType,
   useCameraPermissions,
   useMicrophonePermissions,
 } from "expo-camera";
-import { useFocusEffect } from "@react-navigation/native";
 import { useRouter } from "expo-router";
 import type { CameraView as CameraViewType } from "expo-camera";
+import log from "@/utils/logger";
 
 export const useCamera = (userId?: string) => {
   const MAX_VIDEO_DURATION: number = 6;
@@ -21,7 +21,7 @@ export const useCamera = (userId?: string) => {
   const [isRecording, setIsRecording] = useState(false);
   const [recordingDuration, setRecordingDuration] = useState(0);
   const [capturedMedia, setCapturedMedia] = useState<string | null>(null);
-  const [isCameraActive, setIsCameraActive] = useState(true);
+  const [isCameraActive, setIsCameraActive] = useState(false); // Start with camera inactive
 
   const cameraRef = useRef<CameraViewType>(null);
   const recordingStartTime = useRef<number | null>(null);
@@ -49,45 +49,53 @@ export const useCamera = (userId?: string) => {
     }
   }, [capturedMedia, userId, router]);
 
-  // Cleanup when screen loses focus (tab switch)
-  useFocusEffect(
-    React.useCallback(() => {
-      // When screen gains focus, activate camera
-      setIsCameraActive(true);
-
-      return () => {
-        // Use refs to get current values instead of closure
-        if (cameraRef.current) {
-          cameraRef.current.stopRecording();
-        }
-        if (rafId.current) {
-          cancelAnimationFrame(rafId.current);
-          rafId.current = null;
-        }
-        // Reset state
-        setIsRecording(false);
-        setRecordingDuration(0);
-        recordingStartTime.current = null;
-
-        // Deactivate camera when screen loses focus
-        setIsCameraActive(false);
-      };
-    }, [])
-  );
+  // Cleanup when camera becomes inactive
+  useEffect(() => {
+    log.info(`Camera active state changed to: ${isCameraActive}`);
+    if (!isCameraActive) {
+      log.info("Camera becoming inactive - cleaning up");
+      // Stop recording if camera becomes inactive
+      if (cameraRef.current) {
+        cameraRef.current.stopRecording();
+      }
+      if (rafId.current) {
+        cancelAnimationFrame(rafId.current);
+        rafId.current = null;
+      }
+      // Reset state
+      setIsRecording(false);
+      setRecordingDuration(0);
+      recordingStartTime.current = null;
+    }
+  }, [isCameraActive]);
 
   // Reset captured media when screen comes back into focus
-  useFocusEffect(
-    React.useCallback(() => {
-      // Reset captured media when returning from preview screen
-      if (capturedMedia) {
-        setCapturedMedia(null);
-      }
-    }, [capturedMedia])
-  );
+  useEffect(() => {
+    // Reset captured media when returning from preview screen
+    if (capturedMedia) {
+      setCapturedMedia(null);
+    }
+  }, [capturedMedia]);
+
+  const activateCamera = () => {
+    log.info("Activating camera");
+    setIsCameraActive(true);
+  };
+
+  const deactivateCamera = () => {
+    log.info("Deactivating camera");
+    setIsCameraActive(false);
+  };
 
   const startRecording = async () => {
-    if (!cameraRef.current) return;
+    if (!cameraRef.current || !isCameraActive) {
+      log.warn(
+        "Cannot start recording - camera not active or ref not available"
+      );
+      return;
+    }
 
+    log.info("Starting recording");
     setIsRecording(true);
     recordingStartTime.current = Date.now();
 
@@ -120,6 +128,7 @@ export const useCamera = (userId?: string) => {
 
   const stopRecording = () => {
     if (!cameraRef.current) return;
+    log.info("Stopping recording");
     setIsRecording(false);
 
     if (rafId.current) {
@@ -176,5 +185,7 @@ export const useCamera = (userId?: string) => {
     toggleCameraType,
     toggleFlash,
     dismissPreview,
+    activateCamera,
+    deactivateCamera,
   };
 };
