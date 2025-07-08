@@ -77,8 +77,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#000000",
-    borderWidth: 1,
-    borderColor: "green",
   },
   screensContainer: {
     flexDirection: "row",
@@ -86,7 +84,5 @@ const styles = StyleSheet.create({
   },
   screen: {
     flex: 1,
-    borderWidth: 10,
-    borderColor: "blue",
   },
 });

@@ -5,7 +5,7 @@ import {
   useAnimatedGestureHandler,
   useAnimatedStyle,
   useSharedValue,
-  withSpring,
+  withTiming,
   runOnJS,
 } from "react-native-reanimated";
 
@@ -26,10 +26,8 @@ export const useSwipableTabs = ({
   const handleTabPress = (index: number) => {
     setCurrentIndex(index);
     const targetTranslateX = -index * SCREEN_WIDTH;
-    translateX.value = withSpring(targetTranslateX, {
-      damping: 20,
-      stiffness: 200,
-    });
+    // Instant transition for tab clicks
+    translateX.value = targetTranslateX;
   };
 
   const isTabActive = (index: number) => currentIndex === index;
@@ -69,9 +67,8 @@ export const useSwipableTabs = ({
           }
 
           const targetTranslateX = -targetIndex * SCREEN_WIDTH;
-          translateX.value = withSpring(targetTranslateX, {
-            damping: 20,
-            stiffness: 200,
+          translateX.value = withTiming(targetTranslateX, {
+            duration: 200,
           });
 
           runOnJS(setCurrentIndex)(targetIndex);

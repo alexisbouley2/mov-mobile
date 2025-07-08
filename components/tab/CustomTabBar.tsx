@@ -73,8 +73,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     backgroundColor: "#000000",
     padding: 10,
-    borderWidth: 1,
-    borderColor: "red",
   },
   tabItem: {
     flex: 1,
