@@ -35,16 +35,16 @@ function RootLayoutContent() {
 
   useEffect(() => {
     const setupNavigationBar = async () => {
+      console.log("platform", Platform.OS);
       if (Platform.OS === "android") {
         try {
-          // Set the background color to black
+          // Set navigation bar properties
           await NavigationBar.setBackgroundColorAsync("#000000");
-
-          // Set button style to light (white icons on black background)
           await NavigationBar.setButtonStyleAsync("light");
-
-          // Optional: Make the navigation bar visible if hidden
           await NavigationBar.setVisibilityAsync("visible");
+
+          const visibility = await NavigationBar.getVisibilityAsync();
+          console.log("visibility", visibility);
         } catch (error) {
           console.warn("Failed to configure navigation bar:", error);
         }
