@@ -66,6 +66,14 @@
         {
           "photosPermission": "Allow access to your Photo Library to select photos for your profile and events."
         }
+      ],
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Allow access to your Photo Library to save videos.",
+          "savePhotosPermission": "Allow access to your Photo Library to save videos.",
+          "isAccessMediaLocationEnabled": true
+        }
       ]
     ],
     "experiments": {
