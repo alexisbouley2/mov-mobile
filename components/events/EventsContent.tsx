@@ -1,6 +1,6 @@
 // components/events/EventsContent.tsx
 import React from "react";
-import { ScrollView, View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet } from "react-native";
 import { useEventsLogic } from "@/hooks/events/useEventsLogic";
 import EventSection from "@/components/events/EventSection";
 import typography from "@/styles/typography";
@@ -20,7 +20,7 @@ export default function EventsContent({
   const { pastEventsByMonth } = useEventsLogic(events);
 
   return (
-    <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+    <View style={styles.container}>
       {/* Current Events */}
       {events.current.length > 0 && (
         <EventSection
@@ -61,13 +61,12 @@ export default function EventsContent({
           ))}
         </View>
       )}
-    </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  scrollView: {
-    flex: 1,
+  container: {
     paddingHorizontal: 20,
   },
   section: {},
