@@ -13,7 +13,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import log from "@/utils/logger";
 import { useDebugLifecycle } from "@/utils/debugLifecycle";
 import { useUserProfile } from "@/contexts/UserProfileContext";
-import { TAB_BAR_HEIGHT } from "./_layout";
 import AvatarPicker from "@/components/profile/AvatarPicker";
 import { typography } from "@/styles";
 import { config } from "@/lib/config";
@@ -136,7 +135,6 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    marginBottom: TAB_BAR_HEIGHT,
     backgroundColor: "#000",
   },
   header: {

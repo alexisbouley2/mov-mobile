@@ -35,6 +35,10 @@
       "statusBar": {
         "translucent": true,
         "backgroundColor": "transparent"
+      },
+      "navigationBar": {
+        "backgroundColor": "#000000",
+        "barStyle": "light-content"
       }
     },
     "web": {

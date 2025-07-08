@@ -6,7 +6,6 @@ import { useUserEvents } from "@/contexts/UserEventsContext";
 import EventsHeader from "@/components/events/EventsHeader";
 import EventsContent from "@/components/events/EventsContent";
 import { useDebugLifecycle } from "@/utils/debugLifecycle";
-import { TAB_BAR_HEIGHT } from "./_layout";
 import { useUserProfile } from "@/contexts/UserProfileContext";
 
 export default function EventsScreen() {
@@ -51,6 +50,5 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#000",
-    marginBottom: TAB_BAR_HEIGHT,
   },
 });

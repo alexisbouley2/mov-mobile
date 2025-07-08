@@ -7,7 +7,6 @@ import { Image, StyleSheet, View } from "react-native";
 import { useDebugLifecycle } from "@/utils/debugLifecycle";
 import { useUserProfile } from "@/contexts/UserProfileContext";
 import { useCamera } from "@/hooks/media/useCamera";
-import { TAB_BAR_HEIGHT } from "./_layout";
 
 export default function CameraScreen() {
   useDebugLifecycle("CameraScreen");
@@ -70,7 +69,6 @@ export default function CameraScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    marginBottom: TAB_BAR_HEIGHT,
   },
   camera: {
     flex: 1,
