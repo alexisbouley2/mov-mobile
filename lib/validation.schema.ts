@@ -6,13 +6,13 @@ export const mobileEnvSchema = z.object({
     .enum(["development", "preview", "production"])
     .default("development"),
 
-  EXPO_PUBLIC_API_URL: z.string().url().default("http://localhost:3000"),
+  EXPO_PUBLIC_API_URL: z.string().url(),
 
   EXPO_PUBLIC_SUPABASE_URL: z.string().url().includes("supabase.co"),
 
   EXPO_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1).startsWith("eyJ"), // JWT tokens start with eyJ
 
-  EXPO_PUBLIC_WEB_URL: z.string().url().default("https://getmovapp.com"),
+  EXPO_PUBLIC_WEB_URL: z.string().url(),
 });
 
 // Export the inferred type

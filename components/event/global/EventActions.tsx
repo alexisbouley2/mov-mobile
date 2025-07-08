@@ -85,7 +85,7 @@ export default function EventActions({
                 !isParticipant && { color: "#fff" },
               ]}
             >
-              {isParticipant ? "Participating" : "ìnvited"}
+              {isParticipant ? "Participating" : "Invited"}
             </Text>
           </TouchableOpacity>
         </>

@@ -14,6 +14,8 @@ import {
   UpdateEventResponseSchema,
   DeleteEventResponse,
   DeleteEventResponseSchema,
+  GenerateInviteResponse,
+  GenerateInviteResponseSchema,
 } from "@movapp/types";
 
 export const eventsApi = {
@@ -60,5 +62,16 @@ export const eventsApi = {
     api.delete(
       `/events/${eventId}?userId=${userId}`,
       DeleteEventResponseSchema
+    ),
+
+  // Generate event invite
+  generateInvite: (
+    eventId: string,
+    userId: string
+  ): Promise<GenerateInviteResponse> =>
+    api.post(
+      `/events/${eventId}/invite`,
+      { userId },
+      GenerateInviteResponseSchema
     ),
 };
