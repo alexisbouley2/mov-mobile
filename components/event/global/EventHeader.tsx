@@ -63,7 +63,6 @@ export default function EventHeader({ event, onBack }: EventHeaderProps) {
           uri={event.coverImageUrl}
           cachePolicy="cover-image"
           style={styles.backgroundImage}
-          fallbackSource={require("@/assets/images/react-logo.png")}
           showLoading={true}
           loadingColor="#666"
         />
