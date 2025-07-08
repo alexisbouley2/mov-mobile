@@ -1,8 +1,8 @@
 // app/(app)/(tabs)/_layout.tsx
 import React from "react";
 
-import { SwipableTabs } from "@/components/SwipableTabs";
-import { CustomTabBar } from "@/components/CustomTabBar";
+import { SwipableTabs } from "@/components/tab/SwipableTabs";
+import { CustomTabBar } from "@/components/tab/CustomTabBar";
 
 // Import the screen components
 import EventsScreen from "./events";
