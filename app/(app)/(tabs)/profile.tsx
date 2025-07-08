@@ -31,7 +31,7 @@ export default function ProfileScreen() {
 
   const handleShareMov = async () => {
     try {
-      const sharelink = `${config.EXPO_PUBLIC_WEB_URL}`;
+      const sharelink = `${config.EXPO_PUBLIC_WEB_URL}/share`;
 
       await Share.share({
         url: sharelink,
