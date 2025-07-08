@@ -29,6 +29,7 @@ interface EventContextType {
   deleteEvent: () => void;
   clearEventError: () => void;
   clearEvent: () => void;
+  setEvent: React.Dispatch<React.SetStateAction<EventWithDetails | null>>;
 }
 
 const EventContext = createContext<EventContextType>({
@@ -41,6 +42,7 @@ const EventContext = createContext<EventContextType>({
   deleteEvent: () => {},
   clearEventError: () => {},
   clearEvent: () => {},
+  setEvent: () => {},
 });
 
 export const useEvent = () => useContext(EventContext);
@@ -203,6 +205,7 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
       deleteEvent,
       clearEventError,
       clearEvent,
+      setEvent,
     }),
     [
       event,
@@ -214,6 +217,7 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
       deleteEvent,
       clearEventError,
       clearEvent,
+      setEvent,
     ]
   );
 

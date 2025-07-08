@@ -35,6 +35,9 @@ interface EventParticipantsContextType {
   error: string | null;
   clearError: () => void;
   loadBottomSheetParticipants: (_eventId: string) => Promise<void>;
+
+  // Participant management
+  deleteParticipant: (_participantUserId: string) => Promise<void>;
 }
 
 const EventParticipantsContext = createContext<EventParticipantsContextType>({
@@ -54,6 +57,7 @@ const EventParticipantsContext = createContext<EventParticipantsContextType>({
   error: null,
   clearError: () => {},
   loadBottomSheetParticipants: async () => {},
+  deleteParticipant: async () => {},
 });
 
 export const useEventParticipants = () => useContext(EventParticipantsContext);
@@ -64,7 +68,7 @@ export function EventParticipantsProvider({
   children: React.ReactNode;
 }) {
   const { user } = useUserProfile();
-  const { event } = useEvent();
+  const { event, setEvent } = useEvent();
 
   // Confirmed
   const [confirmedParticipants, setConfirmedParticipants] = useState<
@@ -208,6 +212,45 @@ export function EventParticipantsProvider({
     setError(null);
   }, []);
 
+  // Delete participant with API call first, then update UI if successful
+  const deleteParticipant = useCallback(
+    async (participantUserId: string) => {
+      if (!event || !user) return;
+
+      try {
+        await eventsApi.deleteParticipant(
+          event.id,
+          participantUserId,
+          event.adminId
+        );
+
+        // Only update UI after successful API call
+        setConfirmedParticipants((prev) =>
+          prev.filter((p) => p.user.id !== participantUserId)
+        );
+        setUnconfirmedParticipants((prev) =>
+          prev.filter((p) => p.user.id !== participantUserId)
+        );
+
+        // Also update the main event participants (preview)
+        setEvent((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            participants: prev.participants.filter(
+              (p) => p.user.id !== participantUserId
+            ),
+          };
+        });
+      } catch (error) {
+        // Don't update UI, just show error
+        setError("Failed to delete participant. Please try again.");
+        throw error; // Re-throw so component can handle it
+      }
+    },
+    [event, user, setEvent]
+  );
+
   // Set current event when event changes
   useEffect(() => {
     if (event?.id) {
@@ -253,6 +296,7 @@ export function EventParticipantsProvider({
       error,
       clearError,
       loadBottomSheetParticipants: loadBothParticipants,
+      deleteParticipant,
     }),
     [
       previewParticipants,
@@ -271,6 +315,7 @@ export function EventParticipantsProvider({
       error,
       clearError,
       loadBothParticipants,
+      deleteParticipant,
     ]
   );
 

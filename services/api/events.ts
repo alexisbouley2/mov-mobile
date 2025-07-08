@@ -21,6 +21,8 @@ import {
   AcceptInviteResponse,
   AcceptInviteResponseSchema,
   AcceptInviteRequest,
+  DeleteParticipantResponse,
+  DeleteParticipantResponseSchema,
 } from "@movapp/types";
 
 export const eventsApi = {
@@ -113,4 +115,14 @@ export const eventsApi = {
       { confirmed },
       UpdateEventResponseSchema
     ),
+
+  // Delete a participant from an event
+  deleteParticipant: (
+    eventId: string,
+    participantUserId: string,
+    adminId: string
+  ): Promise<DeleteParticipantResponse> => {
+    const endpoint = `/events/${eventId}/participants/${participantUserId}?adminId=${adminId}`;
+    return api.delete(endpoint, DeleteParticipantResponseSchema);
+  },
 };

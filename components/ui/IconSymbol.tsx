@@ -26,6 +26,9 @@ const MAPPING = {
   clock: "schedule",
   checkmark: "check",
   questionmark: "help",
+  trash: "delete",
+  "info.circle": "info",
+  calendar: "calendar-today",
 } as IconMapping;
 
 /**
