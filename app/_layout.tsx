@@ -8,7 +8,7 @@ import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
-import { View } from "react-native";
+import { Platform, View } from "react-native";
 
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -21,6 +21,7 @@ import {
   SafeAreaProvider,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
+import * as NavigationBar from "expo-navigation-bar";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -31,6 +32,26 @@ function RootLayoutContent() {
 
   // Initialize deep link handler
   useDeepLinkHandler();
+
+  useEffect(() => {
+    const setupNavigationBar = async () => {
+      if (Platform.OS === "android") {
+        try {
+          // Set the background color to black
+          await NavigationBar.setBackgroundColorAsync("#000000");
+
+          // Set button style to light (white icons on black background)
+          await NavigationBar.setButtonStyleAsync("light");
+
+          // Optional: Make the navigation bar visible if hidden
+          await NavigationBar.setVisibilityAsync("visible");
+        } catch (error) {
+          console.warn("Failed to configure navigation bar:", error);
+        }
+      }
+    };
+    setupNavigationBar();
+  }, []);
 
   return (
     <View

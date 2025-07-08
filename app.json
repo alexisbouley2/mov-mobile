@@ -38,7 +38,8 @@
       },
       "navigationBar": {
         "backgroundColor": "#000000",
-        "barStyle": "light-content"
+        "barStyle": "light-content",
+        "visible": true
       }
     },
     "web": {
