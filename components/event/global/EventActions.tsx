@@ -3,31 +3,22 @@ import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { Image } from "expo-image";
-import ParticipantAvatar from "@/components/ui/ParticipantAvatar";
-import { EventWithDetails } from "@movapp/types";
 
 interface EventActionsProps {
-  event: EventWithDetails;
   isAdmin: boolean;
-  isParticipant: boolean;
+  isConfirmed: boolean;
   onUpdate: () => void;
-  onParticipate: () => void;
+  onConfirm: () => void;
   onInvite: () => void;
 }
 
 export default function EventActions({
-  event,
   isAdmin,
-  isParticipant,
+  isConfirmed,
   onUpdate,
-  onParticipate,
+  onConfirm,
   onInvite,
 }: EventActionsProps) {
-  const adminName =
-    event.admin.username.length > 10
-      ? event.admin.username.slice(0, 10) + "..."
-      : event.admin.username;
-
   return (
     <View
       style={[
@@ -37,59 +28,52 @@ export default function EventActions({
         },
       ]}
     >
-      {isAdmin && (
-        <>
-          <TouchableOpacity
-            style={[styles.button, styles.whiteButton]}
-            onPress={onUpdate}
-          >
-            <Image
-              source={require("@/assets/images/icon/black-edit.png")}
-              style={styles.icon}
-            />
-            <Text style={[styles.buttonText, { color: "#000" }]}>
-              Manage Event
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.button, styles.blackButton]}
-            onPress={onInvite}
-          >
-            <IconSymbol name="person.badge.plus" size={20} color="#fff" />
-            <Text style={[styles.buttonText, { color: "#fff" }]}>Invite</Text>
-          </TouchableOpacity>
-        </>
-      )}
-
-      {!isAdmin && (
-        <>
-          <View style={styles.adminContainer}>
-            <View style={styles.avatarContainer}>
-              <ParticipantAvatar user={event.admin} size={40} />
-            </View>
-            <Text style={styles.adminText}>{adminName} invited you</Text>
-          </View>
-          <TouchableOpacity
+      {isAdmin ? (
+        <TouchableOpacity
+          style={[styles.button, styles.whiteButton]}
+          onPress={onUpdate}
+        >
+          <Image
+            source={require("@/assets/images/icon/black-edit.png")}
+            style={styles.icon}
+          />
+          <Text style={[styles.buttonText, { color: "#000" }]}>
+            Manage Event
+          </Text>
+        </TouchableOpacity>
+      ) : (
+        <TouchableOpacity
+          style={[
+            styles.button,
+            styles.statusButton,
+            isConfirmed && styles.whiteButton,
+            !isConfirmed && styles.blackButton,
+          ]}
+          onPress={onConfirm}
+        >
+          <IconSymbol
+            name={isConfirmed ? "checkmark" : "clock"}
+            size={20}
+            color={isConfirmed ? "#000" : "#fff"}
+          />
+          <Text
             style={[
-              styles.button,
-              isParticipant && styles.whiteButton,
-              !isParticipant && styles.blackButton,
+              styles.buttonText,
+              isConfirmed && { color: "#000" },
+              !isConfirmed && { color: "#fff" },
             ]}
-            onPress={onParticipate}
           >
-            <Text
-              style={[
-                styles.buttonText,
-                isParticipant && { color: "#000" },
-                !isParticipant && { color: "#fff" },
-              ]}
-            >
-              {isParticipant ? "Participating" : "Invited"}
-            </Text>
-          </TouchableOpacity>
-        </>
+            {isConfirmed ? "Participate" : "Invited"}
+          </Text>
+        </TouchableOpacity>
       )}
+      <TouchableOpacity
+        style={[styles.button, styles.blackButton]}
+        onPress={onInvite}
+      >
+        <IconSymbol name="person.badge.plus" size={20} color="#fff" />
+        <Text style={[styles.buttonText, { color: "#fff" }]}>Invite</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -102,24 +86,9 @@ const styles = StyleSheet.create({
     marginTop: 0,
     marginBottom: 20,
   },
-  adminContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  adminText: {
-    color: "#fff",
-    fontSize: 12,
-    fontWeight: "600",
-  },
   icon: {
-    width: 24,
-    height: 24,
-  },
-  avatarContainer: {
-    borderWidth: 1,
-    borderColor: "#FFF",
-    borderRadius: 20,
+    width: 20,
+    height: 20,
   },
   button: {
     flexDirection: "row",
@@ -129,6 +98,9 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     paddingHorizontal: 20,
     borderRadius: 24,
+  },
+  statusButton: {
+    minWidth: 150, // Fixed minimum width for status button
   },
   whiteButton: {
     backgroundColor: "#fff",

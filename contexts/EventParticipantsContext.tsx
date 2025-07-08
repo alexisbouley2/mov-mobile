@@ -19,29 +19,41 @@ interface EventParticipantsContextType {
   totalCount: number;
 
   // Bottom sheet data
-  bottomSheetParticipants: Participant[];
-  bottomSheetLoading: boolean;
-  hasMore: boolean;
-  loadBottomSheetParticipants: (_eventId: string) => Promise<void>;
-  loadMoreParticipants: () => Promise<void>;
+  confirmedParticipants: Participant[];
+  unconfirmedParticipants: Participant[];
+  confirmedLoading: boolean;
+  unconfirmedLoading: boolean;
+  confirmedHasMore: boolean;
+  unconfirmedHasMore: boolean;
+  loadConfirmedParticipants: (_eventId: string) => Promise<void>;
+  loadUnconfirmedParticipants: (_eventId: string) => Promise<void>;
+  loadMoreConfirmedParticipants: () => Promise<void>;
+  loadMoreUnconfirmedParticipants: () => Promise<void>;
 
   // Shared state
   currentEventId: string | null;
   error: string | null;
   clearError: () => void;
+  loadBottomSheetParticipants: (_eventId: string) => Promise<void>;
 }
 
 const EventParticipantsContext = createContext<EventParticipantsContextType>({
   previewParticipants: [],
   totalCount: 0,
-  bottomSheetParticipants: [],
-  bottomSheetLoading: false,
-  hasMore: true,
-  loadBottomSheetParticipants: async () => {},
-  loadMoreParticipants: async () => {},
+  confirmedParticipants: [],
+  unconfirmedParticipants: [],
+  confirmedLoading: false,
+  unconfirmedLoading: false,
+  confirmedHasMore: true,
+  unconfirmedHasMore: true,
+  loadConfirmedParticipants: async () => {},
+  loadUnconfirmedParticipants: async () => {},
+  loadMoreConfirmedParticipants: async () => {},
+  loadMoreUnconfirmedParticipants: async () => {},
   currentEventId: null,
   error: null,
   clearError: () => {},
+  loadBottomSheetParticipants: async () => {},
 });
 
 export const useEventParticipants = () => useContext(EventParticipantsContext);
@@ -54,32 +66,52 @@ export function EventParticipantsProvider({
   const { user } = useUserProfile();
   const { event } = useEvent();
 
-  // Bottom sheet state
-  const [bottomSheetParticipants, setBottomSheetParticipants] = useState<
+  // Confirmed
+  const [confirmedParticipants, setConfirmedParticipants] = useState<
     Participant[]
   >([]);
-  const [bottomSheetLoading, setBottomSheetLoading] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
-  const [page, setPage] = useState(1);
+  const [confirmedLoading, setConfirmedLoading] = useState(false);
+  const [confirmedHasMore, setConfirmedHasMore] = useState(true);
+  const [confirmedPage, setConfirmedPage] = useState(1);
+
+  // Unconfirmed
+  const [unconfirmedParticipants, setUnconfirmedParticipants] = useState<
+    Participant[]
+  >([]);
+  const [unconfirmedLoading, setUnconfirmedLoading] = useState(false);
+  const [unconfirmedHasMore, setUnconfirmedHasMore] = useState(true);
+  const [unconfirmedPage, setUnconfirmedPage] = useState(1);
 
   // Shared state
   const [currentEventId, setCurrentEventId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Load participants for bottom sheet with pagination
+  // Helper to load a page of participants (mutualized)
   const loadParticipantsPage = useCallback(
-    async (eventId: string, pageNum: number) => {
+    async (
+      eventId: string,
+      pageNum: number,
+      confirmed: boolean,
+      setParticipants: React.Dispatch<React.SetStateAction<Participant[]>>,
+      setHasMore: React.Dispatch<React.SetStateAction<boolean>>,
+      setPage: React.Dispatch<React.SetStateAction<number>>,
+      setLoading: React.Dispatch<React.SetStateAction<boolean>>
+    ) => {
       if (!user?.id) return;
-
+      setLoading(true);
       try {
         const data: EventParticipantsResponse =
-          await eventsApi.getEventParticipants(eventId, user.id, pageNum, 20);
-
+          await eventsApi.getEventParticipants(
+            eventId,
+            user.id,
+            pageNum,
+            20,
+            confirmed
+          );
         if (pageNum === 1) {
-          setBottomSheetParticipants(data.participants);
+          setParticipants(data.participants);
         } else {
-          // Deduplicate participants when loading more
-          setBottomSheetParticipants((prev) => {
+          setParticipants((prev) => {
             const existingIds = new Set(prev.map((p) => p.id));
             const newParticipants = data.participants.filter(
               (p: Participant) => !existingIds.has(p.id)
@@ -87,7 +119,6 @@ export function EventParticipantsProvider({
             return [...prev, ...newParticipants];
           });
         }
-
         setHasMore(data.hasMore);
         setPage(pageNum);
         setCurrentEventId(eventId);
@@ -95,28 +126,83 @@ export function EventParticipantsProvider({
         log.error("Error loading participants:", err);
         setError("Failed to load participants");
       } finally {
-        setBottomSheetLoading(false);
+        setLoading(false);
       }
     },
     [user?.id]
   );
 
-  // Load initial participants for bottom sheet
-  const loadBottomSheetParticipants = useCallback(
+  // Loaders for confirmed/unconfirmed
+  const loadConfirmedParticipants = useCallback(
     async (eventId: string) => {
-      setBottomSheetLoading(true);
-      setError(null);
-      await loadParticipantsPage(eventId, 1);
+      await loadParticipantsPage(
+        eventId,
+        1,
+        true,
+        setConfirmedParticipants,
+        setConfirmedHasMore,
+        setConfirmedPage,
+        setConfirmedLoading
+      );
     },
     [loadParticipantsPage]
   );
 
-  // Load more participants (pagination)
-  const loadMoreParticipants = useCallback(async () => {
-    if (hasMore && !bottomSheetLoading && currentEventId) {
-      await loadParticipantsPage(currentEventId, page + 1);
+  const loadUnconfirmedParticipants = useCallback(
+    async (eventId: string) => {
+      await loadParticipantsPage(
+        eventId,
+        1,
+        false,
+        setUnconfirmedParticipants,
+        setUnconfirmedHasMore,
+        setUnconfirmedPage,
+        setUnconfirmedLoading
+      );
+    },
+    [loadParticipantsPage]
+  );
+
+  // Load more for confirmed/unconfirmed
+  const loadMoreConfirmedParticipants = useCallback(async () => {
+    if (confirmedHasMore && !confirmedLoading && currentEventId) {
+      await loadParticipantsPage(
+        currentEventId,
+        confirmedPage + 1,
+        true,
+        setConfirmedParticipants,
+        setConfirmedHasMore,
+        setConfirmedPage,
+        setConfirmedLoading
+      );
     }
-  }, [currentEventId, hasMore, bottomSheetLoading, page, loadParticipantsPage]);
+  }, [
+    confirmedHasMore,
+    confirmedLoading,
+    currentEventId,
+    confirmedPage,
+    loadParticipantsPage,
+  ]);
+
+  const loadMoreUnconfirmedParticipants = useCallback(async () => {
+    if (unconfirmedHasMore && !unconfirmedLoading && currentEventId) {
+      await loadParticipantsPage(
+        currentEventId,
+        unconfirmedPage + 1,
+        false,
+        setUnconfirmedParticipants,
+        setUnconfirmedHasMore,
+        setUnconfirmedPage,
+        setUnconfirmedLoading
+      );
+    }
+  }, [
+    unconfirmedHasMore,
+    unconfirmedLoading,
+    currentEventId,
+    unconfirmedPage,
+    loadParticipantsPage,
+  ]);
 
   const clearError = useCallback(() => {
     setError(null);
@@ -138,30 +224,53 @@ export function EventParticipantsProvider({
     return event?.participants?.length || 0;
   }, [event?.participants?.length]);
 
+  // Load both lists when opening bottom sheet
+  const loadBothParticipants = useCallback(
+    async (eventId: string) => {
+      await Promise.all([
+        loadConfirmedParticipants(eventId),
+        loadUnconfirmedParticipants(eventId),
+      ]);
+    },
+    [loadConfirmedParticipants, loadUnconfirmedParticipants]
+  );
+
   const contextValue = useMemo(
     () => ({
       previewParticipants,
       totalCount,
-      bottomSheetParticipants,
-      bottomSheetLoading,
-      hasMore,
-      loadBottomSheetParticipants,
-      loadMoreParticipants,
+      confirmedParticipants,
+      unconfirmedParticipants,
+      confirmedLoading,
+      unconfirmedLoading,
+      confirmedHasMore,
+      unconfirmedHasMore,
+      loadConfirmedParticipants,
+      loadUnconfirmedParticipants,
+      loadMoreConfirmedParticipants,
+      loadMoreUnconfirmedParticipants,
       currentEventId,
       error,
       clearError,
+      loadBottomSheetParticipants: loadBothParticipants,
     }),
     [
       previewParticipants,
       totalCount,
-      bottomSheetParticipants,
-      bottomSheetLoading,
-      hasMore,
-      loadBottomSheetParticipants,
-      loadMoreParticipants,
+      confirmedParticipants,
+      unconfirmedParticipants,
+      confirmedLoading,
+      unconfirmedLoading,
+      confirmedHasMore,
+      unconfirmedHasMore,
+      loadConfirmedParticipants,
+      loadUnconfirmedParticipants,
+      loadMoreConfirmedParticipants,
+      loadMoreUnconfirmedParticipants,
       currentEventId,
       error,
       clearError,
+      loadBothParticipants,
     ]
   );
 

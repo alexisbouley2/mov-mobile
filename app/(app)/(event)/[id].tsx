@@ -30,7 +30,7 @@ export default function EventDetailScreen() {
     handleScroll,
     handleMomentumScrollEnd,
     handleRefresh,
-    handleParticipate,
+    handleConfirm,
     handleInvite,
   } = useEventDetail();
 
@@ -61,11 +61,10 @@ export default function EventDetailScreen() {
         return (
           <View style={styles.content}>
             <EventActions
-              event={item.data.event}
               isAdmin={item.data.isAdmin}
-              isParticipant={item.data.isParticipant}
+              isConfirmed={item.data.isConfirmed}
               onUpdate={handleEdit}
-              onParticipate={handleParticipate}
+              onConfirm={handleConfirm}
               onInvite={handleInvite}
             />
           </View>

@@ -48,11 +48,14 @@ export const eventsApi = {
     eventId: string,
     userId: string,
     page?: number,
-    limit?: number
+    limit?: number,
+    confirmed?: boolean
   ): Promise<EventParticipantsResponse> => {
     const params = new URLSearchParams();
     if (page) params.append("page", page.toString());
     if (limit) params.append("limit", limit.toString());
+    if (typeof confirmed === "boolean")
+      params.append("confirmed", String(confirmed));
 
     const queryString = params.toString();
     const endpoint = `/events/${eventId}/participants/user/${userId}${
@@ -97,5 +100,17 @@ export const eventsApi = {
       `/events/invite/accept`,
       { token, userId },
       AcceptInviteResponseSchema
+    ),
+
+  // Update participant confirmation status
+  updateParticipantConfirmation: (
+    eventId: string,
+    userId: string,
+    confirmed: boolean
+  ): Promise<{ message: string }> =>
+    api.patch(
+      `/events/${eventId}/participants/${userId}/confirm`,
+      { confirmed },
+      UpdateEventResponseSchema
     ),
 };

@@ -23,6 +23,9 @@ const MAPPING = {
   "chevron.right": "chevron-right",
   "person.badge.plus": "person-add",
   "arrow.up": "arrow-upward",
+  clock: "schedule",
+  checkmark: "check",
+  questionmark: "help",
 } as IconMapping;
 
 /**

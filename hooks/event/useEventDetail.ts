@@ -100,7 +100,7 @@ export const useEventDetail = () => {
     }
   };
 
-  const handleParticipate = () => {
+  const handleConfirm = () => {
     toggleParticipation(user?.id || "");
   };
 
@@ -116,7 +116,6 @@ export const useEventDetail = () => {
 
       // Share the invite link
       await Share.share({
-        message: `Join me at ${event.name || "my event"}! ${inviteUrl}`,
         url: inviteUrl,
         title: `Invitation to ${event.name || "Event"}`,
       });
@@ -131,13 +130,17 @@ export const useEventDetail = () => {
     if (!event || !user) return [];
 
     const isAdmin = event.adminId === user.id;
-    const isParticipant = event.participants?.some(
+    const currentParticipant = event.participants?.find(
       (p) => p.user.id === user.id
     );
+    const isConfirmed = currentParticipant?.confirmed || false;
 
     return [
       { type: "header", data: event },
-      { type: "actions", data: { isAdmin, isParticipant, event: event } },
+      {
+        type: "actions",
+        data: { isAdmin, isConfirmed, event: event },
+      },
       ...(event.location ? [{ type: "location", data: event.location }] : []),
       ...(event.information
         ? [{ type: "information", data: event.information }]
@@ -175,7 +178,7 @@ export const useEventDetail = () => {
     handleScroll,
     handleMomentumScrollEnd,
     handleRefresh,
-    handleParticipate,
+    handleConfirm,
     handleInvite,
   };
 };

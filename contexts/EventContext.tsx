@@ -111,21 +111,50 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
     [loadEvent]
   );
 
+  const updateParticipantConfirmedStatusLocally = useCallback(
+    (userId: string, confirmed: boolean) => {
+      setEvent((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          participants: prev.participants.map((p) =>
+            p.user.id === userId ? { ...p, confirmed } : p
+          ),
+        };
+      });
+    },
+    []
+  );
+
   const toggleParticipation = useCallback(
-    async (_userId: string) => {
+    async (userId: string) => {
       if (!event) return;
 
+      // Find current participant status
+      const currentParticipant = event.participants?.find(
+        (p) => p.user.id === userId
+      );
+      if (!currentParticipant) return;
+
+      const newConfirmedStatus = !currentParticipant.confirmed;
+
+      // Optimistically update local state
+      updateParticipantConfirmedStatusLocally(userId, newConfirmedStatus);
+
       try {
-        // TODO: Implement actual API call for toggling participation
-        // For now, just reload the event data to get updated participants
-        await loadEvent(event.id);
-      } catch (err) {
-        setError(
-          err instanceof Error ? err.message : "Failed to toggle participation"
+        await eventsApi.updateParticipantConfirmation(
+          event.id,
+          userId,
+          newConfirmedStatus
         );
+        // Optionally: schedule a background refresh here
+      } catch {
+        // Revert the change and show error
+        updateParticipantConfirmedStatusLocally(userId, !newConfirmedStatus);
+        setError("Failed to update participation status");
       }
     },
-    [event, loadEvent]
+    [event, updateParticipantConfirmedStatusLocally]
   );
 
   const clearEventError = useCallback(() => {

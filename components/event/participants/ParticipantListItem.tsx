@@ -6,12 +6,10 @@ import { Participant } from "@movapp/types";
 
 interface ParticipantListItemProps {
   participant: Participant;
-  isLast?: boolean;
 }
 
 export default function ParticipantListItem({
   participant,
-  isLast = false,
 }: ParticipantListItemProps) {
   return (
     <View style={styles.container}>
@@ -23,7 +21,6 @@ export default function ParticipantListItem({
           </Text>
         </View>
       </View>
-      {!isLast && <View style={styles.separator} />}
     </View>
   );
 }
@@ -45,10 +42,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "500",
     color: "#fff",
-  },
-  separator: {
-    height: 1,
-    backgroundColor: "#333",
-    marginTop: 12,
   },
 });
