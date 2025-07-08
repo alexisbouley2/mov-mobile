@@ -26,11 +26,10 @@ interface SwipableTabsProps {
 export const SwipableTabs: React.FC<SwipableTabsProps> = ({
   children,
   tabBarComponent,
-  initialIndex = 0,
+  initialIndex = 1,
 }) => {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const translateX = useSharedValue(-initialIndex * SCREEN_WIDTH);
-  //   const insets = useSafeAreaInsets();
   const childrenCount = children.length;
 
   const handleTabPress = (index: number) => {
@@ -48,36 +47,42 @@ export const SwipableTabs: React.FC<SwipableTabsProps> = ({
         context.startX = translateX.value;
       },
       onActive: (event, context: any) => {
-        const newTranslateX = context.startX + event.translationX;
-        // Limit the swipe to prevent going beyond the first and last tabs
-        const maxTranslateX = 0;
-        const minTranslateX = -(children.length - 1) * SCREEN_WIDTH;
-        translateX.value = Math.max(
-          minTranslateX,
-          Math.min(maxTranslateX, newTranslateX)
-        );
+        // Only handle horizontal gestures
+        if (Math.abs(event.translationX) > Math.abs(event.translationY)) {
+          const newTranslateX = context.startX + event.translationX;
+          // Limit the swipe to prevent going beyond the first and last tabs
+          const maxTranslateX = 0;
+          const minTranslateX = -(children.length - 1) * SCREEN_WIDTH;
+          translateX.value = Math.max(
+            minTranslateX,
+            Math.min(maxTranslateX, newTranslateX)
+          );
+        }
       },
       onEnd: (event) => {
-        const shouldSwipeLeft =
-          event.velocityX < -500 || event.translationX < -SCREEN_WIDTH * 0.3;
-        const shouldSwipeRight =
-          event.velocityX > 500 || event.translationX > SCREEN_WIDTH * 0.3;
+        // Only handle horizontal gestures
+        if (Math.abs(event.translationX) > Math.abs(event.translationY)) {
+          const shouldSwipeLeft =
+            event.velocityX < -500 || event.translationX < -SCREEN_WIDTH * 0.3;
+          const shouldSwipeRight =
+            event.velocityX > 500 || event.translationX > SCREEN_WIDTH * 0.3;
 
-        let targetIndex = currentIndex;
+          let targetIndex = currentIndex;
 
-        if (shouldSwipeLeft && currentIndex < children.length - 1) {
-          targetIndex = currentIndex + 1;
-        } else if (shouldSwipeRight && currentIndex > 0) {
-          targetIndex = currentIndex - 1;
+          if (shouldSwipeLeft && currentIndex < children.length - 1) {
+            targetIndex = currentIndex + 1;
+          } else if (shouldSwipeRight && currentIndex > 0) {
+            targetIndex = currentIndex - 1;
+          }
+
+          const targetTranslateX = -targetIndex * SCREEN_WIDTH;
+          translateX.value = withSpring(targetTranslateX, {
+            damping: 20,
+            stiffness: 200,
+          });
+
+          runOnJS(setCurrentIndex)(targetIndex);
         }
-
-        const targetTranslateX = -targetIndex * SCREEN_WIDTH;
-        translateX.value = withSpring(targetTranslateX, {
-          damping: 20,
-          stiffness: 200,
-        });
-
-        runOnJS(setCurrentIndex)(targetIndex);
       },
     });
 
@@ -102,7 +107,11 @@ export const SwipableTabs: React.FC<SwipableTabsProps> = ({
 
   return (
     <View style={styles.container}>
-      <PanGestureHandler onGestureEvent={gestureHandler}>
+      <PanGestureHandler
+        onGestureEvent={gestureHandler}
+        activeOffsetX={[-10, 10]} // Only activate for horizontal gestures
+        failOffsetY={[-10, 10]} // Fail if vertical gesture is detected
+      >
         <Animated.View style={[screensContainerStyle, animatedStyle]}>
           {renderScreens()}
         </Animated.View>
