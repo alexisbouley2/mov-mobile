@@ -14,6 +14,7 @@ import { useColorScheme } from "@/hooks/useColorScheme";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { UserProfileProvider } from "@/contexts/UserProfileContext";
 import { InviteProvider } from "@/contexts/InviteContext";
+import { RecordingProvider } from "@/contexts/RecordingContext";
 import { useDeepLinkHandler } from "@/hooks/useDeepLinkHandler";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import {
@@ -45,25 +46,33 @@ function RootLayoutContent() {
       <AuthProvider>
         <InviteProvider>
           <UserProfileProvider>
-            <ThemeProvider
-              value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
-            >
-              <Stack
-                screenOptions={{
-                  headerShown: false,
-                }}
+            <RecordingProvider>
+              <ThemeProvider
+                value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
               >
-                <Stack.Screen name="index" options={{ headerShown: false }} />
-                <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-                <Stack.Screen
-                  name="(onboarding)"
-                  options={{ headerShown: false }}
-                />
-                <Stack.Screen name="(app)" options={{ headerShown: false }} />
-                <Stack.Screen name="invite" options={{ headerShown: false }} />
-              </Stack>
-              <StatusBar style="light" />
-            </ThemeProvider>
+                <Stack
+                  screenOptions={{
+                    headerShown: false,
+                  }}
+                >
+                  <Stack.Screen name="index" options={{ headerShown: false }} />
+                  <Stack.Screen
+                    name="(auth)"
+                    options={{ headerShown: false }}
+                  />
+                  <Stack.Screen
+                    name="(onboarding)"
+                    options={{ headerShown: false }}
+                  />
+                  <Stack.Screen name="(app)" options={{ headerShown: false }} />
+                  <Stack.Screen
+                    name="invite"
+                    options={{ headerShown: false }}
+                  />
+                </Stack>
+                <StatusBar style="light" />
+              </ThemeProvider>
+            </RecordingProvider>
           </UserProfileProvider>
         </InviteProvider>
       </AuthProvider>

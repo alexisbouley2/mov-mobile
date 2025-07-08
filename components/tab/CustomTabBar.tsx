@@ -5,11 +5,13 @@ import { Colors } from "@/constants/Colors";
 interface CustomTabBarProps {
   currentIndex: number;
   onTabPress: (_index: number) => void;
+  isRecording?: boolean;
 }
 
 export const CustomTabBar: React.FC<CustomTabBarProps> = ({
   currentIndex,
   onTabPress,
+  isRecording = false,
 }) => {
   const tabs = [
     {
@@ -29,14 +31,19 @@ export const CustomTabBar: React.FC<CustomTabBarProps> = ({
     },
   ];
 
+  const handleTabPress = (index: number) => {
+    if (isRecording) return;
+    onTabPress(index);
+  };
+
   return (
     <View style={styles.tabBar}>
       {tabs.map((tab) => (
         <TouchableOpacity
           key={tab.index}
           style={styles.tabItem}
-          onPress={() => onTabPress(tab.index)}
-          activeOpacity={0.7}
+          onPress={() => handleTabPress(tab.index)}
+          disabled={isRecording}
         >
           <Image
             source={tab.icon}
@@ -44,7 +51,7 @@ export const CustomTabBar: React.FC<CustomTabBarProps> = ({
               styles.tabIcon,
               tab.index === 1
                 ? {
-                    tintColor: undefined, // POV icon doesn't change color
+                    tintColor: undefined,
                   }
                 : {
                     tintColor:

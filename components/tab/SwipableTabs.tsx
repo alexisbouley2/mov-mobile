@@ -11,6 +11,7 @@ interface SwipableTabsProps {
     onTabPress: (_index: number) => void;
   }) => React.ReactNode;
   initialIndex?: number;
+  isRecording?: boolean;
 }
 
 // Create a context to share the current tab index
@@ -26,6 +27,7 @@ export const SwipableTabs: React.FC<SwipableTabsProps> = ({
   children,
   tabBarComponent,
   initialIndex = 1,
+  isRecording = false,
 }) => {
   const childrenCount = children.length;
 
@@ -58,6 +60,7 @@ export const SwipableTabs: React.FC<SwipableTabsProps> = ({
           onGestureEvent={gestureHandler}
           activeOffsetX={[-10, 10]} // Only activate for horizontal gestures
           failOffsetY={[-10, 10]} // Fail if vertical gesture is detected
+          enabled={!isRecording}
         >
           <Animated.View style={[screensContainerStyle, animatedStyle]}>
             {renderScreens()}

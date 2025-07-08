@@ -7,10 +7,12 @@ import {
 import { useRouter } from "expo-router";
 import type { CameraView as CameraViewType } from "expo-camera";
 import log from "@/utils/logger";
+import { useRecording } from "@/contexts/RecordingContext";
 
 export const useCamera = (userId?: string) => {
   const MAX_VIDEO_DURATION: number = 6;
   const router = useRouter();
+  const { isRecording, setIsRecording } = useRecording();
 
   const [cameraPermission, requestCameraPermission] = useCameraPermissions();
   const [microphonePermission, requestMicrophonePermission] =
@@ -18,7 +20,6 @@ export const useCamera = (userId?: string) => {
 
   const [cameraType, setCameraType] = useState<CameraType>("back");
   const [flashMode, setFlashMode] = useState<"off" | "on">("off");
-  const [isRecording, setIsRecording] = useState(false);
   const [recordingDuration, setRecordingDuration] = useState(0);
   const [capturedMedia, setCapturedMedia] = useState<string | null>(null);
   const [isCameraActive, setIsCameraActive] = useState(false); // Start with camera inactive
@@ -67,7 +68,7 @@ export const useCamera = (userId?: string) => {
       setRecordingDuration(0);
       recordingStartTime.current = null;
     }
-  }, [isCameraActive]);
+  }, [isCameraActive, setIsRecording]);
 
   // Reset captured media when screen comes back into focus
   useEffect(() => {
@@ -123,6 +124,7 @@ export const useCamera = (userId?: string) => {
     } catch {
     } finally {
       setIsRecording(false);
+      setRecordingDuration(0);
     }
   };
 
@@ -130,6 +132,7 @@ export const useCamera = (userId?: string) => {
     if (!cameraRef.current) return;
     log.info("Stopping recording");
     setIsRecording(false);
+    setRecordingDuration(0);
 
     if (rafId.current) {
       cancelAnimationFrame(rafId.current);
@@ -141,7 +144,7 @@ export const useCamera = (userId?: string) => {
   };
 
   const toggleCameraType = () => {
-    if (isRecording) return; // TODO: check undo it, Prevent flipping camera during recording
+    if (isRecording) return; // Prevent flipping camera during recording
     setCameraType((current) => (current === "back" ? "front" : "back"));
   };
 

@@ -9,12 +9,22 @@ import EventsScreen from "./events";
 import CameraScreen from "./camera";
 import ProfileScreen from "./profile";
 
+// Import the recording context to access recording state
+import { useRecording } from "@/contexts/RecordingContext";
+
 export default function TabLayout() {
+  const { isRecording } = useRecording();
+
   return (
     <SwipableTabs
       tabBarComponent={({ currentIndex, onTabPress }) => (
-        <CustomTabBar currentIndex={currentIndex} onTabPress={onTabPress} />
+        <CustomTabBar
+          currentIndex={currentIndex}
+          onTabPress={onTabPress}
+          isRecording={isRecording}
+        />
       )}
+      isRecording={isRecording}
     >
       <EventsScreen />
       <CameraScreen />
