@@ -1,11 +1,8 @@
 import { useCallback, useLayoutEffect, useState, useRef } from "react";
 import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
-import { FlatList, Share, Alert } from "react-native";
+import { FlatList } from "react-native";
 import { useEvent } from "@/contexts/EventContext";
 import { useUserProfile } from "@/contexts/UserProfileContext";
-import { config } from "@/lib/config";
-import { eventsApi } from "@/services/api/events";
-import log from "@/utils/logger";
 
 export const useEventDetail = () => {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -104,26 +101,10 @@ export const useEventDetail = () => {
     toggleParticipation(user?.id || "");
   };
 
-  const handleInvite = useCallback(async () => {
-    if (!event || !user) return;
-
-    try {
-      // Generate invite token from backend
-      const inviteResponse = await eventsApi.generateInvite(event.id, user.id);
-
-      // Generate invite link with token
-      const inviteUrl = `${config.EXPO_PUBLIC_WEB_URL}/invite/${inviteResponse.token}`;
-
-      // Share the invite link
-      await Share.share({
-        url: inviteUrl,
-        title: `Invitation to ${event.name || "Event"}`,
-      });
-    } catch (error) {
-      log.error("Share invite error:", error);
-      Alert.alert("Error", "Could not generate or share the invite link");
-    }
-  }, [event, user]);
+  const handleInvite = useCallback(() => {
+    if (!event) return;
+    router.push(`/(app)/(event)/invite?id=${event.id}`);
+  }, [event, router]);
 
   // Prepare data for rendering
   const getRenderData = () => {

@@ -2,7 +2,7 @@ import React from "react";
 import { View, StyleSheet } from "react-native";
 import { PanGestureHandler } from "react-native-gesture-handler";
 import Animated from "react-native-reanimated";
-import { useSwipableTabs } from "../../hooks/tab/useSwipableTabs";
+import { useSwipableTabs } from "@/hooks/tab/useSwipableTabs";
 
 interface SwipableTabsProps {
   children: React.ReactNode[];

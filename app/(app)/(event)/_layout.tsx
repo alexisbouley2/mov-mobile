@@ -15,6 +15,7 @@ export default function EventLayout() {
               <Stack.Screen name="[id]" />
               <Stack.Screen name="edit" />
               <Stack.Screen name="chat" />
+              <Stack.Screen name="invite" />
             </Stack>
           </EventVideosProvider>
         </EventParticipantsProvider>
