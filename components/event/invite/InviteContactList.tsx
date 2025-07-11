@@ -16,6 +16,8 @@ interface InviteContactListProps {
   permissionState: ContactPermissionState;
   loading: boolean;
   onRequestPermission?: () => void;
+  eventName?: string;
+  inviteUrl?: string | null;
 }
 
 export default function InviteContactList({
@@ -23,6 +25,8 @@ export default function InviteContactList({
   permissionState,
   loading,
   onRequestPermission,
+  eventName,
+  inviteUrl,
 }: InviteContactListProps) {
   const [search, setSearch] = useState("");
   const [added, setAdded] = useState<string[]>([]);
@@ -75,6 +79,8 @@ export default function InviteContactList({
             onAdd={() =>
               setAdded((a) => (a.includes(item.id) ? a : [...a, item.id]))
             }
+            eventName={eventName}
+            inviteUrl={inviteUrl}
           />
         )}
         initialNumToRender={20}

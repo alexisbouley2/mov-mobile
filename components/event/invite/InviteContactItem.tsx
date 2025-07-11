@@ -1,5 +1,6 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import * as Linking from "expo-linking";
 import ContactAvatar from "../../ui/ContactAvatar";
 
 export interface InviteContact {
@@ -15,13 +16,34 @@ interface InviteContactItemProps {
   contact: InviteContact;
   added: boolean;
   onAdd: () => void;
+  eventName?: string;
+  inviteUrl?: string | null;
 }
 
 export default function InviteContactItem({
   contact,
   added,
   onAdd,
+  eventName,
+  inviteUrl,
 }: InviteContactItemProps) {
+  const handleInviteViaSMS = () => {
+    if (!contact.phone) {
+      return;
+    }
+
+    const baseMessage = `Hey! I'm inviting you to join me at ${
+      eventName || "my event"
+    } on MOV.`;
+    const message = inviteUrl
+      ? `${baseMessage} Download the app and join here: ${inviteUrl}`
+      : `${baseMessage} Download the app and join the fun!`;
+
+    const smsUrl = `sms:${contact.phone}?body=${encodeURIComponent(message)}`;
+
+    Linking.openURL(smsUrl);
+  };
+
   // Determine button state and text
   let buttonText = "";
   let buttonDisabled = false;
@@ -52,7 +74,7 @@ export default function InviteContactItem({
     buttonDisabled = false;
     buttonStyle = [styles.button, styles.clickableButton];
     buttonTextStyle = [styles.buttonText];
-    onPress = onAdd;
+    onPress = handleInviteViaSMS;
   }
 
   return (

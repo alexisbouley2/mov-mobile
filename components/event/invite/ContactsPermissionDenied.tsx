@@ -46,26 +46,16 @@ export default function ContactsPermissionDenied({
       <View style={styles.buttonContainer}>
         {canAskAgain && onRequestPermission ? (
           <TouchableOpacity
-            style={styles.primaryButton}
+            style={styles.button}
             onPress={handleRequestPermission}
           >
-            <Text style={styles.primaryButtonText}>Allow Access</Text>
+            <Text style={styles.buttonText}>Allow Access</Text>
           </TouchableOpacity>
         ) : (
-          <TouchableOpacity
-            style={styles.primaryButton}
-            onPress={handleOpenSettings}
-          >
-            <Text style={styles.primaryButtonText}>Open Settings</Text>
+          <TouchableOpacity style={styles.button} onPress={handleOpenSettings}>
+            <Text style={styles.buttonText}>Open Settings</Text>
           </TouchableOpacity>
         )}
-
-        <TouchableOpacity
-          style={styles.secondaryButton}
-          onPress={handleOpenSettings}
-        >
-          <Text style={styles.secondaryButtonText}>Open Settings</Text>
-        </TouchableOpacity>
       </View>
 
       <Text style={styles.note}>
@@ -105,19 +95,7 @@ const styles = StyleSheet.create({
     gap: 12,
     marginBottom: 24,
   },
-  primaryButton: {
-    backgroundColor: "#007AFF",
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-    borderRadius: 12,
-    alignItems: "center",
-  },
-  primaryButtonText: {
-    color: "#ffffff",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  secondaryButton: {
+  button: {
     backgroundColor: "transparent",
     paddingVertical: 16,
     paddingHorizontal: 24,
@@ -126,7 +104,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#333333",
   },
-  secondaryButtonText: {
+  buttonText: {
     color: "#007AFF",
     fontSize: 16,
     fontWeight: "600",
