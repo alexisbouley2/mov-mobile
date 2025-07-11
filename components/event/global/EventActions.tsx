@@ -20,14 +20,7 @@ export default function EventActions({
   onInvite,
 }: EventActionsProps) {
   return (
-    <View
-      style={[
-        styles.container,
-        isAdmin && {
-          justifyContent: "center",
-        },
-      ]}
-    >
+    <View style={styles.container}>
       {isAdmin ? (
         <TouchableOpacity
           style={[styles.button, styles.whiteButton]}
@@ -81,7 +74,7 @@ export default function EventActions({
 const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "center",
     gap: 20,
     marginTop: 0,
     marginBottom: 20,
