@@ -15,6 +15,7 @@
         "NSCameraUsageDescription": "$(PRODUCT_NAME) needs access to your Camera.",
         "NSMicrophoneUsageDescription": "$(PRODUCT_NAME) needs access to your Microphone.",
         "NSPhotoLibraryUsageDescription": "$(PRODUCT_NAME) needs access to your Photo Library to select photos for your profile and events.",
+        "NSContactsUsageDescription": "$(PRODUCT_NAME) needs access to your Contacts to help you invite friends to events.",
         "ITSAppUsesNonExemptEncryption": false
       },
       "bundleIdentifier": "com.alexisbouley2.mov"
@@ -29,7 +30,8 @@
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO",
         "android.permission.READ_EXTERNAL_STORAGE",
-        "android.permission.WRITE_EXTERNAL_STORAGE"
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.READ_CONTACTS"
       ],
       "package": "com.alexisbouley2.mov",
       "statusBar": {
@@ -80,7 +82,14 @@
           "savePhotosPermission": "Allow access to your Photo Library to save videos.",
           "isAccessMediaLocationEnabled": true
         }
-      ]
+      ],
+      [
+        "expo-contacts",
+        {
+          "contactsPermission": "Allow access to your Contacts to help you invite friends to events."
+        }
+      ],
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true

@@ -6,20 +6,16 @@ import { config } from "@/lib/config";
 import { useUserProfile } from "@/contexts/UserProfileContext";
 import InviteHeader from "@/components/event/invite/InviteHeader";
 import InviteContactList from "@/components/event/invite/InviteContactList";
-import { InviteContact } from "@/components/event/invite/InviteContactItem";
-
-const DEFAULT_CONTACTS: InviteContact[] = [
-  { id: "1", name: "Paul", povUser: true },
-  { id: "2", name: "Alex Bandet", phone: "06 59 46 32 12", povUser: true },
-  { id: "3", name: "Aristide Ben", phone: "06 59 46 32 12", povUser: true },
-  { id: "4", name: "Bethany Miles", phone: "06 59 46 32 12", povUser: false },
-];
+import { useContacts } from "@/hooks/event/useContacts";
 
 export default function EventInviteScreen() {
   const { id: eventId } = useLocalSearchParams<{ id: string }>();
   const { user } = useUserProfile();
   const router = useRouter();
   const [shareLoading, setShareLoading] = useState(false);
+
+  const { contacts, permissionState, loading, requestPermission } =
+    useContacts();
 
   const handleShare = useCallback(async () => {
     if (!user) {
@@ -45,7 +41,12 @@ export default function EventInviteScreen() {
         onShare={handleShare}
         shareLoading={shareLoading}
       />
-      <InviteContactList contacts={DEFAULT_CONTACTS} />
+      <InviteContactList
+        contacts={contacts}
+        permissionState={permissionState}
+        loading={loading}
+        onRequestPermission={requestPermission}
+      />
     </View>
   );
 }

@@ -1,13 +1,28 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, FlatList, StyleSheet } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  FlatList,
+  StyleSheet,
+  ActivityIndicator,
+} from "react-native";
 import InviteContactItem, { InviteContact } from "./InviteContactItem";
+import ContactsPermissionDenied from "./ContactsPermissionDenied";
+import { ContactPermissionState } from "@/hooks/event/useContacts";
 
 interface InviteContactListProps {
   contacts: InviteContact[];
+  permissionState: ContactPermissionState;
+  loading: boolean;
+  onRequestPermission?: () => void;
 }
 
 export default function InviteContactList({
   contacts,
+  permissionState,
+  loading,
+  onRequestPermission,
 }: InviteContactListProps) {
   const [search, setSearch] = useState("");
   const [added, setAdded] = useState<string[]>([]);
@@ -15,6 +30,31 @@ export default function InviteContactList({
     c.name.toLowerCase().includes(search.toLowerCase())
   );
 
+  // Show loading state
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#007AFF" />
+        <Text style={styles.loadingText}>Loading contacts...</Text>
+      </View>
+    );
+  }
+
+  // Show permission denied or undetermined state
+  if (
+    permissionState.status === "denied" ||
+    permissionState.status === "undetermined"
+  ) {
+    return (
+      <ContactsPermissionDenied
+        canAskAgain={permissionState.canAskAgain}
+        onRequestPermission={onRequestPermission}
+        isUndetermined={permissionState.status === "undetermined"}
+      />
+    );
+  }
+
+  // Show contacts list
   return (
     <View style={{ flex: 1 }}>
       <TextInput
@@ -37,6 +77,15 @@ export default function InviteContactList({
             }
           />
         )}
+        initialNumToRender={20}
+        maxToRenderPerBatch={10}
+        windowSize={10}
+        removeClippedSubviews={true}
+        getItemLayout={(data, index) => ({
+          length: 80, // Approximate height of each contact item
+          offset: 80 * index,
+          index,
+        })}
       />
     </View>
   );
@@ -58,6 +107,17 @@ const styles = StyleSheet.create({
     fontSize: 20,
     marginLeft: 16,
     marginBottom: 12,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#000000",
+  },
+  loadingText: {
+    color: "#ffffff",
+    fontSize: 16,
+    marginTop: 16,
   },
 });
 

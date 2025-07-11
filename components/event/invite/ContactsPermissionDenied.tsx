@@ -1,0 +1,140 @@
+import React from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Linking,
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+
+interface ContactsPermissionDeniedProps {
+  canAskAgain: boolean;
+  onRequestPermission?: () => void;
+  isUndetermined?: boolean;
+}
+
+export default function ContactsPermissionDenied({
+  canAskAgain,
+  onRequestPermission,
+  isUndetermined = false,
+}: ContactsPermissionDeniedProps) {
+  const handleOpenSettings = () => {
+    Linking.openSettings();
+  };
+
+  const handleRequestPermission = () => {
+    if (onRequestPermission) {
+      onRequestPermission();
+    }
+  };
+
+  return (
+    <View style={styles.container}>
+      <View style={styles.iconContainer}>
+        <Ionicons name="people-outline" size={64} color="#666" />
+      </View>
+
+      <Text style={styles.title}>Contacts Access Required</Text>
+
+      <Text style={styles.description}>
+        {isUndetermined
+          ? "To invite your friends to events, we need access to your contacts. This helps you easily find and invite people you know."
+          : "We need access to your contacts to help you invite friends to events. Please enable it in Settings."}
+      </Text>
+
+      <View style={styles.buttonContainer}>
+        {canAskAgain && onRequestPermission ? (
+          <TouchableOpacity
+            style={styles.primaryButton}
+            onPress={handleRequestPermission}
+          >
+            <Text style={styles.primaryButtonText}>Allow Access</Text>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity
+            style={styles.primaryButton}
+            onPress={handleOpenSettings}
+          >
+            <Text style={styles.primaryButtonText}>Open Settings</Text>
+          </TouchableOpacity>
+        )}
+
+        <TouchableOpacity
+          style={styles.secondaryButton}
+          onPress={handleOpenSettings}
+        >
+          <Text style={styles.secondaryButtonText}>Open Settings</Text>
+        </TouchableOpacity>
+      </View>
+
+      <Text style={styles.note}>
+        You can also invite friends by sharing the event link directly
+      </Text>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 32,
+    backgroundColor: "#000000",
+  },
+  iconContainer: {
+    marginBottom: 24,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#ffffff",
+    textAlign: "center",
+    marginBottom: 16,
+  },
+  description: {
+    fontSize: 16,
+    color: "#cccccc",
+    textAlign: "center",
+    lineHeight: 24,
+    marginBottom: 32,
+  },
+  buttonContainer: {
+    width: "100%",
+    gap: 12,
+    marginBottom: 24,
+  },
+  primaryButton: {
+    backgroundColor: "#007AFF",
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    alignItems: "center",
+  },
+  primaryButtonText: {
+    color: "#ffffff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  secondaryButton: {
+    backgroundColor: "transparent",
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#333333",
+  },
+  secondaryButtonText: {
+    color: "#007AFF",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  note: {
+    fontSize: 14,
+    color: "#666666",
+    textAlign: "center",
+    fontStyle: "italic",
+  },
+});
