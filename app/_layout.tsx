@@ -35,16 +35,12 @@ function RootLayoutContent() {
 
   useEffect(() => {
     const setupNavigationBar = async () => {
-      console.log("platform", Platform.OS);
       if (Platform.OS === "android") {
         try {
           // Set navigation bar properties
           await NavigationBar.setBackgroundColorAsync("#000000");
           await NavigationBar.setButtonStyleAsync("light");
           await NavigationBar.setVisibilityAsync("visible");
-
-          const visibility = await NavigationBar.getVisibilityAsync();
-          console.log("visibility", visibility);
         } catch (error) {
           console.warn("Failed to configure navigation bar:", error);
         }
@@ -87,7 +83,7 @@ function RootLayoutContent() {
                   />
                   <Stack.Screen name="(app)" options={{ headerShown: false }} />
                   <Stack.Screen
-                    name="invite"
+                    name="invite-handler"
                     options={{ headerShown: false }}
                   />
                 </Stack>

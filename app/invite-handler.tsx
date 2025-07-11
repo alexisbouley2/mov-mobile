@@ -4,11 +4,13 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/contexts/UserProfileContext";
 import { useInvite } from "@/contexts/InviteContext";
+
 import { eventsApi } from "@/services/api/events";
 import log from "@/utils/logger";
 
-export default function InviteScreen() {
+export default function InviteHandlerScreen() {
   const { token } = useLocalSearchParams<{ token: string }>();
+
   const router = useRouter();
   const { isAuthenticated } = useAuth();
   const { user } = useUserProfile();
@@ -48,7 +50,6 @@ export default function InviteScreen() {
                 {
                   text: "OK",
                   onPress: () => {
-                    // Add events tab to stack without showing it, then navigate to event
                     router.push("/(app)/(tabs)/events");
                     router.push(`/(app)/(event)/${acceptResponse.eventId}`);
                   },

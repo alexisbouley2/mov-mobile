@@ -39,7 +39,7 @@ export const useDeepLinkHandler = () => {
           if (token) {
             log.info("Processing invite token:", token);
             // Navigate to the invite screen which will handle the token
-            router.replace(`/invite?token=${token}`);
+            router.replace(`/invite-handler?token=${token}`);
             return; // Exit early on successful parsing
           }
         }

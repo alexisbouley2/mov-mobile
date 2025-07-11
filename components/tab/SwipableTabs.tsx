@@ -2,6 +2,7 @@ import React from "react";
 import { View, StyleSheet } from "react-native";
 import { PanGestureHandler } from "react-native-gesture-handler";
 import Animated from "react-native-reanimated";
+import { usePathname } from "expo-router";
 import { useSwipableTabs } from "@/hooks/tab/useSwipableTabs";
 
 interface SwipableTabsProps {
@@ -29,7 +30,18 @@ export const SwipableTabs: React.FC<SwipableTabsProps> = ({
   initialIndex = 1,
   isRecording = false,
 }) => {
+  const pathname = usePathname();
   const childrenCount = children.length;
+
+  // Determine the correct initial index based on the current route
+  const getInitialIndexFromRoute = () => {
+    if (pathname.includes("/(tabs)/events")) return 0;
+    if (pathname.includes("/(tabs)/camera")) return 1;
+    if (pathname.includes("/(tabs)/profile")) return 2;
+    return initialIndex; // fallback to provided initialIndex
+  };
+
+  const routeBasedInitialIndex = getInitialIndexFromRoute();
 
   const {
     currentIndex,
@@ -38,7 +50,7 @@ export const SwipableTabs: React.FC<SwipableTabsProps> = ({
     gestureHandler,
     animatedStyle,
     SCREEN_WIDTH,
-  } = useSwipableTabs({ childrenCount, initialIndex });
+  } = useSwipableTabs({ childrenCount, initialIndex: routeBasedInitialIndex });
 
   const renderScreens = () => {
     return children.map((child, index) => (
