@@ -3,6 +3,7 @@ import React, { useEffect } from "react";
 import { View, StyleSheet, Alert } from "react-native";
 import { useRouter } from "expo-router";
 import { useUserProfile } from "@/contexts/UserProfileContext";
+import { useAuth } from "@/contexts/AuthContext";
 import ProfileForm from "@/components/profile/ProfileForm";
 import { useProfilePhoto } from "@/hooks/profile/useProfilePhoto";
 import { useProfileForm } from "@/hooks/profile/useProfileForm";
@@ -15,6 +16,7 @@ export default function CreateProfileScreen() {
   const router = useRouter();
   const { createUserProfile, profileError, clearProfileError } =
     useUserProfile();
+  const { pendingCountryCode } = useAuth();
 
   const { username, setUsername, loading, setLoading, validateUsername } =
     useProfileForm();
@@ -60,6 +62,7 @@ export default function CreateProfileScreen() {
       // Create user profile with or without photo
       const { error: profileError } = await createUserProfile(
         username.trim(),
+        pendingCountryCode || "+33", // Default to France if not provided
         photoData
       );
 

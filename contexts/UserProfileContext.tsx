@@ -22,6 +22,7 @@ interface UserProfileContextType {
   profileError: string | null;
   createUserProfile: (
     _username: string,
+    _countryCode: string,
     _photoData?: {
       profileImagePath?: string;
       profileThumbnailPath?: string;
@@ -150,6 +151,7 @@ export function UserProfileProvider({
   const createUserProfile = useCallback(
     async (
       username: string,
+      countryCode: string,
       photoData?: {
         profileImagePath?: string;
         profileThumbnailPath?: string;
@@ -168,6 +170,7 @@ export function UserProfileProvider({
         const userData = {
           id: supabaseUser.id,
           phone: phone,
+          countryCode: countryCode,
           username: username,
           ...(photoData && {
             profileImagePath: photoData.profileImagePath,

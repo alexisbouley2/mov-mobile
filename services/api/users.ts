@@ -7,6 +7,8 @@ import {
   UpdateUserResponseSchema,
   DeleteUserResponse,
   DeleteUserResponseSchema,
+  CheckContactsResponse,
+  CheckContactsResponseSchema,
 } from "@movapp/types";
 
 export const usersApi = {
@@ -24,4 +26,15 @@ export const usersApi = {
   // Delete a user
   deleteUser: (userId: string): Promise<DeleteUserResponse> =>
     api.delete(`/users/${userId}`, DeleteUserResponseSchema),
+
+  // Check contacts with event participation and presigned URLs
+  checkContacts: (
+    phoneNumbers: string[],
+    eventId: string
+  ): Promise<CheckContactsResponse> =>
+    api.post(
+      "/users/check-contacts",
+      { phoneNumbers, eventId },
+      CheckContactsResponseSchema
+    ),
 };

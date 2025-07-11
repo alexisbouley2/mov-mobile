@@ -5,19 +5,19 @@ import Svg, { Circle, Path } from "react-native-svg";
 
 interface ContactAvatarProps {
   name: string;
-  photoUrl?: string;
+  profileThumbnailUrl?: string;
   size?: number;
 }
 
 export default function ContactAvatar({
   name: _name,
-  photoUrl,
+  profileThumbnailUrl,
   size = 40,
 }: ContactAvatarProps) {
-  if (photoUrl) {
+  if (profileThumbnailUrl) {
     return (
       <CachedImage
-        uri={photoUrl}
+        uri={profileThumbnailUrl}
         cachePolicy="profile-thumbnail"
         style={[
           styles.image,

@@ -116,6 +116,16 @@ export const eventsApi = {
       UpdateEventResponseSchema
     ),
 
+  // Add a participant to an event
+  addParticipant: (
+    eventId: string,
+    participantUserId: string,
+    userId: string
+  ): Promise<{ message: string }> => {
+    const endpoint = `/events/${eventId}/participants/${participantUserId}?userId=${userId}`;
+    return api.post(endpoint, {}, UpdateEventResponseSchema);
+  },
+
   // Delete a participant from an event
   deleteParticipant: (
     eventId: string,

@@ -16,6 +16,8 @@ import { useDebugLifecycle } from "@/utils/debugLifecycle";
 import { useAuth } from "@/contexts/AuthContext";
 import { PhoneValidationResult } from "@/utils/phoneValidation";
 import PhoneInput from "@/components/auth/phone/PhoneInput";
+import { Country } from "@/types/country";
+import { countries } from "@/data/countries";
 import styles from "./welcome.style";
 
 type ScreenState = "welcome" | "phone";
@@ -24,13 +26,16 @@ function AuthScreen() {
   useDebugLifecycle("WelcomeScreen");
 
   const router = useRouter();
-  const { signInWithOtp } = useAuth();
+  const { signInWithOtp, setPendingCountryCode } = useAuth();
   const [currentScreen, setCurrentScreen] = useState<ScreenState>("welcome");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [validation, setValidation] = useState<PhoneValidationResult>({
     isValid: false,
   });
   const [phoneLoading, setPhoneLoading] = useState(false);
+  const [selectedCountry, setSelectedCountry] = useState<Country>(
+    countries.find((c) => c.code === "FR") || countries[0]
+  );
 
   // Add this ref for SMS pre-warming
   const smsPrewarmRef = useRef<TextInput>(null);
@@ -51,6 +56,8 @@ function AuthScreen() {
     if (error) {
       Alert.alert("Error", error.message || "Failed to send OTP");
     } else {
+      // Store country code for later use
+      setPendingCountryCode(selectedCountry.dialCode);
       router.push({
         pathname: "/(auth)/verify",
         params: { phone: validation.formattedNumber },
@@ -161,6 +168,7 @@ function AuthScreen() {
             value={phoneNumber}
             onChangeText={setPhoneNumber}
             onValidationChange={setValidation}
+            onCountryChange={setSelectedCountry}
             autoFocus={true}
           />
 

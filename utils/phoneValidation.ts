@@ -7,6 +7,25 @@ export interface PhoneValidationResult {
   formattedNumber?: string;
 }
 
+// Normalize phone numbers for comparison
+export function normalizePhoneNumber(
+  phoneNumber: string,
+  userCountryCode: string = "+33"
+): string {
+  let cleaned = phoneNumber.replace(/[\s\-\(\)]/g, "");
+
+  // Handle different formats
+  if (cleaned.startsWith("0")) {
+    // Convert 06... to +336...
+    cleaned = userCountryCode + cleaned.substring(1);
+  } else if (!cleaned.startsWith("+")) {
+    // Add user's country code
+    cleaned = userCountryCode + cleaned;
+  }
+  // remove the + from the beginning to compare in the database
+  return cleaned.substring(1, cleaned.length);
+}
+
 export function validatePhoneNumber(
   phoneNumber: string,
   country: Country

@@ -2,14 +2,15 @@ import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import * as Linking from "expo-linking";
 import ContactAvatar from "../../ui/ContactAvatar";
+import { UserContact } from "@movapp/types";
 
 export interface InviteContact {
   id: string;
   name: string;
   phone?: string;
-  povUser?: boolean;
-  participant?: boolean;
-  photoUrl?: string;
+  normalizedPhone?: string;
+
+  user?: UserContact;
 }
 
 interface InviteContactItemProps {
@@ -18,6 +19,7 @@ interface InviteContactItemProps {
   onAdd: () => void;
   eventName?: string;
   inviteUrl?: string | null;
+  loading?: boolean;
 }
 
 export default function InviteContactItem({
@@ -26,6 +28,7 @@ export default function InviteContactItem({
   onAdd,
   eventName,
   inviteUrl,
+  loading = false,
 }: InviteContactItemProps) {
   const handleInviteViaSMS = () => {
     if (!contact.phone) {
@@ -51,14 +54,19 @@ export default function InviteContactItem({
   let buttonTextStyle = {};
   let onPress = undefined;
 
-  if (contact.povUser) {
-    if (contact.participant) {
+  if (contact.user) {
+    if (contact.user.isParticipant) {
       buttonText = "Member";
       buttonDisabled = true;
       buttonStyle = [styles.button, styles.notClickableButton];
       buttonTextStyle = [styles.buttonText];
     } else if (added) {
       buttonText = "Added";
+      buttonDisabled = true;
+      buttonStyle = [styles.button, styles.notClickableButton];
+      buttonTextStyle = [styles.buttonText];
+    } else if (loading) {
+      buttonText = "Adding...";
       buttonDisabled = true;
       buttonStyle = [styles.button, styles.notClickableButton];
       buttonTextStyle = [styles.buttonText];
@@ -81,13 +89,15 @@ export default function InviteContactItem({
     <View style={styles.contactRow}>
       <ContactAvatar
         name={contact.name}
-        photoUrl={contact.photoUrl}
+        profileThumbnailUrl={contact.user?.profileThumbnailUrl || undefined}
         size={40}
       />
       <View style={styles.contactInfo}>
-        <Text style={styles.contactName}>{contact.name}</Text>
-        {contact.povUser ? (
-          <Text style={styles.contactDescription}>POV User</Text>
+        <Text style={styles.contactName} numberOfLines={1} ellipsizeMode="tail">
+          {contact.name}
+        </Text>
+        {contact.user ? (
+          <Text style={styles.contactDescription}>MOV User</Text>
         ) : (
           contact.phone && (
             <Text style={styles.contactDescription}>{contact.phone}</Text>

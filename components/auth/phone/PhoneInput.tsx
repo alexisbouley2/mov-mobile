@@ -14,6 +14,7 @@ interface PhoneInputProps {
   value: string;
   onChangeText: (_text: string) => void;
   onValidationChange: (_validation: PhoneValidationResult) => void;
+  onCountryChange?: (_country: Country) => void;
   placeholder?: string;
   autoFocus?: boolean;
 }
@@ -22,6 +23,7 @@ export default function PhoneInput({
   value,
   onChangeText,
   onValidationChange,
+  onCountryChange,
   placeholder = "Phone Number",
   autoFocus = false,
 }: PhoneInputProps) {
@@ -51,6 +53,8 @@ export default function PhoneInput({
     setSelectedCountry(country);
     // Clear the input when country changes
     onChangeText("");
+    // Notify parent component about country change
+    onCountryChange?.(country);
   };
 
   return (

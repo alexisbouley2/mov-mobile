@@ -2,6 +2,11 @@ import { useState, useEffect, useCallback } from "react";
 import { Alert, Linking } from "react-native";
 import * as Contacts from "expo-contacts";
 import { InviteContact } from "@/components/event/invite/InviteContactItem";
+import { normalizePhoneNumber } from "@/utils/phoneValidation";
+import { useUserProfile } from "@/contexts/UserProfileContext";
+import { useEvent } from "@/contexts/EventContext";
+import { usersApi } from "@/services/api/users";
+import { UserContact } from "@movapp/types";
 
 export interface ContactPermissionState {
   status: "undetermined" | "granted" | "denied";
@@ -16,6 +21,8 @@ export function useContacts() {
       canAskAgain: true,
     });
   const [loading, setLoading] = useState(false);
+  const { user } = useUserProfile();
+  const { event } = useEvent();
 
   // Check current permission status
   const checkPermission = useCallback(async () => {
@@ -68,6 +75,24 @@ export function useContacts() {
     }
   }, []);
 
+  // Check which contacts are MOV users with event participation
+  const checkContacts = useCallback(
+    async (phoneNumbers: string[]): Promise<UserContact[]> => {
+      if (!phoneNumbers.length || !event?.id) return [];
+
+      try {
+        const response = await usersApi.checkContacts(phoneNumbers, event.id);
+        if (!response.success) return [];
+
+        return response.contacts;
+      } catch (error) {
+        console.error("Error checking contacts:", error);
+        return [];
+      }
+    },
+    [event?.id]
+  );
+
   // Fetch contacts from device
   const fetchContacts = useCallback(async () => {
     try {
@@ -81,17 +106,47 @@ export function useContacts() {
       });
 
       if (data.length > 0) {
+        // Normalize and format contacts
         const formattedContacts: InviteContact[] = data
           .filter((contact) => contact.name && contact.phoneNumbers?.length)
-          .map((contact, index) => ({
-            id: contact.id || `contact-${index}`,
-            name: contact.name || "Unknown",
-            phone: contact.phoneNumbers?.[0]?.number || "",
-            photoUrl: contact.image?.uri,
-            povUser: false, // We'll need to check this against our user database
-          }));
+          .map((contact, index) => {
+            const phoneNumber = contact.phoneNumbers?.[0]?.number || "";
+            const normalizedPhone = normalizePhoneNumber(
+              phoneNumber,
+              user?.countryCode
+            );
 
-        setContacts(formattedContacts);
+            return {
+              id: contact.id || `contact-${index}`,
+              name: contact.name || "Unknown",
+              phone: phoneNumber,
+              normalizedPhone: normalizedPhone,
+            };
+          });
+
+        // Check which contacts are MOV users with event participation
+        const phoneNumbers: string[] = [];
+        formattedContacts.forEach((contact) => {
+          if (contact.normalizedPhone) {
+            phoneNumbers.push(contact.normalizedPhone);
+          }
+        });
+
+        const userContacts = await checkContacts(phoneNumbers);
+
+        // Merge enriched data with formatted contacts
+        const contactsWithUser = formattedContacts.map((contact) => {
+          const userContact = userContacts.find(
+            (userContact) => userContact.phone === contact.normalizedPhone
+          );
+
+          return {
+            ...contact,
+            user: userContact,
+          };
+        });
+
+        setContacts(contactsWithUser);
       }
     } catch (error) {
       console.error("Error fetching contacts:", error);
@@ -99,7 +154,7 @@ export function useContacts() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user?.countryCode, checkContacts]);
 
   // Initialize on mount
   useEffect(() => {

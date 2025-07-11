@@ -16,6 +16,8 @@ interface AuthContextType {
   session: Session | null;
   isAuthenticated: boolean;
   loading: boolean;
+  pendingCountryCode: string | null;
+  setPendingCountryCode: (_countryCode: string) => void;
   signInWithOtp: (_phone: string) => Promise<{ error: any }>;
   verifyOtp: (_phone: string, _token: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
@@ -26,6 +28,8 @@ const AuthContext = createContext<AuthContextType>({
   session: null,
   isAuthenticated: false,
   loading: true,
+  pendingCountryCode: null,
+  setPendingCountryCode: () => {},
   signInWithOtp: async () => ({ error: null }),
   verifyOtp: async () => ({ error: null }),
   signOut: async () => {},
@@ -37,6 +41,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [supabaseUser, setSupabaseUser] = useState<SupabaseUser | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [pendingCountryCode, setPendingCountryCode] = useState<string | null>(
+    null
+  );
 
   useEffect(() => {
     // Get initial session
@@ -90,6 +97,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       session,
       isAuthenticated,
       loading,
+      pendingCountryCode,
+      setPendingCountryCode,
       signInWithOtp,
       verifyOtp,
       signOut,
@@ -99,6 +108,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       session,
       isAuthenticated,
       loading,
+      pendingCountryCode,
+      setPendingCountryCode,
       signInWithOtp,
       verifyOtp,
       signOut,

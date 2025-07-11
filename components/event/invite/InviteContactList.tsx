@@ -6,10 +6,14 @@ import {
   FlatList,
   StyleSheet,
   ActivityIndicator,
+  Alert,
 } from "react-native";
 import InviteContactItem, { InviteContact } from "./InviteContactItem";
 import ContactsPermissionDenied from "./ContactsPermissionDenied";
 import { ContactPermissionState } from "@/hooks/event/useContacts";
+import { useEvent } from "@/contexts/EventContext";
+import { useUserProfile } from "@/contexts/UserProfileContext";
+import { eventsApi } from "@/services/api/events";
 
 interface InviteContactListProps {
   contacts: InviteContact[];
@@ -30,9 +34,53 @@ export default function InviteContactList({
 }: InviteContactListProps) {
   const [search, setSearch] = useState("");
   const [added, setAdded] = useState<string[]>([]);
+  const [addingParticipant, setAddingParticipant] = useState<string | null>(
+    null
+  );
+  const { event, setEvent } = useEvent();
+  const { user } = useUserProfile();
+
   const filtered = contacts.filter((c) =>
     c.name.toLowerCase().includes(search.toLowerCase())
   );
+
+  const handleAddParticipant = async (contact: InviteContact) => {
+    if (!event || !user || !contact.id || contact.id.startsWith("contact-")) {
+      return;
+    }
+
+    setAddingParticipant(contact.id);
+
+    try {
+      await eventsApi.addParticipant(event.id, contact.user!.id, user.id);
+
+      // Update added list
+      setAdded((prev) => [...prev, contact.id]);
+
+      // Update event participants list (similar to delete logic)
+      setEvent((prev) => {
+        if (!prev) return prev;
+
+        // Add the new participant to the event
+        const newParticipant = {
+          id: `participant-${contact.id}`,
+          joinedAt: new Date(),
+          confirmed: false,
+          user: contact.user!,
+        };
+
+        return {
+          ...prev,
+          participants: [...prev.participants, newParticipant],
+        };
+      });
+    } catch (error) {
+      console.error("Error adding participant:", error);
+      Alert.alert("Error", "Failed to add participant. Please try again.");
+    } finally {
+      setAddingParticipant(null);
+    }
+  };
 
   // Show loading state
   if (loading) {
@@ -76,11 +124,10 @@ export default function InviteContactList({
           <InviteContactItem
             contact={item}
             added={added.includes(item.id)}
-            onAdd={() =>
-              setAdded((a) => (a.includes(item.id) ? a : [...a, item.id]))
-            }
+            onAdd={() => handleAddParticipant(item)}
             eventName={eventName}
             inviteUrl={inviteUrl}
+            loading={addingParticipant === item.id}
           />
         )}
         initialNumToRender={20}
