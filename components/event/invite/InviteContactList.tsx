@@ -7,6 +7,7 @@ import {
   StyleSheet,
   ActivityIndicator,
   Alert,
+  Keyboard,
 } from "react-native";
 import InviteContactItem, { InviteContact } from "./InviteContactItem";
 import ContactsPermissionDenied from "./ContactsPermissionDenied";
@@ -49,6 +50,8 @@ export default function InviteContactList({
       return;
     }
 
+    // Dismiss keyboard before adding participant
+    Keyboard.dismiss();
     setAddingParticipant(contact.id);
 
     try {
@@ -139,6 +142,8 @@ export default function InviteContactList({
           offset: 80 * index,
           index,
         })}
+        keyboardShouldPersistTaps="handled"
+        onScrollBeginDrag={() => Keyboard.dismiss()}
       />
     </View>
   );

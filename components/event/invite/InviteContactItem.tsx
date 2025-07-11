@@ -109,6 +109,7 @@ export default function InviteContactItem({
         onPress={onPress}
         disabled={buttonDisabled}
         activeOpacity={buttonDisabled ? 1 : 0.7}
+        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
       >
         <Text style={buttonTextStyle}>{buttonText}</Text>
       </TouchableOpacity>

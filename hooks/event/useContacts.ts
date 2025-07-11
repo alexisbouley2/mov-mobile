@@ -146,7 +146,14 @@ export function useContacts() {
           };
         });
 
-        setContacts(contactsWithUser);
+        // Sort contacts alphabetically by name
+        const sortedContacts = contactsWithUser.sort((a, b) => {
+          const nameA = a.name.toLowerCase();
+          const nameB = b.name.toLowerCase();
+          return nameA.localeCompare(nameB);
+        });
+
+        setContacts(sortedContacts);
       }
     } catch (error) {
       console.error("Error fetching contacts:", error);
