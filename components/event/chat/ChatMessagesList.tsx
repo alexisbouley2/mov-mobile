@@ -37,7 +37,7 @@ export const ChatMessagesList: React.FC<ChatMessagesListProps> = ({
         currentDate = messageDate;
         items.push({
           type: "date",
-          id: `date-${messageDate}`,
+          id: `message-${message.id}`,
           data: new Date(message.createdAt),
         });
       }
