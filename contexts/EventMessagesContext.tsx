@@ -6,6 +6,7 @@ import React, {
   useCallback,
   useMemo,
   useEffect,
+  useRef,
 } from "react";
 import { supabase } from "@/lib/supabase";
 import { messagesApi } from "@/services/api";
@@ -87,11 +88,16 @@ export function EventMessagesProvider({
   const [currentEventId, setCurrentEventId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // Use refs to avoid dependency issues
+  const loadPreviewRef = useRef<
+    ((_eventId: string) => Promise<void>) | undefined
+  >(undefined);
+  const currentEventIdRef = useRef<string | null>(null);
+
   // Load message preview
   const loadPreview = useCallback(
     async (eventId: string) => {
       if (!user?.id) return;
-
       try {
         setPreviewLoading(true);
         setError(null);
@@ -107,6 +113,10 @@ export function EventMessagesProvider({
     },
     [user?.id]
   );
+
+  // Update refs
+  loadPreviewRef.current = loadPreview;
+  currentEventIdRef.current = currentEventId;
 
   // Load full messages with pagination
   const loadMessagesPage = useCallback(
@@ -161,7 +171,9 @@ export function EventMessagesProvider({
   // Send message
   const sendMessage = useCallback(
     async (content: string) => {
-      if (!currentEventId || !user?.id || sending || !content.trim()) return;
+      if (!currentEventId || !user?.id || sending || !content.trim()) {
+        return;
+      }
 
       setSending(true);
       try {
@@ -218,58 +230,92 @@ export function EventMessagesProvider({
 
   // Set up real-time subscription for message updates
   useEffect(() => {
-    if (!event?.id || !user?.id) return;
+    if (!event?.id || !user?.id) {
+      return;
+    }
 
-    const channel = supabase
-      .channel(`event-messages-${event.id}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "Message",
-          filter: `eventId=eq.${event.id}`,
-        },
-        (payload) => {
-          const newMessage = payload.new as any;
+    const channelName = `event-messages-${event.id}`;
 
-          // Don't add our own messages (they're already added optimistically)
-          if (newMessage.senderId === user?.id) return;
+    const channel = supabase.channel(channelName).on(
+      "postgres_changes",
+      {
+        event: "INSERT",
+        schema: "public",
+        table: "Message",
+        filter: `eventId=eq.${event.id}`,
+      },
+      async (payload) => {
+        const newMessage = payload.new as any;
 
-          // Add the new message with basic sender info
-          const messageWithSender: Message = {
+        // Don't add our own messages (they're already added optimistically)
+        if (newMessage.senderId === user?.id) {
+          return;
+        }
+
+        try {
+          // Fetch the complete message with sender information
+          const messageWithSender = await messagesApi.getMessageById(
+            newMessage.id,
+            user.id
+          );
+
+          if (messageWithSender) {
+            // Update messages if we're viewing this event's chat
+            if (currentEventIdRef.current === event.id) {
+              setMessages((prev) => {
+                const exists = prev.some((m) => m.id === newMessage.id);
+                if (exists) {
+                  return prev;
+                }
+                return [...prev, messageWithSender];
+              });
+              setTotal((prev) => prev + 1);
+            }
+
+            // Always update preview
+            if (loadPreviewRef.current) {
+              loadPreviewRef.current(event.id);
+            }
+          }
+        } catch (err) {
+          log.error(
+            "Error fetching sender information for real-time message:",
+            err
+          );
+          // Fallback to basic message without sender details
+          const messageWithBasicSender: Message = {
             id: newMessage.id,
             content: newMessage.content,
             createdAt: newMessage.createdAt,
             type: newMessage.type || "text",
             sender: {
               id: newMessage.senderId,
-              username: "User", // Placeholder - ideally fetch from API
+              username: "User", // Fallback placeholder
               profileThumbnailPath: null,
               profileThumbnailUrl: null,
             },
           };
 
-          // Update messages if we're viewing this event's chat
-          if (currentEventId === event.id) {
+          if (currentEventIdRef.current === event.id) {
             setMessages((prev) => {
               const exists = prev.some((m) => m.id === newMessage.id);
-              if (exists) return prev;
-              return [...prev, messageWithSender];
+              if (exists) {
+                return prev;
+              }
+              return [...prev, messageWithBasicSender];
             });
             setTotal((prev) => prev + 1);
           }
-
-          // Always update preview
-          loadPreview(event.id);
         }
-      )
-      .subscribe();
+      }
+    );
+
+    channel.subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [event?.id, user?.id, currentEventId, loadPreview]);
+  }, [event?.id, user?.id]);
 
   const contextValue = useMemo(
     () => ({

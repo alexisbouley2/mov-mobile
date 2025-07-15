@@ -50,4 +50,11 @@ export const messagesApi = {
       messageData,
       SendMessageResponseSchema
     ),
+
+  // Get a single message by ID with sender information
+  getMessageById: (
+    messageId: string,
+    userId: string
+  ): Promise<SendMessageResponse | null> =>
+    api.get(`/messages/${messageId}/user/${userId}`, SendMessageResponseSchema),
 };
