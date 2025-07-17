@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "894319536992",
+    "project_id": "mov-notif",
+    "storage_bucket": "mov-notif.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:894319536992:android:3a4cd1fc382935c3168c05",
+        "android_client_info": {
+          "package_name": "com.alexisbouley2.mov"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAtTUsQlYjNJjc5j3-QEXKicNYg45U_Kmo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
