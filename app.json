@@ -19,7 +19,7 @@
         "ITSAppUsesNonExemptEncryption": false
       },
       "bundleIdentifier": "com.alexisbouley2.mov",
-      "googleServicesFile": "${GOOGLE_SERVICES_IOS}"
+      "googleServicesFile": "./GoogleService-Info.plist"
     },
     "android": {
       "adaptiveIcon": {
@@ -45,7 +45,7 @@
         "visible": true
       },
       "userInterfaceStyle": "dark",
-      "googleServicesFile": "${GOOGLE_SERVICES_ANDROID}"
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "bundler": "metro",
