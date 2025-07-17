@@ -11,7 +11,9 @@
         "resourceClass": "m-medium"
       },
       "env": {
-        "EXPO_PUBLIC_ENV": "development"
+        "EXPO_PUBLIC_ENV": "development",
+        "GOOGLE_SERVICES_IOS": "GOOGLE_SERVICES_IOS",
+        "GOOGLE_SERVICES_ANDROID": "GOOGLE_SERVICES_ANDROID"
       }
     },
     "preview": {
@@ -23,7 +25,9 @@
         "resourceClass": "m-medium"
       },
       "env": {
-        "EXPO_PUBLIC_ENV": "preview"
+        "EXPO_PUBLIC_ENV": "preview",
+        "GOOGLE_SERVICES_IOS": "GOOGLE_SERVICES_IOS",
+        "GOOGLE_SERVICES_ANDROID": "GOOGLE_SERVICES_ANDROID"
       },
       "channel": "preview"
     },
@@ -37,7 +41,9 @@
         "resourceClass": "m-medium"
       },
       "env": {
-        "EXPO_PUBLIC_ENV": "production"
+        "EXPO_PUBLIC_ENV": "production",
+        "GOOGLE_SERVICES_IOS": "GOOGLE_SERVICES_IOS",
+        "GOOGLE_SERVICES_ANDROID": "GOOGLE_SERVICES_ANDROID"
       }
     }
   }

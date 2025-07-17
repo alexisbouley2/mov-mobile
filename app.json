@@ -18,7 +18,8 @@
         "NSContactsUsageDescription": "$(PRODUCT_NAME) needs access to your Contacts to help you invite friends to events.",
         "ITSAppUsesNonExemptEncryption": false
       },
-      "bundleIdentifier": "com.alexisbouley2.mov"
+      "bundleIdentifier": "com.alexisbouley2.mov",
+      "googleServicesFile": "${GOOGLE_SERVICES_IOS}"
     },
     "android": {
       "adaptiveIcon": {
@@ -43,7 +44,8 @@
         "barStyle": "light-content",
         "visible": true
       },
-      "userInterfaceStyle": "dark"
+      "userInterfaceStyle": "dark",
+      "googleServicesFile": "${GOOGLE_SERVICES_ANDROID}"
     },
     "web": {
       "bundler": "metro",
@@ -89,7 +91,14 @@
           "contactsPermission": "Allow access to your Contacts to help you invite friends to events."
         }
       ],
-      "expo-web-browser"
+      "expo-web-browser",
+      "@react-native-firebase/app",
+      [
+        "@react-native-firebase/messaging",
+        {
+          "enableBackgroundSync": true
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

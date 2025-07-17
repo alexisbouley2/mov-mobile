@@ -1,3 +1,4 @@
+import { NotificationProvider } from "@/contexts/NotificationContext";
 import {
   DarkTheme,
   DefaultTheme,
@@ -61,37 +62,45 @@ function RootLayoutContent() {
       }}
     >
       <AuthProvider>
-        <InviteProvider>
-          <UserProfileProvider>
-            <RecordingProvider>
-              <ThemeProvider
-                value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
-              >
-                <Stack
-                  screenOptions={{
-                    headerShown: false,
-                  }}
+        <NotificationProvider>
+          <InviteProvider>
+            <UserProfileProvider>
+              <RecordingProvider>
+                <ThemeProvider
+                  value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
                 >
-                  <Stack.Screen name="index" options={{ headerShown: false }} />
-                  <Stack.Screen
-                    name="(auth)"
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen
-                    name="(onboarding)"
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen name="(app)" options={{ headerShown: false }} />
-                  <Stack.Screen
-                    name="invite-handler"
-                    options={{ headerShown: false }}
-                  />
-                </Stack>
-                <StatusBar style="light" />
-              </ThemeProvider>
-            </RecordingProvider>
-          </UserProfileProvider>
-        </InviteProvider>
+                  <Stack
+                    screenOptions={{
+                      headerShown: false,
+                    }}
+                  >
+                    <Stack.Screen
+                      name="index"
+                      options={{ headerShown: false }}
+                    />
+                    <Stack.Screen
+                      name="(auth)"
+                      options={{ headerShown: false }}
+                    />
+                    <Stack.Screen
+                      name="(onboarding)"
+                      options={{ headerShown: false }}
+                    />
+                    <Stack.Screen
+                      name="(app)"
+                      options={{ headerShown: false }}
+                    />
+                    <Stack.Screen
+                      name="invite-handler"
+                      options={{ headerShown: false }}
+                    />
+                  </Stack>
+                  <StatusBar style="light" />
+                </ThemeProvider>
+              </RecordingProvider>
+            </UserProfileProvider>
+          </InviteProvider>
+        </NotificationProvider>
       </AuthProvider>
     </View>
   );
