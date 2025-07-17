@@ -11,9 +11,6 @@ platform :ios, podfile_properties['ios.deploymentTarget'] || '15.1'
 install! 'cocoapods',
   :deterministic_uuids => false
 
-# Enable modular headers for Firebase compatibility
-use_modular_headers!
-
 prepare_react_native_project!
 
 target 'MOV' do
@@ -34,13 +31,8 @@ target 'MOV' do
 
   config = use_native_modules!(config_command)
 
-  use_frameworks! :linkage => podfile_properties['ios.useFrameworks'].to_sym if podfile_properties['ios.useFrameworks']
-  use_frameworks! :linkage => ENV['USE_FRAMEWORKS'].to_sym if ENV['USE_FRAMEWORKS']
-
-  # Fix for Firebase with static frameworks
-  pod 'GoogleUtilities', :modular_headers => true
-  pod 'FirebaseCore', :modular_headers => true
-  pod 'FirebaseCoreInternal', :modular_headers => true
+  # Firebase iOS SDK strictly requires static frameworks
+  use_frameworks! :linkage => :static
 
   use_react_native!(
     :path => config[:reactNativePath],
