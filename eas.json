@@ -34,10 +34,7 @@
         "buildType": "app-bundle"
       },
       "ios": {
-        "resourceClass": "m-medium",
-        "entitlements": {
-          "aps-environment": "production"
-        }
+        "resourceClass": "m-medium"
       },
       "env": {
         "EXPO_PUBLIC_ENV": "production"

@@ -19,7 +19,7 @@
         "ITSAppUsesNonExemptEncryption": false
       },
       "entitlements": {
-        "aps-environment": "development"
+        "aps-environment": "production"
       },
       "bundleIdentifier": "com.alexisbouley2.mov",
       "googleServicesFile": "./GoogleService-Info.plist"
