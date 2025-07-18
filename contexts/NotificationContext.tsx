@@ -6,9 +6,10 @@ import React, {
   useState,
   useCallback,
   useMemo,
+  useRef,
 } from "react";
 import { PushNotificationService } from "@/services/notifications/pushNotificationService";
-import { useAuth } from "@/contexts/AuthContext";
+import { useUserProfile } from "@/contexts/UserProfileContext";
 import log from "@/utils/logger";
 
 interface NotificationContextType {
@@ -17,6 +18,9 @@ interface NotificationContextType {
   hasPermission: boolean;
   requestPermission: () => Promise<boolean>;
   refreshToken: () => Promise<string | null>;
+  clearBadge: () => Promise<void>;
+  setBadge: (_count: number) => Promise<void>;
+  getBadgeCount: () => Promise<number>;
 }
 
 const NotificationContext = createContext<NotificationContextType>({
@@ -25,6 +29,9 @@ const NotificationContext = createContext<NotificationContextType>({
   hasPermission: false,
   requestPermission: async () => false,
   refreshToken: async () => null,
+  clearBadge: async () => {},
+  setBadge: async (_count: number) => {},
+  getBadgeCount: async () => 0,
 });
 
 export const useNotifications = () => useContext(NotificationContext);
@@ -34,29 +41,57 @@ export function NotificationProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const { supabaseUser, isAuthenticated } = useAuth();
+  const { user } = useUserProfile();
   const [fcmToken, setFcmToken] = useState<string | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
   const [hasPermission, setHasPermission] = useState(false);
+
+  // Track previous user ID to handle FCM token removal
+  const previousUserIdRef = useRef<string | null>(null);
 
   const notificationService = useMemo(
     () => PushNotificationService.getInstance(),
     []
   );
 
-  // Initialiser les notifications quand l'utilisateur est authentifié
+  // Initialize notifications when user profile is loaded
   useEffect(() => {
-    if (isAuthenticated && supabaseUser && !isInitialized) {
+    if (user && !isInitialized) {
+      previousUserIdRef.current = user.id; // Track current user
       initializeNotifications();
     }
-  }, [isAuthenticated, supabaseUser, isInitialized]);
+    // Cleanup when user is no longer available
+    else if (!user && isInitialized && previousUserIdRef.current) {
+      // Remove FCM token from database before clearing local state
+      notificationService
+        .removeFCMToken(previousUserIdRef.current)
+        .catch((error) => {
+          log.error("Failed to remove FCM token on user logout:", error);
+        });
 
-  // Sauvegarder le token quand on l'obtient et que l'utilisateur est connecté
+      // Clear local state
+      setFcmToken(null);
+      setIsInitialized(false);
+      setHasPermission(false);
+      previousUserIdRef.current = null;
+    }
+    // Update tracked user ID when user changes (but not on initial mount)
+    else if (
+      user &&
+      previousUserIdRef.current &&
+      user.id !== previousUserIdRef.current
+    ) {
+      // We should never be here
+      previousUserIdRef.current = user.id;
+    }
+  }, [user, isInitialized, notificationService]);
+
+  // Save FCM token when we get it and user is available
   useEffect(() => {
-    if (fcmToken && supabaseUser?.id && isInitialized) {
+    if (fcmToken && user?.id && isInitialized) {
       saveFCMToken();
     }
-  }, [fcmToken, supabaseUser?.id, isInitialized]);
+  }, [fcmToken, user?.id, isInitialized]);
 
   const initializeNotifications = useCallback(async () => {
     try {
@@ -77,17 +112,17 @@ export function NotificationProvider({
   }, [notificationService]);
 
   const saveFCMToken = useCallback(async () => {
-    if (!supabaseUser?.id || !fcmToken) return;
+    if (!user?.id || !fcmToken) return;
 
     try {
-      const success = await notificationService.saveFCMToken(supabaseUser.id);
+      const success = await notificationService.saveFCMToken(user.id);
       if (success) {
-        log.info("FCM token saved for user:", supabaseUser.id);
+        log.info("FCM token saved for user:", user.id);
       }
     } catch (error) {
       log.error("Failed to save FCM token:", error);
     }
-  }, [notificationService, supabaseUser?.id, fcmToken]);
+  }, [notificationService, user?.id, fcmToken]);
 
   const requestPermission = useCallback(async (): Promise<boolean> => {
     try {
@@ -118,18 +153,20 @@ export function NotificationProvider({
     }
   }, [notificationService]);
 
-  // Nettoyer le token lors de la déconnexion
-  useEffect(() => {
-    if (!isAuthenticated && fcmToken && supabaseUser?.id) {
-      // Supprimer le token de la base quand l'utilisateur se déconnecte
-      notificationService.removeFCMToken(supabaseUser.id).catch((error) => {
-        log.error("Failed to remove FCM token on logout:", error);
-      });
-      setFcmToken(null);
-      setIsInitialized(false);
-      setHasPermission(false);
-    }
-  }, [isAuthenticated, fcmToken, supabaseUser?.id, notificationService]);
+  const clearBadge = useCallback(async (): Promise<void> => {
+    await notificationService.clearBadge();
+  }, [notificationService]);
+
+  const setBadge = useCallback(
+    async (count: number): Promise<void> => {
+      await notificationService.setBadge(count);
+    },
+    [notificationService]
+  );
+
+  const getBadgeCount = useCallback(async (): Promise<number> => {
+    return await notificationService.getBadgeCount();
+  }, [notificationService]);
 
   const contextValue = useMemo(
     () => ({
@@ -138,8 +175,20 @@ export function NotificationProvider({
       hasPermission,
       requestPermission,
       refreshToken,
+      clearBadge,
+      setBadge,
+      getBadgeCount,
     }),
-    [fcmToken, isInitialized, hasPermission, requestPermission, refreshToken]
+    [
+      fcmToken,
+      isInitialized,
+      hasPermission,
+      requestPermission,
+      refreshToken,
+      clearBadge,
+      setBadge,
+      getBadgeCount,
+    ]
   );
 
   return (

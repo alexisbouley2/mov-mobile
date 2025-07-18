@@ -23,13 +23,6 @@ export const pushNotificationsApi = {
     );
   },
 
-  async removeAllUserTokens(userId: string): Promise<{ success: boolean }> {
-    return api.delete(
-      `/push-tokens/user/${userId}`,
-      RemovePushTokenResponseSchema
-    );
-  },
-
   async getUserTokens(userId: string): Promise<PushTokenResponse[]> {
     return api.get(
       `/push-tokens/user/${userId}`,

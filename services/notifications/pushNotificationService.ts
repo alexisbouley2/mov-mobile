@@ -1,7 +1,9 @@
 // services/notifications/pushNotificationService.ts
 import messaging from "@react-native-firebase/messaging";
 import { router } from "expo-router";
+import * as Notifications from "expo-notifications";
 import log from "@/utils/logger";
+import { pushNotificationsApi } from "@/services/api/pushNotifications";
 
 export class PushNotificationService {
   private static instance: PushNotificationService;
@@ -26,7 +28,6 @@ export class PushNotificationService {
         authStatus === messaging.AuthorizationStatus.PROVISIONAL;
 
       if (enabled) {
-        log.info("Push notification permission granted:", authStatus);
         await this.getFCMToken();
         this.setupMessageHandlers();
         this.isInitialized = true;
@@ -43,10 +44,7 @@ export class PushNotificationService {
       if (!this.fcmToken) {
         // Register device for remote messages first
         await messaging().registerDeviceForRemoteMessages();
-        log.info("Device registered for remote messages");
-
         this.fcmToken = await messaging().getToken();
-        log.info("FCM Token obtained:", this.fcmToken);
       }
       return this.fcmToken;
     } catch (error) {
@@ -66,11 +64,6 @@ export class PushNotificationService {
 
     // Message reçu quand l'app est en background/fermée et l'ouvre
     messaging().onNotificationOpenedApp((remoteMessage) => {
-      log.info(
-        "Notification caused app to open from background:",
-        remoteMessage
-      );
-
       // Naviguer vers l'événement
       this.handleNotificationNavigation(remoteMessage);
     });
@@ -80,11 +73,6 @@ export class PushNotificationService {
       .getInitialNotification()
       .then((remoteMessage) => {
         if (remoteMessage) {
-          log.info(
-            "Notification caused app to open from quit state:",
-            remoteMessage
-          );
-
           // Naviguer vers l'événement
           this.handleNotificationNavigation(remoteMessage);
         }
@@ -92,9 +80,7 @@ export class PushNotificationService {
 
     // Écouter les changements de token (rare mais possible)
     messaging().onTokenRefresh((newToken) => {
-      log.info("FCM token refreshed:", newToken);
       this.fcmToken = newToken;
-      // Ici on pourrait automatiquement mettre à jour le token en base
     });
   }
 
@@ -103,10 +89,11 @@ export class PushNotificationService {
     const { data } = remoteMessage;
 
     if (data?.eventId) {
-      log.info("Navigating to event:", data.eventId);
-
       // Naviguer vers l'événement
       router.push(`/(app)/(event)/${data.eventId}`);
+
+      // Clear badge when user taps notification
+      this.clearBadge();
     }
   }
 
@@ -117,16 +104,10 @@ export class PushNotificationService {
     }
 
     try {
-      const { pushNotificationsApi } = await import(
-        "@/services/api/pushNotifications"
-      );
-
       await pushNotificationsApi.createToken({
         userId,
         token: this.fcmToken,
       });
-
-      log.info("FCM token saved successfully");
       return true;
     } catch (error) {
       log.error("Error saving FCM token:", error);
@@ -135,23 +116,55 @@ export class PushNotificationService {
   }
 
   async removeFCMToken(userId: string): Promise<boolean> {
+    console.log("this.fcmToken", this.fcmToken);
     if (!this.fcmToken) return true;
 
     try {
-      const { pushNotificationsApi } = await import(
-        "@/services/api/pushNotifications"
-      );
-
       await pushNotificationsApi.removeToken({
         userId,
         token: this.fcmToken,
       });
 
-      log.info("FCM token removed successfully");
       return true;
     } catch (error) {
       log.error("Error removing FCM token:", error);
       return false;
+    }
+  }
+
+  /**
+   * Clear the app icon badge
+   */
+  async clearBadge(): Promise<void> {
+    try {
+      await Notifications.setBadgeCountAsync(0);
+      log.info("Badge cleared");
+    } catch (error) {
+      log.error("Error clearing badge:", error);
+    }
+  }
+
+  /**
+   * Set the app icon badge to a specific number
+   */
+  async setBadge(count: number): Promise<void> {
+    try {
+      await Notifications.setBadgeCountAsync(count);
+      log.info(`Badge set to: ${count}`);
+    } catch (error) {
+      log.error("Error setting badge:", error);
+    }
+  }
+
+  /**
+   * Get current badge count
+   */
+  async getBadgeCount(): Promise<number> {
+    try {
+      return await Notifications.getBadgeCountAsync();
+    } catch (error) {
+      log.error("Error getting badge count:", error);
+      return 0;
     }
   }
 

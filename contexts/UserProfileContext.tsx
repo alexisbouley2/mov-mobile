@@ -262,12 +262,12 @@ export function UserProfileProvider({
   useEffect(() => {
     if (isAuthenticated && supabaseUser) {
       fetchUserProfile(supabaseUser.id);
-    } else if (!isAuthenticated) {
-      // Clear profile data when user logs out
+    } else if (!isAuthenticated || !supabaseUser) {
+      // Clear profile data when user logs out or supabaseUser is cleared
       setUser(null);
       setProfileError(null);
     }
-  }, [isAuthenticated, supabaseUser, fetchUserProfile]);
+  }, [isAuthenticated, supabaseUser?.id]); // Remove fetchUserProfile dependency
 
   // Process pending invite when user profile is loaded
   useEffect(() => {

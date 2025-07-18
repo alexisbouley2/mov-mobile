@@ -1,7 +1,9 @@
 // Updated app/(app)/(event)/chat/[id].tsx
 import React from "react";
 import { View, StyleSheet, KeyboardAvoidingView, Platform } from "react-native";
+import { useFocusEffect } from "expo-router";
 import { useEventMessages } from "@/contexts/EventMessagesContext";
+import { useNotifications } from "@/contexts/NotificationContext";
 import {
   ChatHeader,
   ChatMessagesList,
@@ -11,10 +13,19 @@ import {
 export default function ChatScreen() {
   const { messages, messagesLoading, sending, sendMessage, loadMoreMessages } =
     useEventMessages();
+  const { clearBadge } = useNotifications();
 
   const handleSendMessage = async (message: string) => {
     await sendMessage(message);
   };
+
+  // Clear badge when user focuses on chat screen
+  useFocusEffect(
+    React.useCallback(() => {
+      // Clear badge when user enters chat
+      clearBadge();
+    }, [clearBadge])
+  );
 
   return (
     <View style={styles.container}>

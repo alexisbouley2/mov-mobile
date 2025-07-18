@@ -62,9 +62,9 @@ function RootLayoutContent() {
       }}
     >
       <AuthProvider>
-        <NotificationProvider>
-          <InviteProvider>
-            <UserProfileProvider>
+        <InviteProvider>
+          <UserProfileProvider>
+            <NotificationProvider>
               <RecordingProvider>
                 <ThemeProvider
                   value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
@@ -98,9 +98,9 @@ function RootLayoutContent() {
                   <StatusBar style="light" />
                 </ThemeProvider>
               </RecordingProvider>
-            </UserProfileProvider>
-          </InviteProvider>
-        </NotificationProvider>
+            </NotificationProvider>
+          </UserProfileProvider>
+        </InviteProvider>
       </AuthProvider>
     </View>
   );
