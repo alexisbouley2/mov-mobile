@@ -7,14 +7,14 @@ import { Image, StyleSheet, View } from "react-native";
 import { useDebugLifecycle } from "@/utils/debugLifecycle";
 import { useUserProfile } from "@/contexts/UserProfileContext";
 import { useCamera } from "@/hooks/media/useCamera";
-import { useTabContext } from "@/hooks/tab/useTabContext";
+import { useTab } from "@/contexts/TabContext";
 import log from "@/utils/logger";
 
 export default function CameraScreen() {
   useDebugLifecycle("CameraScreen");
 
   const { user } = useUserProfile();
-  const { isTabActive } = useTabContext();
+  const { isTabActive } = useTab();
   const isCameraTabActive = isTabActive(1); // Camera tab is at index 1
 
   const {
@@ -67,6 +67,10 @@ export default function CameraScreen() {
           flash={flashMode}
           enableTorch={isRecording && flashMode === "on"} // torch for video
           mode="video"
+          // Performance optimizations
+          videoStabilizationMode="auto"
+          videoQuality="720p" // Lower resolution for faster startup
+          responsiveOrientationWhenOrientationLocked={true}
         />
       ) : (
         <View style={styles.camera} />

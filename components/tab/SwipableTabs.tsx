@@ -4,6 +4,7 @@ import { PanGestureHandler } from "react-native-gesture-handler";
 import Animated from "react-native-reanimated";
 import { usePathname } from "expo-router";
 import { useSwipableTabs } from "@/hooks/tab/useSwipableTabs";
+import { TabProvider } from "@/contexts/TabContext";
 
 interface SwipableTabsProps {
   children: React.ReactNode[];
@@ -14,15 +15,6 @@ interface SwipableTabsProps {
   initialIndex?: number;
   isRecording?: boolean;
 }
-
-// Create a context to share the current tab index
-export const TabContext = React.createContext<{
-  currentTabIndex: number;
-  isTabActive: (_index: number) => boolean;
-}>({
-  currentTabIndex: 0,
-  isTabActive: () => false,
-});
 
 export const SwipableTabs: React.FC<SwipableTabsProps> = ({
   children,
@@ -66,7 +58,7 @@ export const SwipableTabs: React.FC<SwipableTabsProps> = ({
   };
 
   return (
-    <TabContext.Provider value={{ currentTabIndex: currentIndex, isTabActive }}>
+    <TabProvider value={{ currentTabIndex: currentIndex, isTabActive }}>
       <View style={styles.container}>
         <PanGestureHandler
           onGestureEvent={gestureHandler}
@@ -81,7 +73,7 @@ export const SwipableTabs: React.FC<SwipableTabsProps> = ({
 
         {tabBarComponent({ currentIndex, onTabPress: handleTabPress })}
       </View>
-    </TabContext.Provider>
+    </TabProvider>
   );
 };
 
