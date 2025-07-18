@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from "react";
-import {
-  CameraType,
-  useCameraPermissions,
-  useMicrophonePermissions,
-} from "expo-camera";
 import { useRouter } from "expo-router";
-import type { CameraView as CameraViewType } from "expo-camera";
+import {
+  Camera,
+  useCameraDevice,
+  useCameraPermission,
+  useMicrophonePermission,
+} from "react-native-vision-camera";
 import log from "@/utils/logger";
 import { useRecording } from "@/contexts/RecordingContext";
 
@@ -14,28 +14,41 @@ export const useCamera = (userId?: string) => {
   const router = useRouter();
   const { isRecording, setIsRecording } = useRecording();
 
-  const [cameraPermission, requestCameraPermission] = useCameraPermissions();
-  const [microphonePermission, requestMicrophonePermission] =
-    useMicrophonePermissions();
+  const {
+    hasPermission: hasCameraPermission,
+    requestPermission: requestCameraPermission,
+  } = useCameraPermission();
+  const {
+    hasPermission: hasMicrophonePermission,
+    requestPermission: requestMicrophonePermission,
+  } = useMicrophonePermission();
 
-  const [cameraType, setCameraType] = useState<CameraType>("back");
-  const [flashMode, setFlashMode] = useState<"off" | "on">("off");
+  const [cameraPosition, setCameraPosition] = useState<"back" | "front">(
+    "back"
+  );
+  const [flash, setFlash] = useState<"off" | "on">("off");
   const [recordingDuration, setRecordingDuration] = useState(0);
   const [capturedMedia, setCapturedMedia] = useState<string | null>(null);
   const [isCameraActive, setIsCameraActive] = useState(false); // Start with camera inactive
 
-  const cameraRef = useRef<CameraViewType>(null);
+  const device = useCameraDevice(cameraPosition);
+  const cameraRef = useRef<Camera>(null);
   const recordingStartTime = useRef<number | null>(null);
   const rafId = useRef<number | null>(null);
 
   useEffect(() => {
-    if (!cameraPermission?.granted) {
+    if (!hasCameraPermission) {
       requestCameraPermission();
     }
-    if (!microphonePermission?.granted) {
+    if (!hasMicrophonePermission) {
       requestMicrophonePermission();
     }
-  }, [cameraPermission, microphonePermission]);
+  }, [
+    hasCameraPermission,
+    hasMicrophonePermission,
+    requestCameraPermission,
+    requestMicrophonePermission,
+  ]);
 
   // Navigate to MediaPreview screen when media is captured
   useEffect(() => {
@@ -57,7 +70,11 @@ export const useCamera = (userId?: string) => {
       log.info("Camera becoming inactive - cleaning up");
       // Stop recording if camera becomes inactive
       if (cameraRef.current) {
-        cameraRef.current.stopRecording();
+        try {
+          cameraRef.current.stopRecording();
+        } catch (error) {
+          log.warn("Error stopping recording:", error);
+        }
       }
       if (rafId.current) {
         cancelAnimationFrame(rafId.current);
@@ -89,9 +106,9 @@ export const useCamera = (userId?: string) => {
   };
 
   const startRecording = async () => {
-    if (!cameraRef.current || !isCameraActive) {
+    if (!cameraRef.current || !isCameraActive || !device) {
       log.warn(
-        "Cannot start recording - camera not active or ref not available"
+        "Cannot start recording - camera not active, ref not available, or device not found"
       );
       return;
     }
@@ -117,39 +134,67 @@ export const useCamera = (userId?: string) => {
     rafId.current = requestAnimationFrame(updateProgress);
 
     try {
-      const video = await cameraRef.current.recordAsync({
-        maxDuration: MAX_VIDEO_DURATION,
+      cameraRef.current.startRecording({
+        flash: flash === "on" ? "on" : "off",
+        onRecordingFinished: (video: any) => {
+          log.info("Recording finished:", video.path);
+          setCapturedMedia(video.path);
+          setIsRecording(false);
+          setRecordingDuration(0);
+          if (rafId.current) {
+            cancelAnimationFrame(rafId.current);
+            rafId.current = null;
+          }
+          recordingStartTime.current = null;
+        },
+        onRecordingError: (error: any) => {
+          log.error("Recording error:", error);
+          setIsRecording(false);
+          setRecordingDuration(0);
+          if (rafId.current) {
+            cancelAnimationFrame(rafId.current);
+            rafId.current = null;
+          }
+          recordingStartTime.current = null;
+        },
       });
-      setCapturedMedia(video?.uri || null);
-    } catch {
-    } finally {
+
+      // Auto-stop after max duration
+      setTimeout(() => {
+        if (isRecording) {
+          stopRecording();
+        }
+      }, MAX_VIDEO_DURATION * 1000);
+    } catch (error) {
+      log.error("Error starting recording:", error);
       setIsRecording(false);
       setRecordingDuration(0);
     }
   };
 
-  const stopRecording = () => {
+  const stopRecording = async () => {
     if (!cameraRef.current) return;
     log.info("Stopping recording");
-    setIsRecording(false);
-    setRecordingDuration(0);
 
     if (rafId.current) {
       cancelAnimationFrame(rafId.current);
       rafId.current = null;
     }
 
-    recordingStartTime.current = null;
-    cameraRef.current.stopRecording();
+    try {
+      await cameraRef.current.stopRecording();
+    } catch (error) {
+      log.warn("Error stopping recording:", error);
+    }
   };
 
   const toggleCameraType = () => {
     if (isRecording) return; // Prevent flipping camera during recording
-    setCameraType((current) => (current === "back" ? "front" : "back"));
+    setCameraPosition((current) => (current === "back" ? "front" : "back"));
   };
 
   const toggleFlash = () => {
-    setFlashMode((current) => {
+    setFlash((current) => {
       switch (current) {
         case "off":
           return "on";
@@ -169,15 +214,16 @@ export const useCamera = (userId?: string) => {
 
   return {
     // State
-    cameraPermission,
-    microphonePermission,
-    cameraType,
-    flashMode,
+    hasCameraPermission,
+    hasMicrophonePermission,
+    cameraPosition,
+    flash,
     isRecording,
     recordingDuration,
     capturedMedia,
     isCameraActive,
     recordingProgress,
+    device,
 
     // Refs
     cameraRef,

@@ -1,7 +1,7 @@
 // app/(tabs)/index.tsx
 
 import CameraControls from "@/components/camera/CameraControls";
-import { CameraView } from "expo-camera";
+import { Camera } from "react-native-vision-camera";
 import React, { useEffect } from "react";
 import { Image, StyleSheet, View } from "react-native";
 import { useDebugLifecycle } from "@/utils/debugLifecycle";
@@ -18,13 +18,14 @@ export default function CameraScreen() {
   const isCameraTabActive = isTabActive(1); // Camera tab is at index 1
 
   const {
-    cameraPermission,
-    microphonePermission,
-    cameraType,
-    flashMode,
+    hasCameraPermission,
+    hasMicrophonePermission,
+    cameraPosition: _cameraPosition,
+    flash,
     isRecording,
     isCameraActive,
     recordingProgress,
+    device,
     cameraRef,
     startRecording,
     stopRecording,
@@ -45,9 +46,10 @@ export default function CameraScreen() {
     }
   }, [isCameraTabActive, activateCamera, deactivateCamera]);
 
-  if (!cameraPermission || !microphonePermission)
+  if (!hasCameraPermission || !hasMicrophonePermission)
     return <View style={styles.container} />;
-  if (!cameraPermission.granted) return <View style={styles.container} />;
+  if (!hasCameraPermission) return <View style={styles.container} />;
+  if (!device) return <View style={styles.container} />;
 
   return (
     <View style={styles.container}>
@@ -60,17 +62,19 @@ export default function CameraScreen() {
 
       {/* Only render camera when this tab is active */}
       {isCameraTabActive && isCameraActive ? (
-        <CameraView
+        <Camera
           ref={cameraRef}
           style={styles.camera}
-          facing={cameraType}
-          flash={flashMode}
-          enableTorch={isRecording && flashMode === "on"} // torch for video
-          mode="video"
+          device={device}
+          isActive={isCameraActive}
+          video={true}
+          audio={true}
+          torch={isRecording && flash === "on" ? "on" : "off"}
           // Performance optimizations
           videoStabilizationMode="auto"
-          videoQuality="720p" // Lower resolution for faster startup
-          responsiveOrientationWhenOrientationLocked={true}
+          videoHdr={false}
+          photoHdr={false}
+          lowLightBoost={false}
         />
       ) : (
         <View style={styles.camera} />
@@ -84,7 +88,7 @@ export default function CameraScreen() {
           onToggleCamera={toggleCameraType}
           onToggleFlash={toggleFlash}
           isRecording={isRecording}
-          flashMode={flashMode}
+          flashMode={flash}
           recordingProgress={recordingProgress}
         />
       )}
