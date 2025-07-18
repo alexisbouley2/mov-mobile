@@ -18,9 +18,8 @@ interface NotificationContextType {
   hasPermission: boolean;
   requestPermission: () => Promise<boolean>;
   refreshToken: () => Promise<string | null>;
-  clearBadge: () => Promise<void>;
-  setBadge: (_count: number) => Promise<void>;
-  getBadgeCount: () => Promise<number>;
+  syncBadgeCount: () => Promise<number>;
+  markEventNotificationsAsRead: (_eventId: string) => Promise<number>;
 }
 
 const NotificationContext = createContext<NotificationContextType>({
@@ -29,9 +28,8 @@ const NotificationContext = createContext<NotificationContextType>({
   hasPermission: false,
   requestPermission: async () => false,
   refreshToken: async () => null,
-  clearBadge: async () => {},
-  setBadge: async (_count: number) => {},
-  getBadgeCount: async () => 0,
+  syncBadgeCount: async () => 0,
+  markEventNotificationsAsRead: async (_eventId: string) => 0,
 });
 
 export const useNotifications = () => useContext(NotificationContext);
@@ -93,6 +91,13 @@ export function NotificationProvider({
     }
   }, [fcmToken, user?.id, isInitialized]);
 
+  // Sync badge count when user is available and notifications are initialized
+  useEffect(() => {
+    if (user?.id && isInitialized && fcmToken) {
+      syncBadgeCount();
+    }
+  }, [user?.id, isInitialized, fcmToken]);
+
   const initializeNotifications = useCallback(async () => {
     try {
       log.info("Initializing push notifications...");
@@ -124,6 +129,37 @@ export function NotificationProvider({
     }
   }, [notificationService, user?.id, fcmToken]);
 
+  const syncBadgeCount = useCallback(async (): Promise<number> => {
+    if (!user?.id) return 0;
+
+    try {
+      const count = await notificationService.syncBadgeCount(user.id);
+      return count;
+    } catch (error) {
+      log.error("Failed to sync badge count:", error);
+      return 0;
+    }
+  }, [notificationService, user?.id]);
+
+  const markEventNotificationsAsRead = useCallback(
+    async (eventId: string): Promise<number> => {
+      if (!user?.id) return 0;
+
+      try {
+        const markedCount =
+          await notificationService.markEventNotificationsAsRead(
+            user.id,
+            eventId
+          );
+        return markedCount;
+      } catch (error) {
+        log.error("Failed to mark event notifications as read:", error);
+        return 0;
+      }
+    },
+    [notificationService, user?.id]
+  );
+
   const requestPermission = useCallback(async (): Promise<boolean> => {
     try {
       await notificationService.initialize();
@@ -153,21 +189,6 @@ export function NotificationProvider({
     }
   }, [notificationService]);
 
-  const clearBadge = useCallback(async (): Promise<void> => {
-    await notificationService.clearBadge();
-  }, [notificationService]);
-
-  const setBadge = useCallback(
-    async (count: number): Promise<void> => {
-      await notificationService.setBadge(count);
-    },
-    [notificationService]
-  );
-
-  const getBadgeCount = useCallback(async (): Promise<number> => {
-    return await notificationService.getBadgeCount();
-  }, [notificationService]);
-
   const contextValue = useMemo(
     () => ({
       fcmToken,
@@ -175,9 +196,8 @@ export function NotificationProvider({
       hasPermission,
       requestPermission,
       refreshToken,
-      clearBadge,
-      setBadge,
-      getBadgeCount,
+      syncBadgeCount,
+      markEventNotificationsAsRead,
     }),
     [
       fcmToken,
@@ -185,9 +205,8 @@ export function NotificationProvider({
       hasPermission,
       requestPermission,
       refreshToken,
-      clearBadge,
-      setBadge,
-      getBadgeCount,
+      syncBadgeCount,
+      markEventNotificationsAsRead,
     ]
   );
 

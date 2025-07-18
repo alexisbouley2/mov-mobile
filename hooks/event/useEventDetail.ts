@@ -3,11 +3,13 @@ import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
 import { FlatList } from "react-native";
 import { useEvent } from "@/contexts/EventContext";
 import { useUserProfile } from "@/contexts/UserProfileContext";
+import { useNotifications } from "@/contexts/NotificationContext";
 
 export const useEventDetail = () => {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { user } = useUserProfile();
+  const { markEventNotificationsAsRead } = useNotifications();
   const { event, eventLoading, error, loadEvent, toggleParticipation } =
     useEvent();
 
@@ -39,6 +41,13 @@ export const useEventDetail = () => {
 
         loadEvent(id);
 
+        // Clear notifications for this event when user visits
+        if (user?.id) {
+          markEventNotificationsAsRead(id).catch((error) => {
+            console.warn("Failed to mark event notifications as read:", error);
+          });
+        }
+
         // Mark as initialized after first load
         hasInitialized.current = true;
 
@@ -54,7 +63,7 @@ export const useEventDetail = () => {
           }, 100);
         }
       }
-    }, [id, loadEvent])
+    }, [id, loadEvent, user?.id, markEventNotificationsAsRead])
   );
 
   // Clear shouldRefresh flag when loading completes

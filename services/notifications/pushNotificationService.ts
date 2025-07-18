@@ -5,10 +5,20 @@ import * as Notifications from "expo-notifications";
 import log from "@/utils/logger";
 import { pushNotificationsApi } from "@/services/api/pushNotifications";
 
+interface NotificationData {
+  type: string;
+  eventId: string;
+  senderId?: string;
+  messageContent?: string;
+}
+
 export class PushNotificationService {
   private static instance: PushNotificationService;
   private fcmToken: string | null = null;
   private isInitialized = false;
+  private currentUserId: string | null = null;
+
+  // Track notification counts locally for immediate UI updates
 
   static getInstance(): PushNotificationService {
     if (!PushNotificationService.instance) {
@@ -58,13 +68,28 @@ export class PushNotificationService {
     messaging().onMessage(async (remoteMessage) => {
       log.info("Message received in foreground:", remoteMessage);
 
-      // Ici vous pourrez afficher une notification locale si besoin
-      // Par exemple avec react-native-toast-message ou une notification locale
+      // Fetch badge count from backend instead of incrementing locally
+      if (this.currentUserId) {
+        try {
+          const response = await pushNotificationsApi.getBadgeCount(
+            this.currentUserId
+          );
+          await Notifications.setBadgeCountAsync(response.count);
+        } catch (error) {
+          log.error("Error fetching badge count in onMessage:", error);
+          // Fallback to incrementing locally if API call fails
+        }
+      } else {
+        log.warn("No user ID available for badge count fetch");
+      }
+
+      // Here you can show a local notification or toast if needed
+      // For now, we just update the badge
     });
 
     // Message reçu quand l'app est en background/fermée et l'ouvre
     messaging().onNotificationOpenedApp((remoteMessage) => {
-      // Naviguer vers l'événement
+      log.info("Notification opened app:", remoteMessage);
       this.handleNotificationNavigation(remoteMessage);
     });
 
@@ -73,7 +98,7 @@ export class PushNotificationService {
       .getInitialNotification()
       .then((remoteMessage) => {
         if (remoteMessage) {
-          // Naviguer vers l'événement
+          log.info("App opened from notification (cold start):", remoteMessage);
           this.handleNotificationNavigation(remoteMessage);
         }
       });
@@ -81,20 +106,14 @@ export class PushNotificationService {
     // Écouter les changements de token (rare mais possible)
     messaging().onTokenRefresh((newToken) => {
       this.fcmToken = newToken;
+      log.info("FCM token refreshed");
     });
   }
 
   private handleNotificationNavigation(remoteMessage: any) {
-    // Logique de navigation basée sur le contenu de la notification
     const { data } = remoteMessage;
-
-    if (data?.eventId) {
-      // Naviguer vers l'événement
-      router.push(`/(app)/(event)/${data.eventId}`);
-
-      // Clear badge when user taps notification
-      this.clearBadge();
-    }
+    const notificationData = data as NotificationData;
+    router.push(`/(app)/(event)/${notificationData.eventId}`);
   }
 
   async saveFCMToken(userId: string): Promise<boolean> {
@@ -104,6 +123,9 @@ export class PushNotificationService {
     }
 
     try {
+      // Store the user ID for badge count fetching
+      this.currentUserId = userId;
+
       await pushNotificationsApi.createToken({
         userId,
         token: this.fcmToken,
@@ -116,7 +138,6 @@ export class PushNotificationService {
   }
 
   async removeFCMToken(userId: string): Promise<boolean> {
-    console.log("this.fcmToken", this.fcmToken);
     if (!this.fcmToken) return true;
 
     try {
@@ -124,6 +145,11 @@ export class PushNotificationService {
         userId,
         token: this.fcmToken,
       });
+
+      // Clear the stored user ID when removing token
+      if (this.currentUserId === userId) {
+        this.currentUserId = null;
+      }
 
       return true;
     } catch (error) {
@@ -133,46 +159,42 @@ export class PushNotificationService {
   }
 
   /**
-   * Clear the app icon badge
+   * Get current badge count from server and sync local count
    */
-  async clearBadge(): Promise<void> {
+  async syncBadgeCount(userId: string): Promise<number> {
     try {
-      await Notifications.setBadgeCountAsync(0);
-      log.info("Badge cleared");
+      const response = await pushNotificationsApi.getBadgeCount(userId);
+      await Notifications.setBadgeCountAsync(response.count);
+      return response.count;
     } catch (error) {
-      log.error("Error clearing badge:", error);
-    }
-  }
-
-  /**
-   * Set the app icon badge to a specific number
-   */
-  async setBadge(count: number): Promise<void> {
-    try {
-      await Notifications.setBadgeCountAsync(count);
-      log.info(`Badge set to: ${count}`);
-    } catch (error) {
-      log.error("Error setting badge:", error);
-    }
-  }
-
-  /**
-   * Get current badge count
-   */
-  async getBadgeCount(): Promise<number> {
-    try {
-      return await Notifications.getBadgeCountAsync();
-    } catch (error) {
-      log.error("Error getting badge count:", error);
+      log.error("Error syncing badge count:", error);
       return 0;
     }
   }
 
-  getToken(): string | null {
-    return this.fcmToken;
-  }
+  /**
+   * Mark all notifications for a specific event as read
+   */
+  async markEventNotificationsAsRead(
+    userId: string,
+    eventId: string
+  ): Promise<number> {
+    try {
+      const response = await pushNotificationsApi.markEventNotificationsAsRead(
+        userId,
+        eventId
+      );
 
-  isReady(): boolean {
-    return this.isInitialized && !!this.fcmToken;
+      // Update local badge count with the new count from server
+      await Notifications.setBadgeCountAsync(response.newBadgeCount);
+
+      log.info(
+        `Marked ${response.markedCount} event notifications as read. New badge count: ${response.newBadgeCount}`
+      );
+      return response.markedCount;
+    } catch (error) {
+      log.error("Error marking event notifications as read:", error);
+      return 0;
+    }
   }
 }
