@@ -41,6 +41,10 @@ export class PushNotificationService {
   async getFCMToken(): Promise<string | null> {
     try {
       if (!this.fcmToken) {
+        // Register device for remote messages first
+        await messaging().registerDeviceForRemoteMessages();
+        log.info("Device registered for remote messages");
+
         this.fcmToken = await messaging().getToken();
         log.info("FCM Token obtained:", this.fcmToken);
       }
