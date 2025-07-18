@@ -56,6 +56,22 @@ class ApiClient {
     }
     return validateSchema(schema, await response.json());
   }
+
+  async deleteWithBody<T>(
+    endpoint: string,
+    data: unknown,
+    schema: z.ZodSchema<T>
+  ): Promise<T> {
+    const response = await fetch(`${this.baseUrl}${endpoint}`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to delete ${endpoint}: ${response.statusText}`);
+    }
+    return validateSchema(schema, await response.json());
+  }
 }
 
 export const api = new ApiClient();
