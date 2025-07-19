@@ -21,12 +21,14 @@ interface VideoCarouselProps {
   videos: VideoItem[];
   initialIndex: number;
   onIndexChange: (_index: number) => void;
+  onClose?: () => void;
 }
 
 export default function VideoCarousel({
   videos,
   initialIndex,
   onIndexChange,
+  onClose,
 }: VideoCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [loadedVideos, setLoadedVideos] = useState<Set<number>>(
@@ -85,7 +87,7 @@ export default function VideoCarousel({
                     return extended;
                   });
                 }
-              }, 500);
+              }, 200);
 
               return updated;
             });
@@ -244,23 +246,13 @@ export default function VideoCarousel({
                     video={video}
                     isActive={isActive}
                     style={styles.video}
+                    onClose={onClose}
                   />
                 ) : (
                   <View style={styles.placeholder}>
                     <Text style={styles.placeholderText}>Loading...</Text>
                   </View>
                 )}
-
-                {/* Debug info */}
-                <View style={styles.debugOverlay}>
-                  <Text style={styles.debugText}>
-                    {video.id.substring(0, 8)}...
-                  </Text>
-                  <Text style={styles.debugText}>Index: {index}</Text>
-                  <Text style={styles.debugText}>
-                    {isLoaded ? (isActive ? "PLAYING" : "READY") : "NOT LOADED"}
-                  </Text>
-                </View>
               </View>
             );
           })}
@@ -297,18 +289,5 @@ const styles = StyleSheet.create({
   placeholderText: {
     color: "#666",
     fontSize: 16,
-  },
-  debugOverlay: {
-    position: "absolute",
-    top: 50,
-    left: 20,
-    backgroundColor: "rgba(0,0,0,0.7)",
-    padding: 10,
-    borderRadius: 5,
-  },
-  debugText: {
-    color: "white",
-    fontSize: 12,
-    marginBottom: 2,
   },
 });

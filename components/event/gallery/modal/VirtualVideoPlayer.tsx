@@ -3,6 +3,7 @@ import { View, StyleSheet, ActivityIndicator } from "react-native";
 import Video from "react-native-video";
 import { VideoItem } from "@/contexts/EventVideosContext";
 import { videoCacheService } from "@/services/videoCacheService";
+import VideoOverlay from "./VideoOverlay";
 import log from "@/utils/logger";
 
 interface VirtualVideoPlayerProps {
@@ -11,6 +12,7 @@ interface VirtualVideoPlayerProps {
   style?: any;
   onLoad?: () => void;
   onError?: (_error: any) => void;
+  onClose?: () => void;
 }
 
 export default function VirtualVideoPlayer({
@@ -19,6 +21,7 @@ export default function VirtualVideoPlayer({
   style,
   onLoad,
   onError,
+  onClose,
 }: VirtualVideoPlayerProps) {
   const videoRef = useRef<any>(null);
   const [videoSource, setVideoSource] = useState<string | null>(null);
@@ -126,6 +129,9 @@ export default function VirtualVideoPlayer({
           <ActivityIndicator size="large" color="white" />
         </View>
       )}
+
+      {/* Add overlay with user info, three dots button, download button, and close button */}
+      <VideoOverlay video={video} onClose={onClose} />
     </View>
   );
 }

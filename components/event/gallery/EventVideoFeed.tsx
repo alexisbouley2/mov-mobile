@@ -1,6 +1,6 @@
 import React from "react";
 import { View, FlatList, StyleSheet } from "react-native";
-import VideoViewerModal from "./VideoViewerModal";
+import { VideoViewerModal } from "./modal";
 import VideoGridItem from "./VideoGridItem";
 import {
   LoadingState,
@@ -93,12 +93,7 @@ export default function EventVideoFeed() {
         nestedScrollEnabled={true}
       />
 
-      <VideoViewerModal
-        visible={modalVisible}
-        videos={currentVideos}
-        onClose={() => {}}
-        onIndexChange={() => {}}
-      />
+      <VideoViewerModal visible={modalVisible} videos={currentVideos} />
     </View>
   );
 }
