@@ -71,12 +71,14 @@ export default function CameraScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.CTAContainer}>
-        <Image
-          source={require("@/assets/images/logo/start-a-pov.png")}
-          style={styles.CTAImage}
-        />
-      </View>
+      {!isRecording && (
+        <View style={styles.CTAContainer}>
+          <Image
+            source={require("@/assets/images/logo/start-a-pov.png")}
+            style={styles.CTAImage}
+          />
+        </View>
+      )}
 
       {/* Only render camera when this tab is active */}
       {isCameraTabActive && isCameraActive ? (
