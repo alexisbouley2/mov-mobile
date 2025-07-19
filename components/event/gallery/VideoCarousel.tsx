@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useMemo } from "react";
-import { View, StyleSheet, Text } from "react-native";
+import React, { useEffect, useState, useCallback, useRef } from "react";
+import { View, StyleSheet, Text, Dimensions } from "react-native";
 import {
   PanGestureHandler,
   PanGestureHandlerGestureEvent,
@@ -8,13 +8,14 @@ import Animated, {
   useAnimatedGestureHandler,
   useAnimatedStyle,
   useSharedValue,
-  withSpring,
+  withTiming,
   runOnJS,
 } from "react-native-reanimated";
 import VirtualVideoPlayer from "./VirtualVideoPlayer";
 import { VideoItem, useEventVideos } from "@/contexts/EventVideosContext";
 import { videoCacheService } from "@/services/videoCacheService";
-import log from "@/utils/logger";
+
+const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 interface VideoCarouselProps {
   videos: VideoItem[];
@@ -28,9 +29,13 @@ export default function VideoCarousel({
   onIndexChange,
 }: VideoCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
-  const [containerHeight, setContainerHeight] = useState(0);
+  const [loadedVideos, setLoadedVideos] = useState<Set<number>>(
+    new Set([initialIndex])
+  );
+  const translateY = useSharedValue(-initialIndex * SCREEN_HEIGHT);
+  const isAnimating = useRef(false);
+  const pendingIndex = useRef<number | null>(null);
 
-  // Get load more functions and state from context
   const {
     loadMoreAllVideos,
     loadMoreUserVideos,
@@ -41,142 +46,66 @@ export default function VideoCarousel({
     userVideosHasMore,
   } = useEventVideos();
 
-  // Start with the current video centered (translateY = 0 shows the middle slot)
-  const translateY = useSharedValue(0);
+  // Load videos with priority
+  const loadVideosWithPriority = useCallback(
+    (targetIndex: number) => {
+      if (isAnimating.current) {
+        // Store for later if we're still animating
+        pendingIndex.current = targetIndex;
+        return;
+      }
 
-  // Video component pool - keep track of active video components for instant playback
-  const [activeVideoComponents, setActiveVideoComponents] = useState<{
-    [videoId: string]: {
-      video: VideoItem;
-      index: number;
-      isVisible: boolean;
-      isPlaying: boolean;
-    };
-  }>({});
+      // Clear pending index
+      pendingIndex.current = null;
 
-  // Range of videos to keep loaded (currentIndex ± PRELOAD_RANGE)
-  const PRELOAD_RANGE = 2;
+      // Update loaded videos set
+      setLoadedVideos((prev) => {
+        const newSet = new Set(prev);
 
-  // Calculate which videos should be active (in memory) around current index
-  const activeVideoIndices = useMemo(() => {
-    const indices = [];
-    for (
-      let i = Math.max(0, currentIndex - PRELOAD_RANGE);
-      i <= Math.min(videos.length - 1, currentIndex + PRELOAD_RANGE);
-      i++
-    ) {
-      indices.push(i);
-    }
-    return indices;
-  }, [currentIndex, videos.length, PRELOAD_RANGE]);
+        // Priority order: target index first, then adjacent
+        newSet.add(targetIndex);
 
-  // Update video component pool when active indices change
-  useEffect(() => {
-    const updateVideoPool = () => {
-      // Use functional update to avoid dependency on activeVideoComponents
-      setActiveVideoComponents((prevComponents) => {
-        const newActiveComponents: typeof prevComponents = {};
+        // Add adjacent videos after a small delay to prioritize current
+        setTimeout(() => {
+          if (!isAnimating.current) {
+            setLoadedVideos((prevSet) => {
+              const updated = new Set(prevSet);
+              // Add adjacent videos
+              if (targetIndex > 0) updated.add(targetIndex - 1);
+              if (targetIndex < videos.length - 1) updated.add(targetIndex + 1);
 
-        // Keep existing components that are still in range (no re-render!)
-        Object.keys(prevComponents).forEach((videoId) => {
-          const component = prevComponents[videoId];
-          if (activeVideoIndices.includes(component.index)) {
-            newActiveComponents[videoId] = {
-              ...component,
-              isVisible: component.index === currentIndex,
-              isPlaying: component.index === currentIndex,
-            };
+              // Extended preload when idle
+              setTimeout(() => {
+                if (!isAnimating.current) {
+                  setLoadedVideos((prevSet2) => {
+                    const extended = new Set(prevSet2);
+                    if (targetIndex > 1) extended.add(targetIndex - 2);
+                    if (targetIndex < videos.length - 2)
+                      extended.add(targetIndex + 2);
+                    return extended;
+                  });
+                }
+              }, 500);
+
+              return updated;
+            });
           }
-        });
+        }, 100);
 
-        // Add new components for videos entering the range
-        activeVideoIndices.forEach((index) => {
-          const video = videos[index];
-          if (video && !newActiveComponents[video.id]) {
-            newActiveComponents[video.id] = {
-              video,
-              index,
-              isVisible: index === currentIndex,
-              isPlaying: index === currentIndex,
-            };
-          }
-        });
-
-        // Log video pool changes for debugging
-        const addedVideos = Object.keys(newActiveComponents).filter(
-          (id) => !prevComponents[id]
-        );
-        const removedVideos = Object.keys(prevComponents).filter(
-          (id) => !newActiveComponents[id]
-        );
-        const currentVideo = Object.values(newActiveComponents).find(
-          (comp) => comp.isVisible
-        );
-
-        if (addedVideos.length > 0) {
-          log.info(
-            `[VideoCarousel] Added videos to pool: ${addedVideos.join(", ")}`
-          );
-        }
-        if (removedVideos.length > 0) {
-          log.info(
-            `[VideoCarousel] Removed videos from pool: ${removedVideos.join(
-              ", "
-            )}`
-          );
-        }
-        if (currentVideo) {
-          log.info(
-            `[VideoCarousel] Current video: ${currentVideo.video.id} (index ${currentVideo.index})`
-          );
-        }
-
-        // Create a compact summary of all videos in pool
-        const poolSummary = Object.values(newActiveComponents)
-          .sort((a, b) => a.index - b.index)
-          .map((comp) => {
-            const status = comp.isPlaying
-              ? "PLAYING"
-              : comp.isVisible
-              ? "VISIBLE"
-              : "LOADED";
-            return `${comp.video.id}(idx:${comp.index},${status})`;
-          })
-          .join(" | ");
-
-        log.info(
-          `[VideoCarousel] Video pool state: ${
-            Object.keys(newActiveComponents).length
-          } videos - currentIndex=${currentIndex} - [${poolSummary}]`
-        );
-
-        // Log detailed state of each video for debugging
-        Object.values(newActiveComponents)
-          .sort((a, b) => a.index - b.index)
-          .forEach((comp) => {
-            const offset = (comp.index - currentIndex) * containerHeight;
-            log.info(
-              `  Video ${comp.video.id}: index=${comp.index}, offset=${offset}px, ` +
-                `playing=${comp.isPlaying}, visible=${comp.isVisible}`
-            );
-          });
-
-        return newActiveComponents;
+        return newSet;
       });
 
-      // Preload videos around current index
-      videoCacheService.preloadVideosAround(videos, currentIndex);
+      // Preload video cache
+      videoCacheService.preloadVideosAround(videos, targetIndex);
 
-      // Load more videos when approaching the end
-      const shouldLoadMore = currentIndex >= videos.length - 3;
-
-      if (shouldLoadMore) {
-        const isCurrentlyLoadingMore =
+      // Check if we need to load more videos
+      if (targetIndex >= videos.length - 3) {
+        const isLoading =
           activeTab === "all" ? allVideosLoadingMore : userVideosLoadingMore;
-        const hasMoreVideos =
+        const hasMore =
           activeTab === "all" ? allVideosHasMore : userVideosHasMore;
 
-        if (!isCurrentlyLoadingMore && hasMoreVideos) {
+        if (!isLoading && hasMore) {
           if (activeTab === "all") {
             loadMoreAllVideos();
           } else {
@@ -184,150 +113,152 @@ export default function VideoCarousel({
           }
         }
       }
-    };
+    },
+    [
+      videos,
+      activeTab,
+      allVideosLoadingMore,
+      userVideosLoadingMore,
+      allVideosHasMore,
+      userVideosHasMore,
+      loadMoreAllVideos,
+      loadMoreUserVideos,
+    ]
+  );
 
-    updateVideoPool();
-  }, [
-    currentIndex,
-    videos,
-    activeVideoIndices,
-    // Note: activeVideoComponents removed to prevent infinite loop
-    activeTab,
-    allVideosLoadingMore,
-    userVideosLoadingMore,
-    allVideosHasMore,
-    userVideosHasMore,
-    loadMoreAllVideos,
-    loadMoreUserVideos,
-  ]);
-
-  // Initialize position
+  // Initial load
   useEffect(() => {
-    setCurrentIndex(initialIndex);
-    // Start at center position (0 = videos in correct slots)
-    translateY.value = 0;
+    loadVideosWithPriority(initialIndex);
   }, [initialIndex]);
 
-  const changeIndex = (newIndex: number) => {
-    if (
-      newIndex >= 0 &&
-      newIndex < videos.length &&
-      newIndex !== currentIndex
-    ) {
-      setCurrentIndex(newIndex);
-      onIndexChange(newIndex);
+  // Handle pending loads after animation
+  useEffect(() => {
+    if (!isAnimating.current && pendingIndex.current !== null) {
+      loadVideosWithPriority(pendingIndex.current);
     }
-  };
+  }, [loadVideosWithPriority]);
+
+  // Update current index and notify parent
+  const updateIndex = useCallback(
+    (newIndex: number) => {
+      if (
+        newIndex >= 0 &&
+        newIndex < videos.length &&
+        newIndex !== currentIndex
+      ) {
+        setCurrentIndex(newIndex);
+        onIndexChange(newIndex);
+      }
+    },
+    [currentIndex, videos.length, onIndexChange]
+  );
+
+  // Pause loading during animation
+  const startAnimation = useCallback(() => {
+    isAnimating.current = true;
+  }, []);
+
+  // Resume loading after animation
+  const endAnimation = useCallback(
+    (targetIndex: number) => {
+      isAnimating.current = false;
+      updateIndex(targetIndex);
+      loadVideosWithPriority(targetIndex);
+    },
+    [updateIndex, loadVideosWithPriority]
+  );
 
   const gestureHandler =
     useAnimatedGestureHandler<PanGestureHandlerGestureEvent>({
       onStart: (_, context) => {
         context.startY = translateY.value;
+        runOnJS(startAnimation)();
       },
       onActive: (event, context) => {
         translateY.value = (context.startY as number) + event.translationY;
       },
       onEnd: (event) => {
-        const { velocityY, translationY } = event;
-        const threshold = containerHeight * 0.25;
+        const currentOffset = translateY.value;
+        const currentIndexFromOffset = Math.round(
+          -currentOffset / SCREEN_HEIGHT
+        );
 
-        let targetIndex = currentIndex;
+        // Calculate target index based on gesture
+        let targetIndex = currentIndexFromOffset;
 
-        // Improved target index calculation
-        if (Math.abs(translationY) > threshold) {
-          // Calculate how many videos to skip based on translation distance
-          const videosToSkip = Math.floor(
-            Math.abs(translationY) / containerHeight
-          );
-          const direction = translationY < 0 ? 1 : -1; // Up swipe = next (+1), Down swipe = previous (-1)
-
-          targetIndex = currentIndex + direction * (1 + videosToSkip);
-
-          // Clamp to valid range
-          targetIndex = Math.max(0, Math.min(videos.length - 1, targetIndex));
-        } else if (Math.abs(velocityY) > 800) {
-          // Fast swipe - move by 1
-          if (velocityY < 0 && currentIndex < videos.length - 1) {
-            targetIndex = currentIndex + 1;
-          } else if (velocityY > 0 && currentIndex > 0) {
-            targetIndex = currentIndex - 1;
+        // Check for significant swipe
+        if (Math.abs(event.velocityY) > 500) {
+          if (event.velocityY < 0) {
+            targetIndex = Math.min(
+              videos.length - 1,
+              currentIndexFromOffset + 1
+            );
+          } else {
+            targetIndex = Math.max(0, currentIndexFromOffset - 1);
           }
         }
 
-        if (targetIndex !== currentIndex) {
-          // Update index immediately for instant video switching
-          runOnJS(changeIndex)(targetIndex);
+        // Clamp to valid range
+        targetIndex = Math.max(0, Math.min(videos.length - 1, targetIndex));
 
-          // Animate back to center for smooth visual transition
-          translateY.value = withSpring(0, {
-            damping: 100,
-            stiffness: 300,
-          });
-        } else {
-          // No index change - just spring back to center
-          translateY.value = withSpring(0, {
-            damping: 100,
-            stiffness: 300,
-          });
-        }
+        // Animate to target position
+        translateY.value = withTiming(
+          -targetIndex * SCREEN_HEIGHT,
+          {
+            duration: 200,
+          },
+          (finished) => {
+            if (finished) {
+              runOnJS(endAnimation)(targetIndex);
+            }
+          }
+        );
       },
     });
 
-  const handleLayout = (event: any) => {
-    const { height } = event.nativeEvent.layout;
-    setContainerHeight(height);
-  };
-
-  // Create animated style for the entire carousel that moves during gestures
-  const carouselAnimatedStyle = useAnimatedStyle(() => ({
+  const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: translateY.value }],
   }));
 
-  return (
-    <View style={styles.container} onLayout={handleLayout}>
-      <PanGestureHandler onGestureEvent={gestureHandler}>
-        <Animated.View
-          style={[styles.carouselContainer, carouselAnimatedStyle]}
-        >
-          {/* Render all active video components with clean absolute positioning */}
-          {Object.values(activeVideoComponents).map((component) => {
-            const baseOffset =
-              (component.index - currentIndex) * containerHeight;
+  // Render only loaded videos for performance
+  const renderRange = 3; // Slightly larger than load range for smooth appearance
 
-            log.info(
-              `[VideoCarousel] Positioning video ${component.video.id}: ` +
-                `baseOffset=${baseOffset}px, currentIndex=${currentIndex}, ` +
-                `videoIndex=${component.index}, containerHeight=${containerHeight}`
-            );
+  return (
+    <View style={styles.container}>
+      <PanGestureHandler onGestureEvent={gestureHandler}>
+        <Animated.View style={[styles.scrollContainer, animatedStyle]}>
+          {videos.map((video, index) => {
+            // Skip rendering if too far from current index
+            if (Math.abs(index - currentIndex) > renderRange) {
+              return <View key={video.id} style={styles.videoSlot} />;
+            }
+
+            // Only mount video player if loaded
+            const isLoaded = loadedVideos.has(index);
+            const isActive = index === currentIndex && !isAnimating.current;
 
             return (
-              <View
-                key={component.video.id}
-                style={[
-                  styles.videoContainer,
-                  {
-                    height: containerHeight,
-                    transform: [{ translateY: baseOffset }],
-                    opacity: 1,
-                    zIndex: component.isVisible ? 10 : 5,
-                  },
-                ]}
-              >
-                <VirtualVideoPlayer
-                  video={component.video}
-                  isActive={component.isPlaying}
-                  style={styles.video}
-                />
+              <View key={video.id} style={styles.videoSlot}>
+                {isLoaded ? (
+                  <VirtualVideoPlayer
+                    video={video}
+                    isActive={isActive}
+                    style={styles.video}
+                  />
+                ) : (
+                  <View style={styles.placeholder}>
+                    <Text style={styles.placeholderText}>Loading...</Text>
+                  </View>
+                )}
 
-                {/* Debug overlay */}
+                {/* Debug info */}
                 <View style={styles.debugOverlay}>
                   <Text style={styles.debugText}>
-                    {component.video.id.substring(0, 8)}...
+                    {video.id.substring(0, 8)}...
                   </Text>
-                  <Text style={styles.debugText}>Index: {component.index}</Text>
-                  <Text style={styles.debugText}>Base: {baseOffset}px</Text>
+                  <Text style={styles.debugText}>Index: {index}</Text>
                   <Text style={styles.debugText}>
-                    {component.isPlaying ? "PLAYING" : "PAUSED"}
+                    {isLoaded ? (isActive ? "PLAYING" : "READY") : "NOT LOADED"}
                   </Text>
                 </View>
               </View>
@@ -342,31 +273,42 @@ export default function VideoCarousel({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: "black",
   },
-  carouselContainer: {
-    flex: 1,
-    width: "100%",
-  },
-  videoContainer: {
+  scrollContainer: {
     position: "absolute",
     top: 0,
     left: 0,
     right: 0,
+  },
+  videoSlot: {
+    height: SCREEN_HEIGHT,
     width: "100%",
   },
   video: {
     flex: 1,
   },
+  placeholder: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#111",
+  },
+  placeholderText: {
+    color: "#666",
+    fontSize: 16,
+  },
   debugOverlay: {
     position: "absolute",
-    top: 20,
+    top: 50,
     left: 20,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    padding: 8,
-    borderRadius: 4,
+    backgroundColor: "rgba(0,0,0,0.7)",
+    padding: 10,
+    borderRadius: 5,
   },
   debugText: {
     color: "white",
     fontSize: 12,
+    marginBottom: 2,
   },
 });
