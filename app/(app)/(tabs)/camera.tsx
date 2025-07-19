@@ -1,29 +1,32 @@
 // app/(tabs)/index.tsx
-
-import CameraControls from "@/components/camera/CameraControls";
+import React, { useEffect } from "react";
+import {
+  Image,
+  StyleSheet,
+  View,
+  TouchableOpacity,
+  ActivityIndicator,
+  Text,
+} from "react-native";
 import { Camera } from "react-native-vision-camera";
-import React, { useEffect, useRef } from "react";
-import { Image, StyleSheet, View, TouchableOpacity } from "react-native";
-import { useDebugLifecycle } from "@/utils/debugLifecycle";
+import { useFocusEffect } from "@react-navigation/native";
+import CameraControls from "@/components/camera/CameraControls";
 import { useUserProfile } from "@/contexts/UserProfileContext";
 import { useCamera } from "@/hooks/media/useCamera";
 import { useTab } from "@/contexts/TabContext";
-import log from "@/utils/logger";
 
 export default function CameraScreen() {
-  useDebugLifecycle("CameraScreen");
-
   const { user } = useUserProfile();
   const { isTabActive } = useTab();
-  const isCameraTabActive = isTabActive(1); // Camera tab is at index 1
-  const doubleTapRef = useRef<number | null>(null);
+  const isCameraTabActive = isTabActive(1);
 
   const {
     hasCameraPermission,
     hasMicrophonePermission,
-    cameraPosition: _cameraPosition,
     flash,
     isRecording,
+    isProcessing,
+    hasVideoCaptured,
     isCameraActive,
     recordingProgress,
     device,
@@ -34,44 +37,45 @@ export default function CameraScreen() {
     toggleFlash,
     activateCamera,
     deactivateCamera,
+    resetVideoCaptured,
   } = useCamera(user?.id);
 
-  // Activate/deactivate camera based on tab visibility
+  // Manage camera lifecycle
   useEffect(() => {
     if (isCameraTabActive) {
-      log.info("Camera tab became active - activating camera");
       activateCamera();
     } else {
-      log.info("Camera tab became inactive - deactivating camera");
       deactivateCamera();
     }
   }, [isCameraTabActive, activateCamera, deactivateCamera]);
 
+  // Reset video captured state when screen comes into focus
+  useFocusEffect(
+    React.useCallback(() => {
+      resetVideoCaptured();
+    }, [resetVideoCaptured])
+  );
+
+  // Handle double tap
+  const lastTapRef = React.useRef(0);
   const handleCameraPress = () => {
-    if (doubleTapRef.current) {
-      // Double tap detected
-      clearTimeout(doubleTapRef.current);
-      doubleTapRef.current = null;
-      log.info("Double tap detected - toggling camera type");
+    const now = Date.now();
+    const DOUBLE_TAP_DELAY = 300;
+
+    if (now - lastTapRef.current < DOUBLE_TAP_DELAY) {
       toggleCameraType();
-    } else {
-      // First tap - set timeout for double tap detection
-      log.info("First tap detected - setting timeout for double tap detection");
-      doubleTapRef.current = setTimeout(() => {
-        doubleTapRef.current = null;
-        // Single tap - do nothing for now
-      }, 300); // 300ms delay for double tap detection
     }
+    lastTapRef.current = now;
   };
 
-  if (!hasCameraPermission || !hasMicrophonePermission)
+  if (!hasCameraPermission || !hasMicrophonePermission || !device) {
     return <View style={styles.container} />;
-  if (!hasCameraPermission) return <View style={styles.container} />;
-  if (!device) return <View style={styles.container} />;
+  }
 
   return (
     <View style={styles.container}>
-      {!isRecording && (
+      {/* CTA Image */}
+      {!isRecording && !isProcessing && !hasVideoCaptured && (
         <View style={styles.CTAContainer}>
           <Image
             source={require("@/assets/images/logo/start-a-pov.png")}
@@ -80,34 +84,47 @@ export default function CameraScreen() {
         </View>
       )}
 
-      {/* Only render camera when this tab is active */}
+      {/* Processing Overlay */}
+      {isProcessing && (
+        <View style={styles.processingOverlay}>
+          <ActivityIndicator size="large" color="white" />
+          <Text style={styles.processingText}>Processing video...</Text>
+        </View>
+      )}
+
+      {/* Camera View */}
       {isCameraTabActive && isCameraActive ? (
         <TouchableOpacity
           style={styles.camera}
           onPress={handleCameraPress}
           activeOpacity={1}
+          disabled={isProcessing}
         >
           <Camera
             ref={cameraRef}
             style={styles.camera}
             device={device}
-            isActive={isCameraActive}
+            isActive={true}
             video={true}
             audio={true}
             torch={isRecording && flash === "on" ? "on" : "off"}
-            // Performance optimizations
+            // fps={30}
             videoStabilizationMode="auto"
-            videoHdr={false}
             photoHdr={false}
             lowLightBoost={false}
+            // format={device.formats.find(
+            //   (
+            //     f //f.videoHeight <= 1080 //&& // Lower resolution for faster processing
+            //   ) => f.maxFps >= 30 // Ensure it supports at least 30fps
+            // )}
           />
         </TouchableOpacity>
       ) : (
         <View style={styles.camera} />
       )}
 
-      {/* Only show camera controls when this tab is active */}
-      {isCameraTabActive && (
+      {/* Camera Controls */}
+      {isCameraTabActive && !isProcessing && !hasVideoCaptured && (
         <CameraControls
           onStartRecording={startRecording}
           onStopRecording={stopRecording}
@@ -116,6 +133,7 @@ export default function CameraScreen() {
           isRecording={isRecording}
           flashMode={flash}
           recordingProgress={recordingProgress}
+          hasVideoCaptured={hasVideoCaptured}
         />
       )}
     </View>
@@ -125,22 +143,38 @@ export default function CameraScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: "black",
   },
   camera: {
     flex: 1,
   },
   CTAContainer: {
     position: "absolute",
-    top: 0,
+    top: 60,
     left: 0,
     right: 0,
-    justifyContent: "flex-start",
+    justifyContent: "center",
     alignItems: "center",
-    paddingTop: 30,
+    zIndex: 1,
   },
   CTAImage: {
     width: 150,
     height: 150,
-    zIndex: 1000,
+  },
+  processingOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0, 0, 0, 0.8)",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 2,
+  },
+  processingText: {
+    color: "white",
+    fontSize: 16,
+    marginTop: 10,
   },
 });

@@ -68,7 +68,7 @@ export const useSwipableTabs = ({
 
           const targetTranslateX = -targetIndex * SCREEN_WIDTH;
           translateX.value = withTiming(targetTranslateX, {
-            duration: 200,
+            duration: 100,
           });
 
           runOnJS(setCurrentIndex)(targetIndex);

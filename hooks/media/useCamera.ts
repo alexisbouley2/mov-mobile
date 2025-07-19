@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+// hooks/media/useCamera.ts
+import { useEffect, useRef, useState, useCallback } from "react";
 import { useRouter } from "expo-router";
 import {
   Camera,
@@ -10,10 +11,10 @@ import log from "@/utils/logger";
 import { useRecording } from "@/contexts/RecordingContext";
 
 export const useCamera = (userId?: string) => {
-  const MAX_VIDEO_DURATION: number = 6;
+  const MAX_VIDEO_DURATION = 6;
   const router = useRouter();
   const { isRecording, setIsRecording } = useRecording();
-
+  // Permissions
   const {
     hasPermission: hasCameraPermission,
     requestPermission: requestCameraPermission,
@@ -23,192 +24,157 @@ export const useCamera = (userId?: string) => {
     requestPermission: requestMicrophonePermission,
   } = useMicrophonePermission();
 
+  // Camera state
   const [cameraPosition, setCameraPosition] = useState<"back" | "front">(
     "back"
   );
   const [flash, setFlash] = useState<"off" | "on">("off");
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [hasVideoCaptured, setHasVideoCaptured] = useState(false);
   const [recordingDuration, setRecordingDuration] = useState(0);
-  const [capturedMedia, setCapturedMedia] = useState<string | null>(null);
-  const [isCameraActive, setIsCameraActive] = useState(false); // Start with camera inactive
+  const [isCameraActive, setIsCameraActive] = useState(false);
 
+  // Refs
   const device = useCameraDevice(cameraPosition);
   const cameraRef = useRef<Camera>(null);
-  const recordingStartTime = useRef<number | null>(null);
-  const rafId = useRef<number | null>(null);
+  const durationInterval = useRef<number | null>(null);
 
+  // Request permissions on mount
   useEffect(() => {
-    if (!hasCameraPermission) {
-      requestCameraPermission();
-    }
-    if (!hasMicrophonePermission) {
-      requestMicrophonePermission();
-    }
-  }, [
-    hasCameraPermission,
-    hasMicrophonePermission,
-    requestCameraPermission,
-    requestMicrophonePermission,
-  ]);
+    if (!hasCameraPermission) requestCameraPermission();
+    if (!hasMicrophonePermission) requestMicrophonePermission();
+  }, [hasCameraPermission, hasMicrophonePermission]);
 
-  // Navigate to MediaPreview screen when media is captured
+  // Cleanup on unmount
   useEffect(() => {
-    if (capturedMedia && userId) {
-      router.push({
-        pathname: "/(app)/(media)/preview",
-        params: {
-          mediaUri: capturedMedia,
-          userId: userId,
-        },
-      });
-    }
-  }, [capturedMedia, userId, router]);
+    return () => {
+      if (durationInterval.current)
+        cancelAnimationFrame(durationInterval.current);
+    };
+  }, []);
 
-  // Cleanup when camera becomes inactive
-  useEffect(() => {
-    log.info(`Camera active state changed to: ${isCameraActive}`);
-    if (!isCameraActive) {
-      log.info("Camera becoming inactive - cleaning up");
-      // Stop recording if camera becomes inactive
-      if (cameraRef.current) {
-        try {
-          cameraRef.current.stopRecording();
-        } catch (error) {
-          log.warn("Error stopping recording:", error);
-        }
-      }
-      if (rafId.current) {
-        cancelAnimationFrame(rafId.current);
-        rafId.current = null;
-      }
-      // Reset state
-      setIsRecording(false);
-      setRecordingDuration(0);
-      recordingStartTime.current = null;
-    }
-  }, [isCameraActive, setIsRecording]);
-
-  // Reset captured media when screen comes back into focus
-  useEffect(() => {
-    // Reset captured media when returning from preview screen
-    if (capturedMedia) {
-      setCapturedMedia(null);
-    }
-  }, [capturedMedia]);
-
-  const activateCamera = () => {
+  const activateCamera = useCallback(() => {
     log.info("Activating camera");
     setIsCameraActive(true);
-  };
+  }, []);
 
-  const deactivateCamera = () => {
+  const deactivateCamera = useCallback(() => {
     log.info("Deactivating camera");
     setIsCameraActive(false);
-  };
 
-  const startRecording = async () => {
-    if (!cameraRef.current || !isCameraActive || !device) {
-      log.warn(
-        "Cannot start recording - camera not active, ref not available, or device not found"
-      );
+    if (durationInterval.current) {
+      cancelAnimationFrame(durationInterval.current);
+      durationInterval.current = null;
+    }
+
+    setIsRecording(false);
+    setIsProcessing(false);
+    setHasVideoCaptured(false);
+    setRecordingDuration(0);
+  }, []);
+
+  const startRecording = useCallback(async () => {
+    if (!cameraRef.current || !isCameraActive || !device || isRecording) {
+      log.warn("Cannot start recording - preconditions not met");
       return;
     }
 
     log.info("Starting recording");
     setIsRecording(true);
-    recordingStartTime.current = Date.now();
+    setRecordingDuration(0);
 
-    const updateProgress = () => {
-      if (!recordingStartTime.current) return;
-
-      const elapsed = (Date.now() - recordingStartTime.current) / 1000;
+    // Update duration at 60fps for smooth animation
+    const startTime = Date.now();
+    const updateDuration = () => {
+      const elapsed = (Date.now() - startTime) / 1000;
       setRecordingDuration(elapsed);
 
       if (elapsed >= MAX_VIDEO_DURATION) {
         stopRecording();
-        return;
+      } else {
+        durationInterval.current = requestAnimationFrame(updateDuration);
       }
-
-      rafId.current = requestAnimationFrame(updateProgress);
     };
-
-    rafId.current = requestAnimationFrame(updateProgress);
+    durationInterval.current = requestAnimationFrame(updateDuration);
 
     try {
-      cameraRef.current.startRecording({
+      await cameraRef.current.startRecording({
         flash: flash === "on" ? "on" : "off",
-        onRecordingFinished: (video: any) => {
+        // Optimized settings for faster processing
+        videoCodec: "h264",
+        // videoBitRate: "high",
+        fileType: "mp4",
+        onRecordingFinished: (video) => {
           log.info("Recording finished:", video.path);
-          setCapturedMedia(video.path);
+
+          // Set video captured state to prevent UI flicker
+          setHasVideoCaptured(true);
+
+          // Clear state
           setIsRecording(false);
+          setIsProcessing(false);
           setRecordingDuration(0);
-          if (rafId.current) {
-            cancelAnimationFrame(rafId.current);
-            rafId.current = null;
+
+          // Navigate with the actual video path
+          if (userId) {
+            router.push({
+              pathname: "/(app)/(media)/preview",
+              params: {
+                mediaUri: video.path,
+                userId: userId,
+              },
+            });
           }
-          recordingStartTime.current = null;
         },
-        onRecordingError: (error: any) => {
+        onRecordingError: (error) => {
           log.error("Recording error:", error);
+
           setIsRecording(false);
+          setIsProcessing(false);
           setRecordingDuration(0);
-          if (rafId.current) {
-            cancelAnimationFrame(rafId.current);
-            rafId.current = null;
-          }
-          recordingStartTime.current = null;
         },
       });
-
-      // Auto-stop after max duration
-      setTimeout(() => {
-        if (isRecording) {
-          stopRecording();
-        }
-      }, MAX_VIDEO_DURATION * 1000);
     } catch (error) {
       log.error("Error starting recording:", error);
       setIsRecording(false);
       setRecordingDuration(0);
     }
-  };
+  }, [cameraRef, isCameraActive, device, isRecording, flash, userId, router]);
 
-  const stopRecording = async () => {
-    if (!cameraRef.current) return;
+  const stopRecording = useCallback(async () => {
+    if (!cameraRef.current || !isRecording) return;
+
     log.info("Stopping recording");
 
-    if (rafId.current) {
-      cancelAnimationFrame(rafId.current);
-      rafId.current = null;
+    // Show processing state immediately
+    setIsProcessing(true);
+
+    // Clear animation frame
+    if (durationInterval.current) {
+      cancelAnimationFrame(durationInterval.current);
+      durationInterval.current = null;
     }
 
     try {
       await cameraRef.current.stopRecording();
     } catch (error) {
       log.warn("Error stopping recording:", error);
+      setIsProcessing(false);
     }
-  };
+  }, [isRecording]);
 
-  const toggleCameraType = () => {
-    if (isRecording) return; // Prevent flipping camera during recording
+  const toggleCameraType = useCallback(() => {
+    if (isRecording || isProcessing) return;
     setCameraPosition((current) => (current === "back" ? "front" : "back"));
-  };
+  }, [isRecording, isProcessing]);
 
-  const toggleFlash = () => {
-    setFlash((current) => {
-      switch (current) {
-        case "off":
-          return "on";
-        case "on":
-          return "off";
-        default:
-          return "off";
-      }
-    });
-  };
+  const toggleFlash = useCallback(() => {
+    setFlash((current) => (current === "off" ? "on" : "off"));
+  }, []);
 
-  const dismissPreview = () => {
-    setCapturedMedia(null);
-  };
+  const resetVideoCaptured = useCallback(() => {
+    setHasVideoCaptured(false);
+  }, []);
 
   const recordingProgress = Math.min(recordingDuration / MAX_VIDEO_DURATION, 1);
 
@@ -219,8 +185,9 @@ export const useCamera = (userId?: string) => {
     cameraPosition,
     flash,
     isRecording,
+    isProcessing,
+    hasVideoCaptured,
     recordingDuration,
-    capturedMedia,
     isCameraActive,
     recordingProgress,
     device,
@@ -233,8 +200,8 @@ export const useCamera = (userId?: string) => {
     stopRecording,
     toggleCameraType,
     toggleFlash,
-    dismissPreview,
     activateCamera,
     deactivateCamera,
+    resetVideoCaptured,
   };
 };
