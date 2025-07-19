@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Video } from "expo-av";
 import { Alert } from "react-native";
 import { useRouter } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
@@ -16,15 +15,13 @@ export function useMediaPreview({ mediaUri, userId }: UseMediaPreviewProps) {
   const router = useRouter();
   const { events } = useUserEvents();
   const [jobId, setJobId] = useState<string | null>(null);
-  const videoRef = useRef<Video>(null);
+  const videoRef = useRef<any>(null);
+  const [paused, setPaused] = useState(false);
 
   // Cleanup video when component unmounts
   useEffect(() => {
     return () => {
-      if (videoRef.current) {
-        videoRef.current.pauseAsync();
-        videoRef.current.unloadAsync();
-      }
+      setPaused(true);
     };
   }, []);
 
@@ -32,12 +29,10 @@ export function useMediaPreview({ mediaUri, userId }: UseMediaPreviewProps) {
   useFocusEffect(
     React.useCallback(() => {
       const restartVideo = async () => {
-        if (videoRef.current) {
-          try {
-            await videoRef.current.playAsync();
-          } catch (error) {
-            log.debug("Failed to restart video:", error);
-          }
+        try {
+          setPaused(false);
+        } catch (error) {
+          log.debug("Failed to restart video:", error);
         }
       };
 
@@ -53,9 +48,7 @@ export function useMediaPreview({ mediaUri, userId }: UseMediaPreviewProps) {
       log.info("=== MediaPreview: Creating unified upload job ===");
 
       // Stop video before navigating
-      if (videoRef.current) {
-        await videoRef.current.pauseAsync();
-      }
+      setPaused(true);
 
       // Create job immediately
       const newJobId = mediaUploadManager.createJob(mediaUri, userId, "video", {
@@ -101,9 +94,7 @@ export function useMediaPreview({ mediaUri, userId }: UseMediaPreviewProps) {
   // Handle dismiss with job cleanup
   const handleDismiss = async () => {
     // Stop video before dismissing
-    if (videoRef.current) {
-      await videoRef.current.pauseAsync();
-    }
+    setPaused(true);
 
     if (jobId) {
       try {
@@ -121,6 +112,7 @@ export function useMediaPreview({ mediaUri, userId }: UseMediaPreviewProps) {
   return {
     jobId,
     videoRef,
+    paused,
     handleSend,
     handleDismiss,
   };

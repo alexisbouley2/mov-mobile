@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from "react";
 import { View, StyleSheet, ActivityIndicator } from "react-native";
-import { Video, ResizeMode } from "expo-av";
+import Video from "react-native-video";
 import { VideoItem } from "@/contexts/EventVideosContext";
 import { videoCacheService } from "@/services/videoCacheService";
 import log from "@/utils/logger";
@@ -20,9 +20,10 @@ export default function VirtualVideoPlayer({
   onLoad,
   onError,
 }: VirtualVideoPlayerProps) {
-  const videoRef = useRef<Video>(null);
+  const videoRef = useRef<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [videoSource, setVideoSource] = useState<string | null>(null);
+  const [paused, setPaused] = useState(!isActive);
 
   // Update video source when video prop changes
   useEffect(() => {
@@ -62,18 +63,8 @@ export default function VirtualVideoPlayer({
 
   // Handle play/pause based on active state
   useEffect(() => {
-    if (videoRef.current && videoSource) {
-      if (isActive) {
-        videoRef.current.playAsync().catch((error) => {
-          log.error("Failed to play video:", error);
-        });
-      } else {
-        videoRef.current.pauseAsync().catch((error) => {
-          log.error("Failed to pause video:", error);
-        });
-      }
-    }
-  }, [isActive, videoSource]);
+    setPaused(!isActive);
+  }, [isActive]);
 
   const handleVideoLoad = () => {
     setIsLoading(false);
@@ -84,6 +75,10 @@ export default function VirtualVideoPlayer({
     log.error("Video playback error:", error);
     setIsLoading(false);
     onError?.(error);
+  };
+
+  const handleLoadStart = () => {
+    setIsLoading(true);
   };
 
   if (!video || !videoSource) {
@@ -100,15 +95,17 @@ export default function VirtualVideoPlayer({
         ref={videoRef}
         source={{ uri: videoSource }}
         style={styles.video}
-        shouldPlay={isActive}
-        isLooping={true}
-        resizeMode={ResizeMode.COVER} // Changed to COVER for better full-screen experience
+        paused={paused}
+        repeat={true}
+        resizeMode="cover"
         onLoad={handleVideoLoad}
         onError={handleVideoError}
-        onLoadStart={() => {
-          setIsLoading(true);
-        }}
-        useNativeControls={false} // Hide native controls for cleaner look
+        onLoadStart={handleLoadStart}
+        controls={false}
+        muted={false}
+        playWhenInactive={false}
+        playInBackground={false}
+        ignoreSilentSwitch="ignore"
       />
 
       {isLoading && (

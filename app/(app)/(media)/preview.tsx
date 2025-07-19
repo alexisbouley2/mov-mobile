@@ -1,4 +1,4 @@
-import { ResizeMode, Video } from "expo-av";
+import Video from "react-native-video";
 import React from "react";
 import {
   SafeAreaView,
@@ -16,7 +16,7 @@ export default function MediaPreviewScreen() {
   const mediaUri = params.mediaUri as string;
   const userId = params.userId as string;
 
-  const { videoRef, handleSend, handleDismiss } = useMediaPreview({
+  const { videoRef, paused, handleSend, handleDismiss } = useMediaPreview({
     mediaUri,
     userId,
   });
@@ -29,14 +29,11 @@ export default function MediaPreviewScreen() {
         ref={videoRef}
         source={{ uri: mediaUri }}
         style={styles.media}
-        shouldPlay={true}
-        isLooping
-        resizeMode={ResizeMode.COVER}
-        onLoad={() => {
-          if (videoRef.current) {
-            videoRef.current.playAsync();
-          }
-        }}
+        paused={paused}
+        repeat={true}
+        resizeMode="cover"
+        controls={false}
+        muted={false}
       />
 
       {/* Top Controls */}
