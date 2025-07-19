@@ -14,7 +14,7 @@ export interface CachedVideo {
 
 class VideoCacheService {
   private cache = new Map<string, CachedVideo>();
-  private maxCacheSize = 7; // Keep max 7 videos cached
+  private maxCacheSize = 10; // Keep max 10 videos cached (increased for better instant playback)
   private cacheDirectory: string;
 
   constructor() {
@@ -155,18 +155,42 @@ class VideoCacheService {
   preloadVideosAround(videos: VideoItem[], currentIndex: number) {
     const indicesToPreload = [];
 
-    // Preload 2 before and 3 after current video
+    // Preload 3 before and 4 after current video (more aggressive)
     for (
-      let i = Math.max(0, currentIndex - 2);
-      i <= Math.min(videos.length - 1, currentIndex + 3);
+      let i = Math.max(0, currentIndex - 3);
+      i <= Math.min(videos.length - 1, currentIndex + 4);
       i++
     ) {
       indicesToPreload.push(i);
     }
 
-    indicesToPreload.forEach((index) => {
+    // Prioritize next and previous videos for instant playback
+    const priorityIndices = [
+      currentIndex + 1, // Next video (highest priority)
+      currentIndex - 1, // Previous video
+      currentIndex + 2, // Second next
+      currentIndex + 3, // Third next
+      currentIndex - 2, // Second previous
+      currentIndex - 3, // Third previous
+      currentIndex + 4, // Fourth next
+    ].filter((i) => i >= 0 && i < videos.length);
+
+    // Preload priority videos first
+    priorityIndices.forEach((index) => {
       const video = videos[index];
       if (video && !this.cache.has(video.id)) {
+        this.queueForPreload(video);
+      }
+    });
+
+    // Then preload remaining videos
+    indicesToPreload.forEach((index) => {
+      const video = videos[index];
+      if (
+        video &&
+        !this.cache.has(video.id) &&
+        !priorityIndices.includes(index)
+      ) {
         this.queueForPreload(video);
       }
     });
@@ -186,7 +210,7 @@ class VideoCacheService {
       return;
     }
 
-    const keepRange = 5;
+    const keepRange = 7; // Increased range for better instant playback
     const videosToKeep = new Set<string>();
 
     // Mark videos to keep (within range of current)

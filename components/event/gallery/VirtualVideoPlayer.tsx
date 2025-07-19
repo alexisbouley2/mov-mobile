@@ -21,64 +21,75 @@ export default function VirtualVideoPlayer({
   onError,
 }: VirtualVideoPlayerProps) {
   const videoRef = useRef<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const [videoSource, setVideoSource] = useState<string | null>(null);
-  const [paused, setPaused] = useState(!isActive);
+  const [isVideoReady, setIsVideoReady] = useState(false);
 
-  // Update video source when video prop changes
+  // Log component lifecycle
   useEffect(() => {
-    if (!video) {
-      setVideoSource(null);
-      setIsLoading(false);
-      return;
-    }
-
-    setIsLoading(true);
-
-    // Check if video is cached
-    const cached = videoCacheService.getCachedVideo(video.id);
-
-    if (cached?.isReady) {
-      // Use cached version immediately
-      setVideoSource(cached.localUri);
-      setIsLoading(false);
-    } else {
-      // Use original URL while downloading in background
-      setVideoSource(video.videoUrl);
-
-      // Start preloading for next time
-      videoCacheService
-        .preloadVideo(video)
-        .then((localUri) => {
-          // Switch to cached version when ready
-          if (localUri !== video.videoUrl) {
-            setVideoSource(localUri);
-          }
-        })
-        .catch((error) => {
-          log.error("Failed to preload video:", error);
-        });
+    if (video) {
+      log.info(`[VirtualVideoPlayer] Component mounted for video: ${video.id}`);
+      return () => {
+        log.info(
+          `[VirtualVideoPlayer] Component unmounting for video: ${video.id}`
+        );
+      };
     }
   }, [video?.id]);
 
-  // Handle play/pause based on active state
+  // Initialize video source ONCE when component mounts - never change it
   useEffect(() => {
-    setPaused(!isActive);
-  }, [isActive]);
+    if (!video) return;
+
+    const initializeVideoSource = async () => {
+      // Check if video is cached
+      const cached = videoCacheService.getCachedVideo(video.id);
+
+      if (cached?.isReady) {
+        // Use cached version immediately
+        setVideoSource(cached.localUri);
+      } else {
+        // Use original URL and start preloading in background
+        setVideoSource(video.videoUrl);
+
+        // Preload for future use (don't switch source here to avoid re-initialization)
+        videoCacheService.preloadVideo(video).catch((error) => {
+          log.error("Failed to preload video:", error);
+        });
+      }
+    };
+
+    initializeVideoSource();
+  }, [video?.id]); // Only run when video ID changes (component creation)
+
+  // Log when video play/pause state changes
+  useEffect(() => {
+    if (video) {
+      log.info(
+        `[VirtualVideoPlayer] Video ${video.id} ${
+          isActive ? "PLAYING" : "PAUSED"
+        }`
+      );
+    }
+  }, [isActive, video?.id]);
 
   const handleVideoLoad = () => {
-    setIsLoading(false);
+    setIsVideoReady(true);
+    log.info(`[VirtualVideoPlayer] Video loaded: ${video?.id}`);
     onLoad?.();
   };
 
   const handleVideoError = (error: any) => {
-    log.error("Video playback error:", error);
-    setIsLoading(false);
+    log.error(
+      `[VirtualVideoPlayer] Video playback error for ${video?.id}:`,
+      error
+    );
+    setIsVideoReady(false);
     onError?.(error);
   };
 
   const handleLoadStart = () => {
-    setIsLoading(true);
+    setIsVideoReady(false);
+    log.info(`[VirtualVideoPlayer] Video load started: ${video?.id}`);
   };
 
   if (!video || !videoSource) {
@@ -95,7 +106,7 @@ export default function VirtualVideoPlayer({
         ref={videoRef}
         source={{ uri: videoSource }}
         style={styles.video}
-        paused={paused}
+        paused={!isActive}
         repeat={true}
         resizeMode="cover"
         onLoad={handleVideoLoad}
@@ -106,9 +117,11 @@ export default function VirtualVideoPlayer({
         playWhenInactive={false}
         playInBackground={false}
         ignoreSilentSwitch="ignore"
+        // Keep video decoded in GPU memory even when paused
+        preventsDisplaySleepDuringVideoPlayback={false}
       />
 
-      {isLoading && (
+      {!isVideoReady && (
         <View style={styles.loadingOverlay}>
           <ActivityIndicator size="large" color="white" />
         </View>
@@ -123,6 +136,8 @@ const styles = StyleSheet.create({
     backgroundColor: "#000",
     justifyContent: "center",
     alignItems: "center",
+    borderWidth: 1,
+    borderColor: "red",
   },
   video: {
     width: "100%",
