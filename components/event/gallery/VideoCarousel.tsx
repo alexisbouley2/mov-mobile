@@ -214,7 +214,6 @@ export default function VideoCarousel({
       newIndex < videos.length &&
       newIndex !== currentIndex
     ) {
-      log.warn(`[VideoCarousel] Index changed: ${currentIndex} → ${newIndex}`);
       setCurrentIndex(newIndex);
       onIndexChange(newIndex);
     }
@@ -230,28 +229,46 @@ export default function VideoCarousel({
       },
       onEnd: (event) => {
         const { velocityY, translationY } = event;
-        const threshold = containerHeight * 0.25; // Reduced threshold for easier swiping
+        const threshold = containerHeight * 0.25;
 
         let targetIndex = currentIndex;
 
-        if (Math.abs(translationY) > threshold || Math.abs(velocityY) > 800) {
-          if (translationY < 0 && currentIndex < videos.length - 1) {
-            // Swipe up - next video (going down in the list)
+        // Improved target index calculation
+        if (Math.abs(translationY) > threshold) {
+          // Calculate how many videos to skip based on translation distance
+          const videosToSkip = Math.floor(
+            Math.abs(translationY) / containerHeight
+          );
+          const direction = translationY < 0 ? 1 : -1; // Up swipe = next (+1), Down swipe = previous (-1)
+
+          targetIndex = currentIndex + direction * (1 + videosToSkip);
+
+          // Clamp to valid range
+          targetIndex = Math.max(0, Math.min(videos.length - 1, targetIndex));
+        } else if (Math.abs(velocityY) > 800) {
+          // Fast swipe - move by 1
+          if (velocityY < 0 && currentIndex < videos.length - 1) {
             targetIndex = currentIndex + 1;
-          } else if (translationY > 0 && currentIndex > 0) {
-            // Swipe down - previous video (going up in the list)
+          } else if (velocityY > 0 && currentIndex > 0) {
             targetIndex = currentIndex - 1;
           }
         }
 
-        // Always return to center position (0 = videos in correct slots)
-        translateY.value = withSpring(0, {
-          damping: 20,
-          stiffness: 300,
-        });
-
         if (targetIndex !== currentIndex) {
+          // Update index immediately for instant video switching
           runOnJS(changeIndex)(targetIndex);
+
+          // Animate back to center for smooth visual transition
+          translateY.value = withSpring(0, {
+            damping: 100,
+            stiffness: 300,
+          });
+        } else {
+          // No index change - just spring back to center
+          translateY.value = withSpring(0, {
+            damping: 100,
+            stiffness: 300,
+          });
         }
       },
     });
