@@ -34,6 +34,7 @@ export default function VideoCarousel({
   const [loadedVideos, setLoadedVideos] = useState<Set<number>>(
     new Set([initialIndex])
   );
+  const [isMuted, setIsMuted] = useState(false);
   const translateY = useSharedValue(-initialIndex * SCREEN_HEIGHT);
   const isAnimating = useRef(false);
   const pendingIndex = useRef<number | null>(null);
@@ -170,6 +171,10 @@ export default function VideoCarousel({
     [updateIndex, loadVideosWithPriority]
   );
 
+  const handleMuteToggle = useCallback(() => {
+    setIsMuted(!isMuted);
+  }, [isMuted]);
+
   const gestureHandler =
     useAnimatedGestureHandler<PanGestureHandlerGestureEvent>({
       onStart: (_, context) => {
@@ -245,6 +250,8 @@ export default function VideoCarousel({
                   <VirtualVideoPlayer
                     video={video}
                     isActive={isActive}
+                    isMuted={isMuted}
+                    onMuteToggle={handleMuteToggle}
                     style={styles.video}
                     onClose={onClose}
                   />

@@ -1,5 +1,6 @@
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Image } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { CachedImage } from "@/components/ui/CachedImage";
 import ThreeDotsButton from "@/components/ui/ThreeDotsButton";
 import { useVideoDownload } from "@/hooks/media/useVideoDownload";
@@ -8,9 +9,16 @@ import { useEventVideos, VideoItem } from "@/contexts/EventVideosContext";
 interface VideoOverlayProps {
   video: VideoItem;
   onClose?: () => void;
+  isMuted?: boolean;
+  onMuteToggle?: () => void;
 }
 
-export default function VideoOverlay({ video, onClose }: VideoOverlayProps) {
+export default function VideoOverlay({
+  video,
+  onClose,
+  isMuted = false,
+  onMuteToggle,
+}: VideoOverlayProps) {
   const { reportVideo } = useEventVideos();
   const { downloadVideo, isDownloading } = useVideoDownload();
 
@@ -55,6 +63,15 @@ export default function VideoOverlay({ video, onClose }: VideoOverlayProps) {
         onPress={() => reportVideo(video.id)}
         style={styles.deleteButton}
       />
+
+      {/* Mute/Unmute Button */}
+      <TouchableOpacity style={styles.muteButton} onPress={onMuteToggle}>
+        <Ionicons
+          name={isMuted ? "volume-mute" : "volume-high"}
+          size={36}
+          color="#fff"
+        />
+      </TouchableOpacity>
 
       {/* Download/Share Button */}
       <TouchableOpacity
@@ -138,6 +155,16 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     flexDirection: "row",
+    alignItems: "center",
+  },
+  muteButton: {
+    position: "absolute",
+    bottom: 120,
+    right: 30,
+    zIndex: 100,
+    width: 36,
+    height: 36,
+    justifyContent: "center",
     alignItems: "center",
   },
 });

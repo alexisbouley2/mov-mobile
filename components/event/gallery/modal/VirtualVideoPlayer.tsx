@@ -1,5 +1,10 @@
 import React, { useRef, useEffect, useState } from "react";
-import { View, StyleSheet, ActivityIndicator } from "react-native";
+import {
+  View,
+  StyleSheet,
+  ActivityIndicator,
+  TouchableOpacity,
+} from "react-native";
 import Video from "react-native-video";
 import { VideoItem } from "@/contexts/EventVideosContext";
 import { videoCacheService } from "@/services/videoCacheService";
@@ -9,6 +14,8 @@ import log from "@/utils/logger";
 interface VirtualVideoPlayerProps {
   video: VideoItem | null;
   isActive: boolean;
+  isMuted?: boolean;
+  onMuteToggle?: () => void;
   style?: any;
   onLoad?: () => void;
   onError?: (_error: any) => void;
@@ -18,6 +25,8 @@ interface VirtualVideoPlayerProps {
 export default function VirtualVideoPlayer({
   video,
   isActive,
+  isMuted = false,
+  onMuteToggle,
   style,
   onLoad,
   onError,
@@ -26,6 +35,7 @@ export default function VirtualVideoPlayer({
   const videoRef = useRef<any>(null);
   const [videoSource, setVideoSource] = useState<string | null>(null);
   const [isVideoReady, setIsVideoReady] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   // Log component lifecycle
   useEffect(() => {
@@ -64,16 +74,10 @@ export default function VirtualVideoPlayer({
     initializeVideoSource();
   }, [video?.id]); // Only run when video ID changes (component creation)
 
-  // Log when video play/pause state changes
+  // Update playing state based on isActive prop
   useEffect(() => {
-    if (video) {
-      log.info(
-        `[VirtualVideoPlayer] Video ${video.id} ${
-          isActive ? "PLAYING" : "PAUSED"
-        }`
-      );
-    }
-  }, [isActive, video?.id]);
+    setIsPlaying(isActive);
+  }, [isActive]);
 
   const handleVideoLoad = () => {
     setIsVideoReady(true);
@@ -95,6 +99,15 @@ export default function VirtualVideoPlayer({
     log.info(`[VirtualVideoPlayer] Video load started: ${video?.id}`);
   };
 
+  const handleVideoPress = () => {
+    setIsPlaying(!isPlaying);
+    log.info(
+      `[VirtualVideoPlayer] Video ${video?.id} ${
+        !isPlaying ? "PLAYING" : "PAUSED"
+      } via tap`
+    );
+  };
+
   if (!video || !videoSource) {
     return (
       <View style={[styles.container, style]}>
@@ -105,24 +118,30 @@ export default function VirtualVideoPlayer({
 
   return (
     <View style={[styles.container, style]}>
-      <Video
-        ref={videoRef}
-        source={{ uri: videoSource }}
-        style={styles.video}
-        paused={!isActive}
-        repeat={true}
-        resizeMode="cover"
-        onLoad={handleVideoLoad}
-        onError={handleVideoError}
-        onLoadStart={handleLoadStart}
-        controls={false}
-        muted={false}
-        playWhenInactive={false}
-        playInBackground={false}
-        ignoreSilentSwitch="ignore"
-        // Keep video decoded in GPU memory even when paused
-        preventsDisplaySleepDuringVideoPlayback={false}
-      />
+      <TouchableOpacity
+        style={styles.videoContainer}
+        onPress={handleVideoPress}
+        activeOpacity={1}
+      >
+        <Video
+          ref={videoRef}
+          source={{ uri: videoSource }}
+          style={styles.video}
+          paused={!isPlaying}
+          repeat={true}
+          resizeMode="cover"
+          onLoad={handleVideoLoad}
+          onError={handleVideoError}
+          onLoadStart={handleLoadStart}
+          controls={false}
+          muted={isMuted}
+          playWhenInactive={false}
+          playInBackground={false}
+          ignoreSilentSwitch="ignore"
+          // Keep video decoded in GPU memory even when paused
+          preventsDisplaySleepDuringVideoPlayback={false}
+        />
+      </TouchableOpacity>
 
       {!isVideoReady && (
         <View style={styles.loadingOverlay}>
@@ -130,8 +149,13 @@ export default function VirtualVideoPlayer({
         </View>
       )}
 
-      {/* Add overlay with user info, three dots button, download button, and close button */}
-      <VideoOverlay video={video} onClose={onClose} />
+      {/* Add overlay with user info, three dots button, download button, close button, and mute button */}
+      <VideoOverlay
+        video={video}
+        onClose={onClose}
+        isMuted={isMuted}
+        onMuteToggle={onMuteToggle}
+      />
     </View>
   );
 }
@@ -144,6 +168,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderWidth: 1,
     borderColor: "red",
+  },
+  videoContainer: {
+    width: "100%",
+    height: "100%",
   },
   video: {
     width: "100%",

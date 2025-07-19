@@ -2,8 +2,8 @@
 
 import CameraControls from "@/components/camera/CameraControls";
 import { Camera } from "react-native-vision-camera";
-import React, { useEffect } from "react";
-import { Image, StyleSheet, View } from "react-native";
+import React, { useEffect, useRef } from "react";
+import { Image, StyleSheet, View, TouchableOpacity } from "react-native";
 import { useDebugLifecycle } from "@/utils/debugLifecycle";
 import { useUserProfile } from "@/contexts/UserProfileContext";
 import { useCamera } from "@/hooks/media/useCamera";
@@ -16,6 +16,7 @@ export default function CameraScreen() {
   const { user } = useUserProfile();
   const { isTabActive } = useTab();
   const isCameraTabActive = isTabActive(1); // Camera tab is at index 1
+  const doubleTapRef = useRef<number | null>(null);
 
   const {
     hasCameraPermission,
@@ -46,6 +47,23 @@ export default function CameraScreen() {
     }
   }, [isCameraTabActive, activateCamera, deactivateCamera]);
 
+  const handleCameraPress = () => {
+    if (doubleTapRef.current) {
+      // Double tap detected
+      clearTimeout(doubleTapRef.current);
+      doubleTapRef.current = null;
+      log.info("Double tap detected - toggling camera type");
+      toggleCameraType();
+    } else {
+      // First tap - set timeout for double tap detection
+      log.info("First tap detected - setting timeout for double tap detection");
+      doubleTapRef.current = setTimeout(() => {
+        doubleTapRef.current = null;
+        // Single tap - do nothing for now
+      }, 300); // 300ms delay for double tap detection
+    }
+  };
+
   if (!hasCameraPermission || !hasMicrophonePermission)
     return <View style={styles.container} />;
   if (!hasCameraPermission) return <View style={styles.container} />;
@@ -62,20 +80,26 @@ export default function CameraScreen() {
 
       {/* Only render camera when this tab is active */}
       {isCameraTabActive && isCameraActive ? (
-        <Camera
-          ref={cameraRef}
+        <TouchableOpacity
           style={styles.camera}
-          device={device}
-          isActive={isCameraActive}
-          video={true}
-          audio={true}
-          torch={isRecording && flash === "on" ? "on" : "off"}
-          // Performance optimizations
-          videoStabilizationMode="auto"
-          videoHdr={false}
-          photoHdr={false}
-          lowLightBoost={false}
-        />
+          onPress={handleCameraPress}
+          activeOpacity={1}
+        >
+          <Camera
+            ref={cameraRef}
+            style={styles.camera}
+            device={device}
+            isActive={isCameraActive}
+            video={true}
+            audio={true}
+            torch={isRecording && flash === "on" ? "on" : "off"}
+            // Performance optimizations
+            videoStabilizationMode="auto"
+            videoHdr={false}
+            photoHdr={false}
+            lowLightBoost={false}
+          />
+        </TouchableOpacity>
       ) : (
         <View style={styles.camera} />
       )}
