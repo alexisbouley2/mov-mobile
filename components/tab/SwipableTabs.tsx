@@ -63,7 +63,7 @@ export const SwipableTabs: React.FC<SwipableTabsProps> = ({
         <PanGestureHandler
           onGestureEvent={gestureHandler}
           activeOffsetX={[-10, 10]} // Only activate for horizontal gestures
-          failOffsetY={[-10, 10]} // Fail if vertical gesture is detected
+          failOffsetY={[-20, 20]} // Fail if vertical gesture is detected
           enabled={!isRecording}
         >
           <Animated.View style={[screensContainerStyle, animatedStyle]}>
