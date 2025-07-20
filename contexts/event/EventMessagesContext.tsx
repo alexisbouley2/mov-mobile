@@ -123,6 +123,8 @@ export function EventMessagesProvider({
     async (eventId: string, pageNum: number) => {
       if (!user?.id) return;
 
+      console.log("loadMessagesPage", eventId, pageNum);
+
       try {
         const data: EventMessagesResponse = await messagesApi.getMessages(
           eventId,
@@ -144,6 +146,9 @@ export function EventMessagesProvider({
           });
         }
 
+        console.log("data.hasMore", data.hasMore);
+        console.log("data.total", data.total);
+
         setHasMore(data.hasMore);
         setTotal(data.total);
         setPage(pageNum);
@@ -163,6 +168,7 @@ export function EventMessagesProvider({
     async (eventId: string) => {
       setMessagesLoading(true);
       setError(null);
+      console.log("load initial messages");
       await loadMessagesPage(eventId, 1);
     },
     [loadMessagesPage]
@@ -211,6 +217,7 @@ export function EventMessagesProvider({
   const loadMoreMessages = useCallback(async () => {
     // Only allow loading more if initial load is complete and we're not currently loading
     if (hasMore && !messagesLoading && currentEventId) {
+      console.log("loadMoreMessages", currentEventId, page + 1);
       await loadMessagesPage(currentEventId, page + 1);
     }
   }, [currentEventId, hasMore, messagesLoading, page, loadMessagesPage]);
@@ -222,6 +229,7 @@ export function EventMessagesProvider({
   // Auto-load preview and messages when event changes
   useEffect(() => {
     if (event?.id) {
+      console.log("in useffect of when event change");
       setCurrentEventId(event.id);
       loadPreview(event.id);
       loadMessages(event.id);
@@ -233,6 +241,9 @@ export function EventMessagesProvider({
     if (!event?.id || !user?.id) {
       return;
     }
+
+    console.log("in useeffect of real-time subscription");
+    console.log("we did opened a channel");
 
     const channelName = `event-messages-${event.id}`;
 
@@ -313,6 +324,8 @@ export function EventMessagesProvider({
     channel.subscribe();
 
     return () => {
+      console.log("in return of useeffect of real-time subscription");
+      console.log("we did closed a channel");
       supabase.removeChannel(channel);
     };
   }, [event?.id, user?.id]);
