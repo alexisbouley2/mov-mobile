@@ -1,15 +1,38 @@
-import React, { createContext, useContext } from "react";
+import {
+  useState,
+  createContext,
+  useContext,
+  useCallback,
+  useMemo,
+} from "react";
+import { Dimensions } from "react-native";
+import { PanGestureHandlerGestureEvent } from "react-native-gesture-handler";
+import {
+  useAnimatedGestureHandler,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+  runOnJS,
+} from "react-native-reanimated";
+import React from "react";
 
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
+
+// Context types
 interface TabContextType {
   currentTabIndex: number;
   isTabActive: (_index: number) => boolean;
+  isSwipingTowardsCamera: boolean;
+  handleTabPress: (_index: number) => void;
+  gestureHandler: any;
+  animatedStyle: any;
+  SCREEN_WIDTH: number;
 }
 
-const TabContext = createContext<TabContextType>({
-  currentTabIndex: 0,
-  isTabActive: () => false,
-});
+// Create context
+const TabContext = createContext<TabContextType | null>(null);
 
+// Simple consumer hook
 export const useTab = () => {
   const context = useContext(TabContext);
   if (!context) {
@@ -18,9 +41,147 @@ export const useTab = () => {
   return context;
 };
 
-export const TabProvider: React.FC<{
+// Provider component with all logic
+interface TabProviderProps {
   children: React.ReactNode;
-  value: TabContextType;
-}> = ({ children, value }) => {
-  return <TabContext.Provider value={value}>{children}</TabContext.Provider>;
+  childrenCount: number;
+  initialIndex?: number;
+}
+
+export const TabProvider: React.FC<TabProviderProps> = ({
+  children,
+  childrenCount,
+  initialIndex = 1,
+}) => {
+  const [currentIndex, setCurrentIndex] = useState(initialIndex);
+  const [isSwipingTowardsCamera, setIsSwipingTowardsCamera] = useState(false);
+  const translateX = useSharedValue(-initialIndex * SCREEN_WIDTH);
+
+  const handleTabPress = useCallback(
+    (index: number) => {
+      setCurrentIndex(index);
+      const targetTranslateX = -index * SCREEN_WIDTH;
+      // Instant transition for tab clicks
+      translateX.value = targetTranslateX;
+    },
+    [translateX]
+  );
+
+  const isTabActive = useCallback(
+    (index: number) => currentIndex === index,
+    [currentIndex]
+  );
+
+  const gestureHandler =
+    useAnimatedGestureHandler<PanGestureHandlerGestureEvent>({
+      onStart: (_, context: any) => {
+        console.log(
+          `Gesture started: currentIndex=${currentIndex}, startX=${translateX.value}`
+        );
+        context.startX = translateX.value;
+      },
+      onActive: (event, context: any) => {
+        // Debug: Log all gesture data
+        console.log(
+          `Gesture Debug: translationX=${event.translationX}, translationY=${
+            event.translationY
+          }, absX=${Math.abs(event.translationX)}, absY=${Math.abs(
+            event.translationY
+          )}`
+        );
+
+        // Only handle horizontal gestures
+        if (Math.abs(event.translationX) > Math.abs(event.translationY)) {
+          console.log(
+            `Horizontal gesture detected: translationX=${event.translationX}, translationY=${event.translationY}`
+          );
+
+          const newTranslateX = context.startX + event.translationX;
+          // Limit the swipe to prevent going beyond the first and last tabs
+          const maxTranslateX = 0;
+          const minTranslateX = -(childrenCount - 1) * SCREEN_WIDTH;
+          translateX.value = Math.max(
+            minTranslateX,
+            Math.min(maxTranslateX, newTranslateX)
+          );
+
+          // Check if swiping towards camera tab (index 1)
+          const isSwipingTowardsCamera =
+            (currentIndex < 1 && event.translationX < 0) || // Swiping left from events tab
+            (currentIndex > 1 && event.translationX > 0); // Swiping right from profile tab
+
+          console.log(
+            `Swipe towards camera check: currentIndex=${currentIndex}, translationX=${event.translationX}, isSwipingTowardsCamera=${isSwipingTowardsCamera}`
+          );
+
+          // Update the context state
+          runOnJS(setIsSwipingTowardsCamera)(isSwipingTowardsCamera);
+        } else {
+          console.log(
+            `Vertical gesture detected: translationX=${event.translationX}, translationY=${event.translationY}`
+          );
+        }
+      },
+      onEnd: (event, _context: any) => {
+        // Only handle horizontal gestures
+        if (Math.abs(event.translationX) > Math.abs(event.translationY)) {
+          const shouldSwipeLeft =
+            event.velocityX < -500 || event.translationX < -SCREEN_WIDTH * 0.3;
+          const shouldSwipeRight =
+            event.velocityX > 500 || event.translationX > SCREEN_WIDTH * 0.3;
+
+          let targetIndex = currentIndex;
+
+          if (shouldSwipeLeft && currentIndex < childrenCount - 1) {
+            targetIndex = currentIndex + 1;
+          } else if (shouldSwipeRight && currentIndex > 0) {
+            targetIndex = currentIndex - 1;
+          }
+
+          const targetTranslateX = -targetIndex * SCREEN_WIDTH;
+          translateX.value = withTiming(targetTranslateX, {
+            duration: 100,
+          });
+
+          runOnJS(setCurrentIndex)(targetIndex);
+          console.log(`Gesture ended: targetIndex=${targetIndex}`);
+
+          // Clear swipe towards camera state when gesture ends
+          console.log("Clearing swipe towards camera state");
+          runOnJS(setIsSwipingTowardsCamera)(false);
+        }
+      },
+    });
+
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ translateX: translateX.value }],
+    };
+  });
+
+  const contextValue = useMemo(
+    () => ({
+      currentTabIndex: currentIndex,
+      isTabActive,
+      isSwipingTowardsCamera,
+      handleTabPress,
+      gestureHandler,
+      animatedStyle,
+      SCREEN_WIDTH,
+    }),
+    [
+      currentIndex,
+      isTabActive,
+      isSwipingTowardsCamera,
+      handleTabPress,
+      gestureHandler,
+      animatedStyle,
+    ]
+  );
+
+  return React.createElement(
+    TabContext.Provider,
+    { value: contextValue },
+    children
+  );
 };

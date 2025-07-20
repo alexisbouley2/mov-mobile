@@ -3,8 +3,7 @@ import { View, StyleSheet } from "react-native";
 import { PanGestureHandler } from "react-native-gesture-handler";
 import Animated from "react-native-reanimated";
 import { usePathname } from "expo-router";
-import { useSwipableTabs } from "@/hooks/tab/useSwipableTabs";
-import { TabProvider } from "@/contexts/TabContext";
+import { TabProvider, useTab } from "@/contexts/TabContext";
 
 interface SwipableTabsProps {
   children: React.ReactNode[];
@@ -15,6 +14,56 @@ interface SwipableTabsProps {
   initialIndex?: number;
   isRecording?: boolean;
 }
+
+// Inner component that uses the tab context
+const SwipableTabsContent: React.FC<{
+  children: React.ReactNode[];
+  tabBarComponent: (_props: {
+    currentIndex: number;
+    onTabPress: (_index: number) => void;
+  }) => React.ReactNode;
+  isRecording?: boolean;
+}> = ({ children, tabBarComponent, isRecording = false }) => {
+  const {
+    currentTabIndex,
+    handleTabPress,
+    gestureHandler,
+    animatedStyle,
+    SCREEN_WIDTH,
+  } = useTab();
+
+  const renderScreens = () => {
+    return children.map((child, _index) => (
+      <View key={_index} style={styles.screen}>
+        {child}
+      </View>
+    ));
+  };
+
+  const screensContainerStyle = {
+    ...styles.screensContainer,
+    width: SCREEN_WIDTH * children.length,
+  };
+
+  return (
+    <View style={styles.container}>
+      <PanGestureHandler
+        onGestureEvent={gestureHandler}
+        activeOffsetX={[-10, 10]} // Only activate for horizontal gestures
+        failOffsetY={[-20, 20]} // Fail if vertical gesture is detected
+        enabled={!isRecording}
+      >
+        <Animated.View style={[screensContainerStyle, animatedStyle]}>
+          {renderScreens()}
+        </Animated.View>
+      </PanGestureHandler>
+      {tabBarComponent({
+        currentIndex: currentTabIndex,
+        onTabPress: handleTabPress,
+      })}
+    </View>
+  );
+};
 
 export const SwipableTabs: React.FC<SwipableTabsProps> = ({
   children,
@@ -32,47 +81,19 @@ export const SwipableTabs: React.FC<SwipableTabsProps> = ({
     if (pathname.includes("/(tabs)/profile")) return 2;
     return initialIndex; // fallback to provided initialIndex
   };
-
   const routeBasedInitialIndex = getInitialIndexFromRoute();
 
-  const {
-    currentIndex,
-    handleTabPress,
-    isTabActive,
-    gestureHandler,
-    animatedStyle,
-    SCREEN_WIDTH,
-  } = useSwipableTabs({ childrenCount, initialIndex: routeBasedInitialIndex });
-
-  const renderScreens = () => {
-    return children.map((child, index) => (
-      <View key={index} style={styles.screen}>
-        {child}
-      </View>
-    ));
-  };
-
-  const screensContainerStyle = {
-    ...styles.screensContainer,
-    width: SCREEN_WIDTH * childrenCount,
-  };
-
   return (
-    <TabProvider value={{ currentTabIndex: currentIndex, isTabActive }}>
-      <View style={styles.container}>
-        <PanGestureHandler
-          onGestureEvent={gestureHandler}
-          activeOffsetX={[-10, 10]} // Only activate for horizontal gestures
-          failOffsetY={[-20, 20]} // Fail if vertical gesture is detected
-          enabled={!isRecording}
-        >
-          <Animated.View style={[screensContainerStyle, animatedStyle]}>
-            {renderScreens()}
-          </Animated.View>
-        </PanGestureHandler>
-
-        {tabBarComponent({ currentIndex, onTabPress: handleTabPress })}
-      </View>
+    <TabProvider
+      childrenCount={childrenCount}
+      initialIndex={routeBasedInitialIndex}
+    >
+      <SwipableTabsContent
+        tabBarComponent={tabBarComponent}
+        isRecording={isRecording}
+      >
+        {children}
+      </SwipableTabsContent>
     </TabProvider>
   );
 };

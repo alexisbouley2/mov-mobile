@@ -11,9 +11,13 @@ import log from "@/utils/logger";
 import { useRecording } from "@/contexts/RecordingContext";
 
 export const useCamera = (userId?: string) => {
+  console.log(`=== USE CAMERA HOOK CALLED with userId=${userId} ===`);
+
   const MAX_VIDEO_DURATION = 6;
+  const DEACTIVATION_DELAY = 4000; // 1000ms delay before deactivating camera
   const router = useRouter();
   const { isRecording, setIsRecording } = useRecording();
+
   // Permissions
   const {
     hasPermission: hasCameraPermission,
@@ -38,6 +42,9 @@ export const useCamera = (userId?: string) => {
   const device = useCameraDevice(cameraPosition);
   const cameraRef = useRef<Camera>(null);
   const durationInterval = useRef<number | null>(null);
+  const deactivationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null
+  );
 
   // Request permissions on mount
   useEffect(() => {
@@ -50,17 +57,29 @@ export const useCamera = (userId?: string) => {
     return () => {
       if (durationInterval.current)
         cancelAnimationFrame(durationInterval.current);
+      if (deactivationTimeoutRef.current)
+        clearTimeout(deactivationTimeoutRef.current);
     };
   }, []);
 
   const activateCamera = useCallback(() => {
-    log.info("Activating camera");
+    console.log("=== ACTIVATE CAMERA CALLED ===");
+
+    // Clear any pending deactivation
+    if (deactivationTimeoutRef.current) {
+      console.log("Clearing pending deactivation timeout");
+      clearTimeout(deactivationTimeoutRef.current);
+      deactivationTimeoutRef.current = null;
+    }
+
     setIsCameraActive(true);
+    console.log("Camera active state set to true");
   }, []);
 
   const deactivateCamera = useCallback(() => {
-    log.info("Deactivating camera");
+    console.log("=== DEACTIVATE CAMERA CALLED ===");
     setIsCameraActive(false);
+    console.log("Camera active state set to false");
 
     if (durationInterval.current) {
       cancelAnimationFrame(durationInterval.current);
@@ -72,6 +91,48 @@ export const useCamera = (userId?: string) => {
     setHasVideoCaptured(false);
     setRecordingDuration(0);
   }, []);
+
+  const scheduleDeactivation = useCallback(() => {
+    console.log("=== SCHEDULING CAMERA DEACTIVATION ===");
+
+    // Clear any existing timeout
+    if (deactivationTimeoutRef.current) {
+      console.log("Clearing existing deactivation timeout");
+      clearTimeout(deactivationTimeoutRef.current);
+    }
+
+    // Schedule deactivation after delay
+    console.log(`Setting deactivation timeout for ${DEACTIVATION_DELAY}ms`);
+    deactivationTimeoutRef.current = setTimeout(() => {
+      console.log("Deactivation timeout fired - calling deactivateCamera");
+      deactivateCamera();
+      deactivationTimeoutRef.current = null;
+    }, DEACTIVATION_DELAY);
+  }, [deactivateCamera]);
+
+  // Smart camera lifecycle management
+  const manageCameraLifecycle = useCallback(
+    (isTabActive: boolean, isSwipingTowardsCamera: boolean = false) => {
+      console.log(
+        `Camera lifecycle called: tabActive=${isTabActive}, swipingTowards=${isSwipingTowardsCamera}, currentCameraActive=${isCameraActive}`
+      );
+
+      if (isTabActive) {
+        // Camera tab is active - activate immediately
+        console.log("Activating camera - tab is active");
+        activateCamera();
+      } else if (isSwipingTowardsCamera) {
+        // User is swiping towards camera - activate immediately
+        console.log("Activating camera - swiping towards camera");
+        activateCamera();
+      } else {
+        // Camera tab is not active and not swiping towards it - schedule deactivation
+        console.log("Scheduling camera deactivation");
+        scheduleDeactivation();
+      }
+    },
+    [activateCamera, scheduleDeactivation, isCameraActive]
+  );
 
   const startRecording = useCallback(async () => {
     if (!cameraRef.current || !isCameraActive || !device || isRecording) {
@@ -203,5 +264,6 @@ export const useCamera = (userId?: string) => {
     activateCamera,
     deactivateCamera,
     resetVideoCaptured,
+    manageCameraLifecycle,
   };
 };
