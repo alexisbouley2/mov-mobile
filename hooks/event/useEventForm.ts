@@ -5,7 +5,6 @@ export interface EventFormData {
   name: string;
   information: string;
   date: Date;
-  location: string;
 }
 
 export function useEventForm() {
@@ -13,7 +12,6 @@ export function useEventForm() {
     name: "",
     information: "",
     date: new Date(),
-    location: "",
   });
 
   const updateField = useCallback((field: keyof EventFormData, value: any) => {

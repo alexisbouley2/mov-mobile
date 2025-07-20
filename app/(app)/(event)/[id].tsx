@@ -9,7 +9,6 @@ import {
 import { useRouter } from "expo-router";
 import EventHeader from "@/components/event/global/EventHeader";
 import EventActions from "@/components/event/global/EventActions";
-import EventLocation from "@/components/event/global/EventLocation";
 import EventInformation from "@/components/event/global/EventInformation";
 import ParticipantsPreview from "@/components/event/participants/ParticipantsPreview";
 import ChatPreview from "@/components/event/chat/ChatPreview";
@@ -67,13 +66,6 @@ export default function EventDetailScreen() {
               onConfirm={handleConfirm}
               onInvite={handleInvite}
             />
-          </View>
-        );
-
-      case "location":
-        return (
-          <View style={styles.content}>
-            <EventLocation location={item.data} />
           </View>
         );
 

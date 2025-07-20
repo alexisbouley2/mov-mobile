@@ -131,7 +131,6 @@ export const useEventDetail = () => {
         type: "actions",
         data: { isAdmin, isConfirmed, event: event },
       },
-      ...(event.location ? [{ type: "location", data: event.location }] : []),
       ...(event.information
         ? [{ type: "information", data: event.information }]
         : []),

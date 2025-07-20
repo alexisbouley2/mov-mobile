@@ -11,7 +11,6 @@ import EventPhotoSection from "@/components/event-form/EventPhotoSection";
 import EventNameSection from "@/components/event-form/EventNameSection";
 import EventInformationSection from "@/components/event-form/EventInformationSection";
 import EventDateTimeSection from "@/components/event-form/EventDateTimeSection";
-import EventLocationSection from "@/components/event-form/EventLocationSection";
 import EventInfoSection from "@/components/event-form/EventInfoSection";
 import SubmitButton from "../ui/button/SubmitButton";
 
@@ -53,13 +52,6 @@ export default function EventForm({
         <EventNameSection
           name={formData.name}
           onNameChange={(name: string) => onFieldChange("name", name)}
-        />
-
-        <EventLocationSection
-          location={formData.location}
-          onLocationChange={(location: string) =>
-            onFieldChange("location", location)
-          }
         />
 
         {mode === "create" && (

@@ -31,7 +31,6 @@ export function useEditEvent() {
         name: event.name || "",
         information: event.information || "",
         date: new Date(event.date),
-        location: event.location || "",
       });
     }
   }, [event, setFormData]);
@@ -63,7 +62,6 @@ export function useEditEvent() {
       const eventUpdateData: UpdateEventRequest = {
         name: formData.name.trim(),
         information: formData.information.trim(),
-        location: formData.location.trim(),
         // Note: Don't include date in edit - it can't be changed
       };
 

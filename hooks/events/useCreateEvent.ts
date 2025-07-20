@@ -71,7 +71,6 @@ export function useCreateEvent(userId: string) {
         name: formData.name.trim(),
         information: formData.information.trim() || undefined,
         date: formData.date,
-        location: formData.location.trim() || undefined,
         adminId: userId,
         ...(photoData && {
           coverImagePath: photoData.coverImagePath,
