@@ -37,18 +37,6 @@ export default function VirtualVideoPlayer({
   const [isVideoReady, setIsVideoReady] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
 
-  // Log component lifecycle
-  useEffect(() => {
-    if (video) {
-      log.info(`[VirtualVideoPlayer] Component mounted for video: ${video.id}`);
-      return () => {
-        log.info(
-          `[VirtualVideoPlayer] Component unmounting for video: ${video.id}`
-        );
-      };
-    }
-  }, [video?.id]);
-
   // Initialize video source ONCE when component mounts - never change it
   useEffect(() => {
     if (!video) return;

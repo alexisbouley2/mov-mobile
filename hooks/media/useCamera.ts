@@ -112,19 +112,13 @@ export const useCamera = (userId?: string) => {
         activateCamera();
       } else if (!isFocused) {
         // Screen is not focused - deactivate immediately (regardless of tab state)
-        deactivateCamera();
+        scheduleDeactivation();
       } else {
         // Camera tab is not active and not swiping towards it - schedule deactivation
         scheduleDeactivation();
       }
     },
-    [
-      activateCamera,
-      scheduleDeactivation,
-      isCameraActive,
-      isFocused,
-      deactivateCamera,
-    ]
+    [activateCamera, scheduleDeactivation, isCameraActive, isFocused]
   );
 
   const startRecording = useCallback(async () => {

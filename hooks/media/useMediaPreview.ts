@@ -1,101 +1,57 @@
-// hooks/media/useMediaPreview.ts
-import { useState, useRef, useCallback, useEffect } from "react";
-import { Alert } from "react-native";
-import { useRouter, useLocalSearchParams } from "expo-router";
+import React, { useRef, useState } from "react";
+import { useRouter } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
 import { mediaUploadManager } from "@/services/upload";
 import { useUserEvents } from "@/contexts/UserEventsContext";
 import log from "@/utils/logger";
 
 interface UseMediaPreviewProps {
-  mediaUri?: string;
+  mediaUri: string;
   userId: string;
-  isProcessing?: boolean;
 }
 
-export function useMediaPreview({
+interface UseMediaPreviewReturn {
+  videoRef: React.RefObject<any>;
+  paused: boolean;
+  isMuted: boolean;
+  handleSend: () => Promise<void>;
+  handleDismiss: () => void;
+  handleMuteToggle: () => void;
+}
+
+export const useMediaPreview = ({
   mediaUri,
   userId,
-  isProcessing = false,
-}: UseMediaPreviewProps) {
+}: UseMediaPreviewProps): UseMediaPreviewReturn => {
   const router = useRouter();
   const { events } = useUserEvents();
-  const params = useLocalSearchParams();
-
-  // Get mediaUri from params if not provided directly
-  const videoUri = mediaUri || (params.mediaUri as string);
-
-  const [paused, setPaused] = useState(false);
-  const [videoReady, setVideoReady] = useState(false);
-  const [retryCount, setRetryCount] = useState(0);
   const videoRef = useRef<any>(null);
+  const [paused, setPaused] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
 
-  // If processing, wait for the video URI from navigation params
-  useEffect(() => {
-    if (isProcessing && params.mediaUri) {
-      log.info("Video URI received from recording:", params.mediaUri);
-      setRetryCount((prev) => prev + 1); // Force reload with new URI
-    }
-  }, [params.mediaUri, isProcessing]);
-
-  // Auto-play video when screen focuses and video is ready
+  // Auto-play when screen focuses
   useFocusEffect(
-    useCallback(() => {
-      if (videoReady) {
-        setPaused(false);
-      }
-
+    React.useCallback(() => {
+      setPaused(false);
       return () => {
         setPaused(true);
       };
-    }, [videoReady])
+    }, [])
   );
 
-  // Handle video load success
-  const handleVideoLoad = useCallback(() => {
-    log.info("Video loaded successfully");
-    setVideoReady(true);
-    setPaused(false);
-  }, []);
+  const handleMuteToggle = () => {
+    setIsMuted(!isMuted);
+  };
 
-  // Handle video load error with retry
-  const handleVideoError = useCallback(
-    (_error: any) => {
-      if (!videoUri || videoUri === "undefined") {
-        // Still waiting for video URI from recording
-        return;
-      }
-
-      log.warn("Video not ready yet, retrying...");
-
-      if (retryCount < 30) {
-        // Max 3 seconds of retries
-        setTimeout(() => {
-          setRetryCount((prev) => prev + 1);
-        }, 100);
-      } else {
-        log.error("Video failed to load after maximum retries");
-        Alert.alert("Error", "Failed to load video. Please try again.");
-      }
-    },
-    [retryCount, videoUri]
-  );
-
-  // Handle send button
-  const handleSend = useCallback(async () => {
-    if (!videoUri || videoUri === "undefined") {
-      Alert.alert("Error", "Video not ready yet. Please wait.");
-      return;
-    }
-
+  const handleSend = async () => {
     try {
       log.info("Creating upload job for video");
 
-      // Pause video before navigation
+      // Pause video
       setPaused(true);
 
       // Create upload job
-      const jobId = mediaUploadManager.createJob(videoUri, userId, "video", {
+      const jobId = mediaUploadManager.createJob(mediaUri, userId, "video", {
         quality: 0.8,
         time: 1000,
       });
@@ -121,25 +77,20 @@ export function useMediaPreview({
       }
     } catch (error) {
       log.error("Failed to create upload job:", error);
-      Alert.alert("Error", "Failed to process video. Please try again.");
     }
-  }, [videoUri, userId, events, router]);
+  };
 
-  // Handle dismiss
-  const handleDismiss = useCallback(() => {
+  const handleDismiss = () => {
     setPaused(true);
     router.back();
-  }, [router]);
+  };
 
   return {
     videoRef,
-    videoUri: videoUri || (params.mediaUri as string),
     paused,
-    videoReady,
-    retryCount,
-    handleVideoLoad,
-    handleVideoError,
+    isMuted,
     handleSend,
     handleDismiss,
+    handleMuteToggle,
   };
-}
+};

@@ -1,6 +1,6 @@
 // app/(app)/(media)/preview.tsx
 import Video from "react-native-video";
-import React, { useRef, useState } from "react";
+import React from "react";
 import {
   SafeAreaView,
   StyleSheet,
@@ -9,76 +9,29 @@ import {
   View,
   Image,
 } from "react-native";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import { useFocusEffect } from "@react-navigation/native";
-import { mediaUploadManager } from "@/services/upload";
-import { useUserEvents } from "@/contexts/UserEventsContext";
-import log from "@/utils/logger";
+import { useLocalSearchParams } from "expo-router";
+import { useMediaPreview } from "@/hooks/media/useMediaPreview";
 import { useDebugLifecycle } from "@/utils/debugLifecycle";
+import { Ionicons } from "@expo/vector-icons";
 
 export default function MediaPreviewScreen() {
   const params = useLocalSearchParams();
   const mediaUri = params.mediaUri as string;
   const userId = params.userId as string;
 
-  const router = useRouter();
-  const { events } = useUserEvents();
-  const videoRef = useRef<any>(null);
-  const [paused, setPaused] = useState(false);
-
   useDebugLifecycle("MediaPreviewScreen");
 
-  // Auto-play when screen focuses
-  useFocusEffect(
-    React.useCallback(() => {
-      setPaused(false);
-      return () => {
-        setPaused(true);
-      };
-    }, [])
-  );
-
-  const handleSend = async () => {
-    try {
-      log.info("Creating upload job for video");
-
-      // Pause video
-      setPaused(true);
-
-      // Create upload job
-      const jobId = mediaUploadManager.createJob(mediaUri, userId, "video", {
-        quality: 0.8,
-        time: 1000,
-      });
-
-      // Start upload in background
-      mediaUploadManager.startUpload(jobId, (progress) => {
-        log.debug(`Upload progress: ${progress}%`);
-      });
-
-      // Navigate based on available events
-      const currentEvents = events.current || [];
-
-      if (currentEvents.length === 0) {
-        router.push({
-          pathname: "/(app)/(events)/create",
-          params: { jobId },
-        });
-      } else {
-        router.push({
-          pathname: "/(app)/(events)/select-events",
-          params: { jobId },
-        });
-      }
-    } catch (error) {
-      log.error("Failed to create upload job:", error);
-    }
-  };
-
-  const handleDismiss = () => {
-    setPaused(true);
-    router.back();
-  };
+  const {
+    videoRef,
+    paused,
+    isMuted,
+    handleSend,
+    handleDismiss,
+    handleMuteToggle,
+  } = useMediaPreview({
+    mediaUri,
+    userId,
+  });
 
   return (
     <View style={styles.container}>
@@ -91,7 +44,7 @@ export default function MediaPreviewScreen() {
         repeat={true}
         resizeMode="cover"
         controls={false}
-        muted={false}
+        muted={isMuted}
       />
 
       {/* Top Controls */}
@@ -103,6 +56,15 @@ export default function MediaPreviewScreen() {
           />
         </TouchableOpacity>
       </SafeAreaView>
+
+      {/* Mute Button */}
+      <TouchableOpacity style={styles.muteButton} onPress={handleMuteToggle}>
+        <Ionicons
+          name={isMuted ? "volume-mute" : "volume-high"}
+          size={36}
+          color="#fff"
+        />
+      </TouchableOpacity>
 
       {/* Submit Button */}
       <View style={styles.buttonContainer}>
@@ -138,6 +100,16 @@ const styles = StyleSheet.create({
     height: 44,
     marginRight: 20,
     marginTop: 15,
+  },
+  muteButton: {
+    position: "absolute",
+    bottom: 120,
+    right: 30,
+    zIndex: 100,
+    width: 36,
+    height: 36,
+    justifyContent: "center",
+    alignItems: "center",
   },
   buttonContainer: {
     paddingHorizontal: 20,
