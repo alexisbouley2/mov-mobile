@@ -3,9 +3,9 @@ import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
 import { useEventMessages } from "@/contexts/EventMessagesContext";
-import ParticipantAvatar from "../ui/ParticipantAvatar";
+import ParticipantAvatar from "../../ui/ParticipantAvatar";
 
-export default function EventMessagePreview() {
+export default function ChatPreview() {
   const router = useRouter();
   const { preview, previewLoading } = useEventMessages();
 

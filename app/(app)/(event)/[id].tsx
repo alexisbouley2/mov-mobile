@@ -11,8 +11,8 @@ import EventHeader from "@/components/event/global/EventHeader";
 import EventActions from "@/components/event/global/EventActions";
 import EventLocation from "@/components/event/global/EventLocation";
 import EventInformation from "@/components/event/global/EventInformation";
-import EventParticipants from "@/components/event/participants/EventParticipants";
-import EventMessagePreview from "@/components/event/EventMessagePreview";
+import ParticipantsPreview from "@/components/event/participants/ParticipantsPreview";
+import ChatPreview from "@/components/event/chat/ChatPreview";
 import EventGallery from "@/components/event/gallery/EventGallery";
 import { useEventDetail } from "@/hooks/event/useEventDetail";
 
@@ -87,14 +87,14 @@ export default function EventDetailScreen() {
       case "participants":
         return (
           <View style={styles.content}>
-            <EventParticipants />
+            <ParticipantsPreview />
           </View>
         );
 
       case "chat":
         return (
           <View style={styles.content}>
-            <EventMessagePreview />
+            <ChatPreview />
           </View>
         );
 

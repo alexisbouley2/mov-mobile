@@ -1,29 +1,27 @@
 import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 
 type TabType = "confirmed" | "invited";
 
-interface Props {
+interface ParticipantsTabHeaderProps {
   activeTab: TabType;
-  setActiveTab: (_tab: TabType) => void;
+  onTabPress: (_tab: TabType) => void;
   confirmedCount: number;
-  invitedCount: number;
-  onClose: () => void;
+  unconfirmedCount: number;
 }
 
-const EventParticipantsBottomSheetHeader: React.FC<Props> = ({
+export default function ParticipantsTabHeader({
   activeTab,
-  setActiveTab,
+  onTabPress,
   confirmedCount,
-  invitedCount,
-  onClose,
-}) => (
-  <View style={styles.header}>
-    <View style={styles.tabsRow}>
+  unconfirmedCount,
+}: ParticipantsTabHeaderProps) {
+  return (
+    <View style={styles.tabsContainer}>
       <TouchableOpacity
         style={[styles.tab, activeTab === "confirmed" && styles.tabActive]}
-        onPress={() => setActiveTab("confirmed")}
+        onPress={() => onTabPress("confirmed")}
+        activeOpacity={0.7}
       >
         <Text
           style={[
@@ -31,12 +29,13 @@ const EventParticipantsBottomSheetHeader: React.FC<Props> = ({
             activeTab === "confirmed" && styles.tabTextActive,
           ]}
         >
-          Participants ({confirmedCount})
+          Confirmed ({confirmedCount})
         </Text>
       </TouchableOpacity>
       <TouchableOpacity
         style={[styles.tab, activeTab === "invited" && styles.tabActive]}
-        onPress={() => setActiveTab("invited")}
+        onPress={() => onTabPress("invited")}
+        activeOpacity={0.7}
       >
         <Text
           style={[
@@ -44,34 +43,27 @@ const EventParticipantsBottomSheetHeader: React.FC<Props> = ({
             activeTab === "invited" && styles.tabTextActive,
           ]}
         >
-          Invited ({invitedCount})
+          Invited ({unconfirmedCount})
         </Text>
       </TouchableOpacity>
     </View>
-    <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-      <Ionicons name="close" size={24} color="#fff" />
-    </TouchableOpacity>
-  </View>
-);
+  );
+}
 
 const styles = StyleSheet.create({
-  header: {
+  tabsContainer: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 10,
-  },
-  tabsRow: {
-    flexDirection: "row",
-    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingVertical: 16,
     gap: 12,
   },
   tab: {
-    paddingVertical: 6,
+    flex: 1,
+    paddingVertical: 12,
     paddingHorizontal: 16,
-    borderRadius: 20,
+    borderRadius: 25,
     backgroundColor: "#222",
-    marginRight: 8,
+    alignItems: "center",
   },
   tabActive: {
     backgroundColor: "#fff",
@@ -84,9 +76,4 @@ const styles = StyleSheet.create({
   tabTextActive: {
     color: "#000",
   },
-  closeButton: {
-    padding: 8,
-  },
 });
-
-export default EventParticipantsBottomSheetHeader;

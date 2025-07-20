@@ -34,7 +34,7 @@ interface EventParticipantsContextType {
   currentEventId: string | null;
   error: string | null;
   clearError: () => void;
-  loadBottomSheetParticipants: (_eventId: string) => Promise<void>;
+  loadBothParticipants: (_eventId: string) => Promise<void>;
 
   // Participant management
   deleteParticipant: (_participantUserId: string) => Promise<void>;
@@ -56,7 +56,7 @@ const EventParticipantsContext = createContext<EventParticipantsContextType>({
   currentEventId: null,
   error: null,
   clearError: () => {},
-  loadBottomSheetParticipants: async () => {},
+  loadBothParticipants: async () => {},
   deleteParticipant: async () => {},
 });
 
@@ -295,7 +295,7 @@ export function EventParticipantsProvider({
       currentEventId,
       error,
       clearError,
-      loadBottomSheetParticipants: loadBothParticipants,
+      loadBothParticipants,
       deleteParticipant,
     }),
     [
