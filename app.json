@@ -4,11 +4,11 @@
     "slug": "mov",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon/bolt-mov-icon.png",
     "scheme": "mov",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
+      "icon": "./assets/images/icon/bolt-mov-icon-ios.png",
       "statusBar": "light-content",
       "supportsTablet": true,
       "infoPlist": {
@@ -25,8 +25,9 @@
       "googleServicesFile": "./GoogleService-Info.plist"
     },
     "android": {
+      "icon": "./assets/images/icon/bolt-mov-icon-android.png",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/icon/bolt-mov-icon.png",
+        "foregroundImage": "./assets/images/icon/bolt-mov-icon-android.png",
         "backgroundColor": "#000000"
       },
       "edgeToEdgeEnabled": false,
