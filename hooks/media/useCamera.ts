@@ -1,6 +1,7 @@
 // hooks/media/useCamera.ts
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useRouter } from "expo-router";
+import { useFocusEffect } from "@react-navigation/native";
 import {
   Camera,
   useCameraDevice,
@@ -12,7 +13,7 @@ import { useRecording } from "@/contexts/RecordingContext";
 
 export const useCamera = (userId?: string) => {
   const MAX_VIDEO_DURATION = 6;
-  const DEACTIVATION_DELAY = 4000; // 1000ms delay before deactivating camera
+  const DEACTIVATION_DELAY = 1000; // 1000ms delay before deactivating camera
   const DOUBLE_TAP_DELAY = 300;
   const router = useRouter();
   const { isRecording, setIsRecording } = useRecording();
@@ -36,6 +37,7 @@ export const useCamera = (userId?: string) => {
   const [hasVideoCaptured, setHasVideoCaptured] = useState(false);
   const [recordingDuration, setRecordingDuration] = useState(0);
   const [isCameraActive, setIsCameraActive] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
 
   // Refs
   const device = useCameraDevice(cameraPosition);
@@ -63,23 +65,17 @@ export const useCamera = (userId?: string) => {
   }, []);
 
   const activateCamera = useCallback(() => {
-    console.log("=== ACTIVATE CAMERA CALLED ===");
-
     // Clear any pending deactivation
     if (deactivationTimeoutRef.current) {
-      console.log("Clearing pending deactivation timeout");
       clearTimeout(deactivationTimeoutRef.current);
       deactivationTimeoutRef.current = null;
     }
 
     setIsCameraActive(true);
-    console.log("Camera active state set to true");
   }, []);
 
   const deactivateCamera = useCallback(() => {
-    console.log("=== DEACTIVATE CAMERA CALLED ===");
     setIsCameraActive(false);
-    console.log("Camera active state set to false");
 
     if (durationInterval.current) {
       cancelAnimationFrame(durationInterval.current);
@@ -93,18 +89,13 @@ export const useCamera = (userId?: string) => {
   }, []);
 
   const scheduleDeactivation = useCallback(() => {
-    console.log("=== SCHEDULING CAMERA DEACTIVATION ===");
-
     // Clear any existing timeout
     if (deactivationTimeoutRef.current) {
-      console.log("Clearing existing deactivation timeout");
       clearTimeout(deactivationTimeoutRef.current);
     }
 
     // Schedule deactivation after delay
-    console.log(`Setting deactivation timeout for ${DEACTIVATION_DELAY}ms`);
     deactivationTimeoutRef.current = setTimeout(() => {
-      console.log("Deactivation timeout fired - calling deactivateCamera");
       deactivateCamera();
       deactivationTimeoutRef.current = null;
     }, DEACTIVATION_DELAY);
@@ -113,25 +104,27 @@ export const useCamera = (userId?: string) => {
   // Smart camera lifecycle management
   const manageCameraLifecycle = useCallback(
     (isTabActive: boolean, isSwipingTowardsCamera: boolean = false) => {
-      console.log(
-        `Camera lifecycle called: tabActive=${isTabActive}, swipingTowards=${isSwipingTowardsCamera}, currentCameraActive=${isCameraActive}`
-      );
-
-      if (isTabActive) {
-        // Camera tab is active - activate immediately
-        console.log("Activating camera - tab is active");
+      if (isTabActive && isFocused) {
+        // Camera tab is active AND screen is focused - activate immediately
         activateCamera();
-      } else if (isSwipingTowardsCamera) {
-        // User is swiping towards camera - activate immediately
-        console.log("Activating camera - swiping towards camera");
+      } else if (isSwipingTowardsCamera && isFocused) {
+        // User is swiping towards camera AND screen is focused - activate immediately
         activateCamera();
+      } else if (!isFocused) {
+        // Screen is not focused - deactivate immediately (regardless of tab state)
+        deactivateCamera();
       } else {
         // Camera tab is not active and not swiping towards it - schedule deactivation
-        console.log("Scheduling camera deactivation");
         scheduleDeactivation();
       }
     },
-    [activateCamera, scheduleDeactivation, isCameraActive]
+    [
+      activateCamera,
+      scheduleDeactivation,
+      isCameraActive,
+      isFocused,
+      deactivateCamera,
+    ]
   );
 
   const startRecording = useCallback(async () => {
@@ -245,6 +238,16 @@ export const useCamera = (userId?: string) => {
   const resetVideoCaptured = useCallback(() => {
     setHasVideoCaptured(false);
   }, []);
+
+  // Focus-based lifecycle management
+  useFocusEffect(
+    useCallback(() => {
+      setIsFocused(true);
+      return () => {
+        setIsFocused(false);
+      };
+    }, [])
+  );
 
   const recordingProgress = Math.min(recordingDuration / MAX_VIDEO_DURATION, 1);
 

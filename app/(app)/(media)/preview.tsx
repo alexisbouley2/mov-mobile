@@ -14,6 +14,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import { mediaUploadManager } from "@/services/upload";
 import { useUserEvents } from "@/contexts/UserEventsContext";
 import log from "@/utils/logger";
+import { useDebugLifecycle } from "@/utils/debugLifecycle";
 
 export default function MediaPreviewScreen() {
   const params = useLocalSearchParams();
@@ -24,6 +25,8 @@ export default function MediaPreviewScreen() {
   const { events } = useUserEvents();
   const videoRef = useRef<any>(null);
   const [paused, setPaused] = useState(false);
+
+  useDebugLifecycle("MediaPreviewScreen");
 
   // Auto-play when screen focuses
   useFocusEffect(
