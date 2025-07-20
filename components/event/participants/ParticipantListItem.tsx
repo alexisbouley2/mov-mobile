@@ -3,9 +3,9 @@ import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from "react-native";
 import ParticipantAvatar from "@/components/ui/ParticipantAvatar";
 import { Participant } from "@movapp/types";
-import { useEvent } from "@/contexts/EventContext";
+import { useEvent } from "@/contexts/event/EventContext";
 import { useUserProfile } from "@/contexts/UserProfileContext";
-import { useEventParticipants } from "@/contexts/EventParticipantsContext";
+import { useEventParticipants } from "@/contexts/event/EventParticipantsContext";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 
 interface ParticipantListItemProps {

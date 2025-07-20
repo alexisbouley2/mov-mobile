@@ -4,7 +4,7 @@ import * as Contacts from "expo-contacts";
 import { InviteContact } from "@/components/event/invite/InviteContactItem";
 import { normalizePhoneNumber } from "@/utils/phoneValidation";
 import { useUserProfile } from "@/contexts/UserProfileContext";
-import { useEvent } from "@/contexts/EventContext";
+import { useEvent } from "@/contexts/event/EventContext";
 import { usersApi } from "@/services/api/users";
 import { UserContact } from "@movapp/types";
 

@@ -8,7 +8,7 @@ import {
 } from "react-native";
 import { PanGestureHandler } from "react-native-gesture-handler";
 import Animated from "react-native-reanimated";
-import { useEventParticipants } from "@/contexts/EventParticipantsContext";
+import { useEventParticipants } from "@/contexts/event/EventParticipantsContext";
 import ParticipantListItem from "@/components/event/participants/ParticipantListItem";
 import ParticipantsHeader from "@/components/event/participants/ParticipantsHeader";
 import ParticipantsTabHeader from "@/components/event/participants/ParticipantsTabHeader";

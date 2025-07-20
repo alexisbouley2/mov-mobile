@@ -3,7 +3,7 @@ import { View, Text, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import BackButton from "@/components/ui/button/BackButton";
 import { CachedImage } from "@/components/ui/CachedImage";
-import { useEvent } from "@/contexts/EventContext";
+import { useEvent } from "@/contexts/event/EventContext";
 
 export const ChatHeader: React.FC = () => {
   const router = useRouter();

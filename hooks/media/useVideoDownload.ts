@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Alert, Linking } from "react-native";
 import * as MediaLibrary from "expo-media-library";
 import * as FileSystem from "expo-file-system";
-import { VideoItem } from "@/contexts/EventVideosContext";
+import { VideoItem } from "@/contexts/event/EventVideosContext";
 import { videoCacheService } from "@/services/videoCacheService";
 import log from "@/utils/logger";
 

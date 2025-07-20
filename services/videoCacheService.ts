@@ -1,5 +1,5 @@
 import * as FileSystem from "expo-file-system";
-import { VideoItem } from "@/contexts/EventVideosContext";
+import { VideoItem } from "@/contexts/event/EventVideosContext";
 import log from "@/utils/logger";
 
 export interface CachedVideo {

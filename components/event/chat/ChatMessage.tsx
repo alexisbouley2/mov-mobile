@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
-import { Message } from "@/contexts/EventMessagesContext";
+import { Message } from "@/contexts/event/EventMessagesContext";
 import { useUserProfile } from "@/contexts/UserProfileContext";
 
 interface ChatMessageProps {

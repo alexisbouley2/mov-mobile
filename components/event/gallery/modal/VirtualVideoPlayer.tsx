@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
 } from "react-native";
 import Video from "react-native-video";
-import { VideoItem } from "@/contexts/EventVideosContext";
+import { VideoItem } from "@/contexts/event/EventVideosContext";
 import { videoCacheService } from "@/services/videoCacheService";
 import VideoOverlay from "./VideoOverlay";
 import log from "@/utils/logger";

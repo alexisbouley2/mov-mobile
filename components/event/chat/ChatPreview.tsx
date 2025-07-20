@@ -2,7 +2,7 @@
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
-import { useEventMessages } from "@/contexts/EventMessagesContext";
+import { useEventMessages } from "@/contexts/event/EventMessagesContext";
 import ParticipantAvatar from "../../ui/ParticipantAvatar";
 
 export default function ChatPreview() {

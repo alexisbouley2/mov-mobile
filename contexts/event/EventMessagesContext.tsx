@@ -12,7 +12,7 @@ import { supabase } from "@/lib/supabase";
 import { messagesApi } from "@/services/api";
 import log from "@/utils/logger";
 import { useUserProfile } from "@/contexts/UserProfileContext";
-import { useEvent } from "@/contexts/EventContext";
+import { useEvent } from "@/contexts/event/EventContext";
 import {
   MessagePreviewResponse,
   EventMessagesResponse,

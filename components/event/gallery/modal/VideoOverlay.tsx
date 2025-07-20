@@ -4,7 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { CachedImage } from "@/components/ui/CachedImage";
 import ThreeDotsButton from "@/components/ui/ThreeDotsButton";
 import { useVideoDownload } from "@/hooks/media/useVideoDownload";
-import { useEventVideos, VideoItem } from "@/contexts/EventVideosContext";
+import { useEventVideos, VideoItem } from "@/contexts/event/EventVideosContext";
 
 interface VideoOverlayProps {
   video: VideoItem;

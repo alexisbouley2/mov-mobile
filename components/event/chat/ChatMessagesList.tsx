@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useMemo } from "react";
 import { View, FlatList, ActivityIndicator, StyleSheet } from "react-native";
-import { Message } from "@/contexts/EventMessagesContext";
+import { Message } from "@/contexts/event/EventMessagesContext";
 import { ChatMessage } from "./ChatMessage";
 import { ChatEmptyState } from "./ChatEmptyState";
 import { DateSeparator } from "./DateSeparator";

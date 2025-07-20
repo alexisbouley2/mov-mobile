@@ -4,7 +4,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { eventsApi } from "@/services/api/events";
 import { config } from "@/lib/config";
 import { useUserProfile } from "@/contexts/UserProfileContext";
-import { useEvent } from "@/contexts/EventContext";
+import { useEvent } from "@/contexts/event/EventContext";
 import InviteHeader from "@/components/event/invite/InviteHeader";
 import InviteContactList from "@/components/event/invite/InviteContactList";
 import { useContacts } from "@/hooks/event/useContacts";

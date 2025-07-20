@@ -10,7 +10,7 @@ import React, {
 import { eventsApi } from "@/services/api";
 import log from "@/utils/logger";
 import { useUserProfile } from "@/contexts/UserProfileContext";
-import { useEvent } from "@/contexts/EventContext";
+import { useEvent } from "@/contexts/event/EventContext";
 import { EventParticipantsResponse, Participant } from "@movapp/types";
 
 interface EventParticipantsContextType {

@@ -12,7 +12,7 @@ import {
 import InviteContactItem, { InviteContact } from "./InviteContactItem";
 import ContactsPermissionDenied from "./ContactsPermissionDenied";
 import { ContactPermissionState } from "@/hooks/event/useContacts";
-import { useEvent } from "@/contexts/EventContext";
+import { useEvent } from "@/contexts/event/EventContext";
 import { useUserProfile } from "@/contexts/UserProfileContext";
 import { eventsApi } from "@/services/api/events";
 

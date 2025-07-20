@@ -2,7 +2,7 @@
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import EventVideoFeed from "./EventVideoFeed";
-import { useEventVideos } from "@/contexts/EventVideosContext";
+import { useEventVideos } from "@/contexts/event/EventVideosContext";
 
 interface EventGalleryProps {
   eventDate: Date;

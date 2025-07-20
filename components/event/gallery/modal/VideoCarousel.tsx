@@ -12,7 +12,7 @@ import Animated, {
   runOnJS,
 } from "react-native-reanimated";
 import VirtualVideoPlayer from "./VirtualVideoPlayer";
-import { VideoItem, useEventVideos } from "@/contexts/EventVideosContext";
+import { VideoItem, useEventVideos } from "@/contexts/event/EventVideosContext";
 import { videoCacheService } from "@/services/videoCacheService";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");

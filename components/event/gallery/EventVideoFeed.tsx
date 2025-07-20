@@ -8,7 +8,7 @@ import {
   ErrorState,
   EmptyState,
 } from "./VideoFeedStates";
-import { useEventVideos } from "@/contexts/EventVideosContext";
+import { useEventVideos } from "@/contexts/event/EventVideosContext";
 
 export default function EventVideoFeed() {
   const {

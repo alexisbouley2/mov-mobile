@@ -2,7 +2,7 @@
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
-import { useEventParticipants } from "@/contexts/EventParticipantsContext";
+import { useEventParticipants } from "@/contexts/event/EventParticipantsContext";
 import { CachedImage } from "@/components/ui/CachedImage";
 
 const MAX_VISIBLE_PARTICIPANTS = 4;

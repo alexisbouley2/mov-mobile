@@ -10,7 +10,7 @@ import { Alert } from "react-native";
 import { videosApi } from "@/services/api";
 import log from "@/utils/logger";
 import { useUserProfile } from "@/contexts/UserProfileContext";
-import { useEvent } from "@/contexts/EventContext";
+import { useEvent } from "@/contexts/event/EventContext";
 import { videoCacheService } from "@/services/videoCacheService";
 import { VideoFeedResponse, VideoWithUrls } from "@movapp/types";
 

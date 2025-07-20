@@ -1,7 +1,7 @@
 import React from "react";
 import { View, StyleSheet, Modal } from "react-native";
 import VideoCarousel from "./VideoCarousel";
-import { useEventVideos, VideoItem } from "@/contexts/EventVideosContext";
+import { useEventVideos, VideoItem } from "@/contexts/event/EventVideosContext";
 
 interface VideoViewerModalProps {
   visible: boolean;

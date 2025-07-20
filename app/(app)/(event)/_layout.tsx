@@ -1,9 +1,9 @@
 // Updated app/(app)/(event)/_layout.tsx
 import { Stack } from "expo-router";
-import { EventProvider } from "@/contexts/EventContext";
-import { EventMessagesProvider } from "@/contexts/EventMessagesContext";
-import { EventParticipantsProvider } from "@/contexts/EventParticipantsContext";
-import { EventVideosProvider } from "@/contexts/EventVideosContext";
+import { EventProvider } from "@/contexts/event/EventContext";
+import { EventMessagesProvider } from "@/contexts/event/EventMessagesContext";
+import { EventParticipantsProvider } from "@/contexts/event/EventParticipantsContext";
+import { EventVideosProvider } from "@/contexts/event/EventVideosContext";
 
 export default function EventLayout() {
   return (

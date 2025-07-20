@@ -1,7 +1,7 @@
 // Updated app/(app)/(event)/chat/[id].tsx
 import React from "react";
 import { View, StyleSheet, KeyboardAvoidingView, Platform } from "react-native";
-import { useEventMessages } from "@/contexts/EventMessagesContext";
+import { useEventMessages } from "@/contexts/event/EventMessagesContext";
 import {
   ChatHeader,
   ChatMessagesList,

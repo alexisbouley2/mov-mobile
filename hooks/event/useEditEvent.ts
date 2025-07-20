@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { Alert } from "react-native";
 import { useEventForm } from "./useEventForm";
 import { useEventPhoto } from "./useEventPhoto";
-import { useEvent } from "@/contexts/EventContext";
+import { useEvent } from "@/contexts/event/EventContext";
 import log from "@/utils/logger";
 import { UpdateEventRequest } from "@movapp/types";
 

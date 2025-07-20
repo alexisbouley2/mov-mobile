@@ -1,7 +1,7 @@
 import { useCallback, useLayoutEffect, useState, useRef } from "react";
 import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
 import { FlatList } from "react-native";
-import { useEvent } from "@/contexts/EventContext";
+import { useEvent } from "@/contexts/event/EventContext";
 import { useUserProfile } from "@/contexts/UserProfileContext";
 import { useNotifications } from "@/contexts/NotificationContext";
 
