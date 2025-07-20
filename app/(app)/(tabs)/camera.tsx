@@ -17,17 +17,11 @@ import { useTab } from "@/contexts/TabContext";
 import { useDebugLifecycle } from "@/utils/debugLifecycle";
 
 export default function CameraScreen() {
-  console.log("=== CAMERA SCREEN COMPONENT CALLED ===");
-
   const { user } = useUserProfile();
   const { isTabActive, isSwipingTowardsCamera } = useTab();
   const isCameraTabActive = isTabActive(1);
 
   useDebugLifecycle("CameraScreen");
-
-  console.log(
-    `CameraScreen: RENDERING - isTabActive(1)=${isCameraTabActive}, isSwipingTowardsCamera=${isSwipingTowardsCamera}`
-  );
 
   const {
     hasCameraPermission,
@@ -46,36 +40,11 @@ export default function CameraScreen() {
     toggleFlash,
     resetVideoCaptured,
     manageCameraLifecycle,
+    handleCameraPress,
   } = useCamera(user?.id);
-
-  useEffect(() => {
-    console.log("isCameraActive", isCameraActive);
-  }, [isCameraActive]);
-
-  useEffect(() => {
-    console.log("isCameraTabActive", isCameraTabActive);
-  }, [isCameraTabActive]);
-
-  useEffect(() => {
-    console.log("isSwipingTowardsCamera", isSwipingTowardsCamera);
-  }, [isSwipingTowardsCamera]);
-
-  console.log(
-    `CameraScreen: Permissions and device - hasCameraPermission=${hasCameraPermission}, hasMicrophonePermission=${hasMicrophonePermission}, device=${!!device}`
-  );
-
-  // Track context value changes
-  useEffect(() => {
-    console.log(
-      `CameraScreen: Context values changed - isCameraTabActive=${isCameraTabActive}, isSwipingTowardsCamera=${isSwipingTowardsCamera}`
-    );
-  }, [isCameraTabActive, isSwipingTowardsCamera]);
 
   // Smart camera lifecycle management
   useEffect(() => {
-    console.log(
-      `Camera screen effect: isCameraTabActive=${isCameraTabActive}, isSwipingTowardsCamera=${isSwipingTowardsCamera}`
-    );
     manageCameraLifecycle(isCameraTabActive, isSwipingTowardsCamera);
   }, [isCameraTabActive, isSwipingTowardsCamera, manageCameraLifecycle]);
 
@@ -86,22 +55,7 @@ export default function CameraScreen() {
     }, [resetVideoCaptured])
   );
 
-  // Handle double tap
-  const lastTapRef = React.useRef(0);
-  const handleCameraPress = () => {
-    const now = Date.now();
-    const DOUBLE_TAP_DELAY = 300;
-
-    if (now - lastTapRef.current < DOUBLE_TAP_DELAY) {
-      toggleCameraType();
-    }
-    lastTapRef.current = now;
-  };
-
   if (!hasCameraPermission || !hasMicrophonePermission || !device) {
-    console.log(
-      `CameraScreen: EARLY RETURN - hasCameraPermission=${hasCameraPermission}, hasMicrophonePermission=${hasMicrophonePermission}, device=${!!device}`
-    );
     return <View style={styles.container} />;
   }
 
@@ -126,7 +80,6 @@ export default function CameraScreen() {
       )}
 
       {/* Camera View */}
-      {/* {isCameraActive ? ( */}
       <TouchableOpacity
         style={styles.camera}
         onPress={handleCameraPress}
@@ -141,20 +94,11 @@ export default function CameraScreen() {
           video={true}
           audio={true}
           torch={isRecording && flash === "on" ? "on" : "off"}
-          // fps={30}
           videoStabilizationMode="auto"
           photoHdr={false}
           lowLightBoost={false}
-          // format={device.formats.find(
-          //   (
-          //     f //f.videoHeight <= 1080 //&& // Lower resolution for faster processing
-          //   ) => f.maxFps >= 30 // Ensure it supports at least 30fps
-          // )}
         />
       </TouchableOpacity>
-      {/* ) : (
-        <View style={styles.camera} />
-      )} */}
 
       {/* Camera Controls */}
       {isCameraTabActive && !isProcessing && !hasVideoCaptured && (

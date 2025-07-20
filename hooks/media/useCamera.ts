@@ -11,10 +11,9 @@ import log from "@/utils/logger";
 import { useRecording } from "@/contexts/RecordingContext";
 
 export const useCamera = (userId?: string) => {
-  console.log(`=== USE CAMERA HOOK CALLED with userId=${userId} ===`);
-
   const MAX_VIDEO_DURATION = 6;
   const DEACTIVATION_DELAY = 4000; // 1000ms delay before deactivating camera
+  const DOUBLE_TAP_DELAY = 300;
   const router = useRouter();
   const { isRecording, setIsRecording } = useRecording();
 
@@ -45,6 +44,7 @@ export const useCamera = (userId?: string) => {
   const deactivationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
     null
   );
+  const lastTapRef = useRef(0);
 
   // Request permissions on mount
   useEffect(() => {
@@ -229,6 +229,15 @@ export const useCamera = (userId?: string) => {
     setCameraPosition((current) => (current === "back" ? "front" : "back"));
   }, [isRecording, isProcessing]);
 
+  const handleCameraPress = useCallback(() => {
+    const now = Date.now();
+
+    if (now - lastTapRef.current < DOUBLE_TAP_DELAY) {
+      toggleCameraType();
+    }
+    lastTapRef.current = now;
+  }, [toggleCameraType]);
+
   const toggleFlash = useCallback(() => {
     setFlash((current) => (current === "off" ? "on" : "off"));
   }, []);
@@ -265,5 +274,6 @@ export const useCamera = (userId?: string) => {
     deactivateCamera,
     resetVideoCaptured,
     manageCameraLifecycle,
+    handleCameraPress,
   };
 };

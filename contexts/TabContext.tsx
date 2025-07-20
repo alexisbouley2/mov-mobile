@@ -75,27 +75,11 @@ export const TabProvider: React.FC<TabProviderProps> = ({
   const gestureHandler =
     useAnimatedGestureHandler<PanGestureHandlerGestureEvent>({
       onStart: (_, context: any) => {
-        console.log(
-          `Gesture started: currentIndex=${currentIndex}, startX=${translateX.value}`
-        );
         context.startX = translateX.value;
       },
       onActive: (event, context: any) => {
-        // Debug: Log all gesture data
-        console.log(
-          `Gesture Debug: translationX=${event.translationX}, translationY=${
-            event.translationY
-          }, absX=${Math.abs(event.translationX)}, absY=${Math.abs(
-            event.translationY
-          )}`
-        );
-
         // Only handle horizontal gestures
         if (Math.abs(event.translationX) > Math.abs(event.translationY)) {
-          console.log(
-            `Horizontal gesture detected: translationX=${event.translationX}, translationY=${event.translationY}`
-          );
-
           const newTranslateX = context.startX + event.translationX;
           // Limit the swipe to prevent going beyond the first and last tabs
           const maxTranslateX = 0;
@@ -110,16 +94,9 @@ export const TabProvider: React.FC<TabProviderProps> = ({
             (currentIndex < 1 && event.translationX < 0) || // Swiping left from events tab
             (currentIndex > 1 && event.translationX > 0); // Swiping right from profile tab
 
-          console.log(
-            `Swipe towards camera check: currentIndex=${currentIndex}, translationX=${event.translationX}, isSwipingTowardsCamera=${isSwipingTowardsCamera}`
-          );
-
           // Update the context state
           runOnJS(setIsSwipingTowardsCamera)(isSwipingTowardsCamera);
         } else {
-          console.log(
-            `Vertical gesture detected: translationX=${event.translationX}, translationY=${event.translationY}`
-          );
         }
       },
       onEnd: (event, _context: any) => {
@@ -144,10 +121,8 @@ export const TabProvider: React.FC<TabProviderProps> = ({
           });
 
           runOnJS(setCurrentIndex)(targetIndex);
-          console.log(`Gesture ended: targetIndex=${targetIndex}`);
 
           // Clear swipe towards camera state when gesture ends
-          console.log("Clearing swipe towards camera state");
           runOnJS(setIsSwipingTowardsCamera)(false);
         }
       },
