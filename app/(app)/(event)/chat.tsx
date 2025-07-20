@@ -1,12 +1,8 @@
-// Updated app/(app)/(event)/chat/[id].tsx
+// Updated app/(app)/(event)/chat.tsx
 import React from "react";
 import { View, StyleSheet, KeyboardAvoidingView, Platform } from "react-native";
 import { useEventMessages } from "@/contexts/event/EventMessagesContext";
-import {
-  ChatHeader,
-  ChatMessagesList,
-  ChatInput,
-} from "@/components/event/chat";
+import { ChatHeader, GiftedChatMessages } from "@/components/event/chat";
 
 export default function ChatScreen() {
   const { messages, messagesLoading, sending, sendMessage, loadMoreMessages } =
@@ -24,12 +20,13 @@ export default function ChatScreen() {
         keyboardVerticalOffset={Platform.OS === "ios" ? 60 : 40}
       >
         <ChatHeader />
-        <ChatMessagesList
+        <GiftedChatMessages
           messages={messages}
           messagesLoading={messagesLoading}
+          sending={sending}
+          onSendMessage={handleSendMessage}
           onLoadMoreMessages={loadMoreMessages}
         />
-        <ChatInput onSendMessage={handleSendMessage} sending={sending} />
       </KeyboardAvoidingView>
     </View>
   );
