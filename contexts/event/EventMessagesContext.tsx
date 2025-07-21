@@ -19,7 +19,6 @@ import {
   SendMessageResponse,
 } from "@movapp/types";
 
-// Use the types from the API instead of defining our own
 export type MessagePreview = MessagePreviewResponse;
 export type Message = SendMessageResponse;
 
@@ -32,12 +31,13 @@ interface EventMessagesContextType {
   // Full messages data
   messages: Message[];
   messagesLoading: boolean;
+  loadingEarlier: boolean;
   sending: boolean;
   hasMore: boolean;
   total: number;
   loadMessages: (_eventId: string) => Promise<void>;
   sendMessage: (_content: string) => Promise<void>;
-  loadMoreMessages: () => Promise<void>;
+  loadEarlier: () => Promise<void>;
 
   // Shared state
   currentEventId: string | null;
@@ -51,12 +51,13 @@ const EventMessagesContext = createContext<EventMessagesContextType>({
   loadPreview: async () => {},
   messages: [],
   messagesLoading: false,
+  loadingEarlier: false,
   sending: false,
   hasMore: true,
   total: 0,
   loadMessages: async () => {},
   sendMessage: async () => {},
-  loadMoreMessages: async () => {},
+  loadEarlier: async () => {},
   currentEventId: null,
   error: null,
   clearError: () => {},
@@ -79,6 +80,7 @@ export function EventMessagesProvider({
   // Messages state
   const [messages, setMessages] = useState<Message[]>([]);
   const [messagesLoading, setMessagesLoading] = useState(false);
+  const [loadingEarlier, setLoadingEarlier] = useState(false);
   const [sending, setSending] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(1);
@@ -88,7 +90,7 @@ export function EventMessagesProvider({
   const [currentEventId, setCurrentEventId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Use refs to avoid dependency issues
+  // Refs for realtime updates
   const loadPreviewRef = useRef<
     ((_eventId: string) => Promise<void>) | undefined
   >(undefined);
@@ -101,7 +103,6 @@ export function EventMessagesProvider({
       try {
         setPreviewLoading(true);
         setError(null);
-
         const data = await messagesApi.getMessagePreview(eventId, user.id);
         setPreview(data);
       } catch (err) {
@@ -118,40 +119,26 @@ export function EventMessagesProvider({
   loadPreviewRef.current = loadPreview;
   currentEventIdRef.current = currentEventId;
 
-  // Load full messages with pagination
-  const loadMessagesPage = useCallback(
-    async (eventId: string, pageNum: number) => {
+  // Load initial messages
+  const loadMessages = useCallback(
+    async (eventId: string) => {
       if (!user?.id) return;
 
-      console.log("loadMessagesPage", eventId, pageNum);
+      setMessagesLoading(true);
+      setError(null);
 
       try {
         const data: EventMessagesResponse = await messagesApi.getMessages(
           eventId,
           user.id,
-          pageNum,
+          1, // Always start from page 1
           30
         );
 
-        if (pageNum === 1) {
-          setMessages(data.messages);
-        } else {
-          // Deduplicate messages when loading more
-          setMessages((prev) => {
-            const existingIds = new Set(prev.map((m) => m.id));
-            const newMessages = data.messages.filter(
-              (m: Message) => !existingIds.has(m.id)
-            );
-            return [...newMessages, ...prev];
-          });
-        }
-
-        console.log("data.hasMore", data.hasMore);
-        console.log("data.total", data.total);
-
+        setMessages(data.messages);
         setHasMore(data.hasMore);
         setTotal(data.total);
-        setPage(pageNum);
+        setPage(1);
         setCurrentEventId(eventId);
       } catch (err) {
         log.error("Error loading messages:", err);
@@ -163,16 +150,39 @@ export function EventMessagesProvider({
     [user?.id]
   );
 
-  // Load initial messages for event
-  const loadMessages = useCallback(
-    async (eventId: string) => {
-      setMessagesLoading(true);
-      setError(null);
-      console.log("load initial messages");
-      await loadMessagesPage(eventId, 1);
-    },
-    [loadMessagesPage]
-  );
+  // Load earlier messages (pagination)
+  const loadEarlier = useCallback(async () => {
+    if (!currentEventId || !user?.id || !hasMore || loadingEarlier) {
+      return;
+    }
+
+    setLoadingEarlier(true);
+
+    try {
+      const nextPage = page + 1;
+      const data: EventMessagesResponse = await messagesApi.getMessages(
+        currentEventId,
+        user.id,
+        nextPage,
+        30
+      );
+
+      // Prepend older messages to the beginning
+      setMessages((prev) => {
+        const existingIds = new Set(prev.map((m) => m.id));
+        const newMessages = data.messages.filter((m) => !existingIds.has(m.id));
+        return [...newMessages, ...prev];
+      });
+
+      setHasMore(data.hasMore);
+      setPage(nextPage);
+    } catch (err) {
+      log.error("Error loading earlier messages:", err);
+      setError("Failed to load earlier messages");
+    } finally {
+      setLoadingEarlier(false);
+    }
+  }, [currentEventId, user?.id, hasMore, loadingEarlier, page]);
 
   // Send message
   const sendMessage = useCallback(
@@ -182,6 +192,8 @@ export function EventMessagesProvider({
       }
 
       setSending(true);
+      setError(null);
+
       try {
         const newMessage = await messagesApi.sendMessage(
           currentEventId,
@@ -189,10 +201,11 @@ export function EventMessagesProvider({
           { content: content.trim(), type: "text" }
         );
 
+        // Add message to the end of the list
         setMessages((prev) => [...prev, newMessage]);
         setTotal((prev) => prev + 1);
 
-        // Update preview with new message
+        // Update preview
         setPreview((prev) => ({
           hasMessages: true,
           messageCount: (prev?.messageCount || 0) + 1,
@@ -213,40 +226,26 @@ export function EventMessagesProvider({
     [currentEventId, user?.id, sending]
   );
 
-  // Load more messages (pagination)
-  const loadMoreMessages = useCallback(async () => {
-    // Only allow loading more if initial load is complete and we're not currently loading
-    if (hasMore && !messagesLoading && currentEventId) {
-      console.log("loadMoreMessages", currentEventId, page + 1);
-      await loadMessagesPage(currentEventId, page + 1);
-    }
-  }, [currentEventId, hasMore, messagesLoading, page, loadMessagesPage]);
-
   const clearError = useCallback(() => {
     setError(null);
   }, []);
 
   // Auto-load preview and messages when event changes
   useEffect(() => {
-    if (event?.id) {
-      console.log("in useffect of when event change");
+    if (event?.id && user?.id) {
       setCurrentEventId(event.id);
       loadPreview(event.id);
       loadMessages(event.id);
     }
-  }, [event?.id, loadPreview, loadMessages]);
+  }, [event?.id, user?.id]); // Don't include loadPreview and loadMessages to avoid loops
 
-  // Set up real-time subscription for message updates
+  // Real-time subscription
   useEffect(() => {
     if (!event?.id || !user?.id) {
       return;
     }
 
-    console.log("in useeffect of real-time subscription");
-    console.log("we did opened a channel");
-
     const channelName = `event-messages-${event.id}`;
-
     const channel = supabase.channel(channelName).on(
       "postgres_changes",
       {
@@ -258,65 +257,31 @@ export function EventMessagesProvider({
       async (payload) => {
         const newMessage = payload.new as any;
 
-        // Don't add our own messages (they're already added optimistically)
+        // Skip our own messages
         if (newMessage.senderId === user?.id) {
           return;
         }
 
         try {
-          // Fetch the complete message with sender information
           const messageWithSender = await messagesApi.getMessageById(
             newMessage.id,
             user.id
           );
 
-          if (messageWithSender) {
-            // Update messages if we're viewing this event's chat
-            if (currentEventIdRef.current === event.id) {
-              setMessages((prev) => {
-                const exists = prev.some((m) => m.id === newMessage.id);
-                if (exists) {
-                  return prev;
-                }
-                return [...prev, messageWithSender];
-              });
-              setTotal((prev) => prev + 1);
-            }
-
-            // Always update preview
-            if (loadPreviewRef.current) {
-              loadPreviewRef.current(event.id);
-            }
-          }
-        } catch (err) {
-          log.error(
-            "Error fetching sender information for real-time message:",
-            err
-          );
-          // Fallback to basic message without sender details
-          const messageWithBasicSender: Message = {
-            id: newMessage.id,
-            content: newMessage.content,
-            createdAt: newMessage.createdAt,
-            type: newMessage.type || "text",
-            sender: {
-              id: newMessage.senderId,
-              username: "User", // Fallback placeholder
-              profileThumbnailPath: null,
-              profileThumbnailUrl: null,
-            },
-          };
-
-          if (currentEventIdRef.current === event.id) {
+          if (messageWithSender && currentEventIdRef.current === event.id) {
             setMessages((prev) => {
-              const exists = prev.some((m) => m.id === newMessage.id);
-              if (exists) {
-                return prev;
-              }
-              return [...prev, messageWithBasicSender];
+              const exists = prev.some((m) => m.id === messageWithSender.id);
+              return exists ? prev : [...prev, messageWithSender];
             });
             setTotal((prev) => prev + 1);
           }
+
+          // Update preview
+          if (loadPreviewRef.current) {
+            loadPreviewRef.current(event.id);
+          }
+        } catch (err) {
+          log.error("Error fetching real-time message:", err);
         }
       }
     );
@@ -324,8 +289,6 @@ export function EventMessagesProvider({
     channel.subscribe();
 
     return () => {
-      console.log("in return of useeffect of real-time subscription");
-      console.log("we did closed a channel");
       supabase.removeChannel(channel);
     };
   }, [event?.id, user?.id]);
@@ -337,12 +300,13 @@ export function EventMessagesProvider({
       loadPreview,
       messages,
       messagesLoading,
+      loadingEarlier,
       sending,
       hasMore,
       total,
       loadMessages,
       sendMessage,
-      loadMoreMessages,
+      loadEarlier,
       currentEventId,
       error,
       clearError,
@@ -353,12 +317,13 @@ export function EventMessagesProvider({
       loadPreview,
       messages,
       messagesLoading,
+      loadingEarlier,
       sending,
       hasMore,
       total,
       loadMessages,
       sendMessage,
-      loadMoreMessages,
+      loadEarlier,
       currentEventId,
       error,
       clearError,
