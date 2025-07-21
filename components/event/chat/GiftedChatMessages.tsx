@@ -5,6 +5,14 @@ import { GiftedChat, IMessage, User } from "react-native-gifted-chat";
 import { Message } from "@/contexts/event/EventMessagesContext";
 import { useUserProfile } from "@/contexts/UserProfileContext";
 import { ChatEmptyState } from "./ChatEmptyState";
+import {
+  CustomInputToolbar,
+  CustomComposer,
+  CustomSend,
+  CustomBubble,
+  CustomAvatar,
+  CustomDay,
+} from "./renders";
 
 interface GiftedChatMessagesProps {
   messages: Message[];
@@ -56,7 +64,9 @@ export const GiftedChatMessages: React.FC<GiftedChatMessagesProps> = ({
 
   const onSend = useCallback(
     async (newMessages: IMessage[] = []) => {
+      console.log("in on send");
       if (newMessages.length > 0 && newMessages[0].text) {
+        console.log("gonna send new message");
         await onSendMessage(newMessages[0].text);
       }
     },
@@ -79,48 +89,55 @@ export const GiftedChatMessages: React.FC<GiftedChatMessagesProps> = ({
   }
 
   return (
-    <GiftedChat
-      messages={giftedMessages}
-      onSend={onSend}
-      user={currentUser}
-      loadEarlier={true} // Must be true for infiniteScroll
-      onLoadEarlier={handleLoadEarlier}
-      isLoadingEarlier={loadingEarlier}
-      infiniteScroll={true} // Enable automatic loading
-      renderLoading={() => (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#007AFF" />
-        </View>
-      )}
-      renderChatEmpty={() => <ChatEmptyState />}
-      placeholder="Type a message..."
-      alwaysShowSend
-      inverted={true}
-      textInputProps={{
-        style: styles.textInput,
-      }}
-      maxComposerHeight={100}
-      minComposerHeight={44}
-    />
+    <View style={styles.container}>
+      <GiftedChat
+        messages={giftedMessages}
+        onSend={onSend}
+        user={currentUser}
+        loadEarlier={true}
+        onLoadEarlier={handleLoadEarlier}
+        isLoadingEarlier={loadingEarlier}
+        infiniteScroll={true}
+        renderLoading={() => (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#007AFF" />
+          </View>
+        )}
+        renderChatEmpty={() => <ChatEmptyState />}
+        placeholder="Message"
+        alwaysShowSend
+        inverted={true}
+        maxComposerHeight={100}
+        minComposerHeight={44}
+        // Custom renders
+        renderInputToolbar={CustomInputToolbar}
+        renderComposer={CustomComposer}
+        renderSend={CustomSend}
+        renderBubble={CustomBubble}
+        renderAvatar={CustomAvatar}
+        renderDay={CustomDay}
+        // Styling
+        messagesContainerStyle={styles.messagesContainer}
+        bottomOffset={0}
+        keyboardShouldPersistTaps="never"
+      />
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#000",
+  },
+  messagesContainer: {
+    backgroundColor: "#000",
+    paddingBottom: 8,
+  },
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#f5f5f5",
-  },
-  textInput: {
-    backgroundColor: "#fff",
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: "#ddd",
-    paddingHorizontal: 12,
-    paddingTop: 8,
-    paddingBottom: 8,
-    fontSize: 16,
-    lineHeight: 20,
+    backgroundColor: "#000",
   },
 });
