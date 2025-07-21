@@ -132,6 +132,9 @@ export const GiftedChatMessages: React.FC<GiftedChatMessagesProps> = ({
         inverted={true}
         maxComposerHeight={100}
         minComposerHeight={44}
+        // 24-hour time format
+        timeFormat="HH:mm"
+        dateFormat="DD MMM YYYY"
         // Custom renders
         renderInputToolbar={CustomInputToolbar}
         renderComposer={CustomComposer}
@@ -146,11 +149,20 @@ export const GiftedChatMessages: React.FC<GiftedChatMessagesProps> = ({
         listViewProps={
           {
             contentContainerStyle: {
-              paddingBottom: keyboardHeight, // This prevents top messages from being cut off
+              paddingBottom: keyboardHeight,
+              paddingTop: 8,
             },
+            style: {},
+            showsVerticalScrollIndicator: false,
           } as any
         }
         keyboardShouldPersistTaps="never"
+        // Add these props to reduce spacing
+        minInputToolbarHeight={44}
+        // renderAvatarOnTop={true}
+        showAvatarForEveryMessage={false} // Only show avatar for last message in group
+        // scrollToBottom={true}
+        scrollToBottomOffset={100}
       />
     </View>
   );
@@ -160,12 +172,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#000",
-    borderWidth: 1,
-    borderColor: "red",
   },
   messagesContainer: {
     backgroundColor: "#000",
-    paddingBottom: 8,
   },
   loadingContainer: {
     flex: 1,

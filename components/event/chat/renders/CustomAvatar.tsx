@@ -9,11 +9,11 @@ export const CustomAvatar = (props: AvatarProps<any>) => {
       {...props}
       containerStyle={{
         left: styles.avatarContainer,
-        right: {},
+        right: styles.rightAvatarContainer,
       }}
       imageStyle={{
         left: styles.avatarImage,
-        right: {},
+        right: styles.rightAvatarImage,
       }}
     />
   );
@@ -21,12 +21,23 @@ export const CustomAvatar = (props: AvatarProps<any>) => {
 
 const styles = StyleSheet.create({
   avatarContainer: {
-    marginRight: 8,
-    marginLeft: 0,
+    marginRight: 4, // Reduced from 8
+    marginLeft: 0, // Reduced from 4
+    marginBottom: 0,
+  },
+  rightAvatarContainer: {
+    marginLeft: 4, // Reduced from 8
+    marginRight: 0, // Reduced from 4
+    marginBottom: 0,
   },
   avatarImage: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+  },
+  rightAvatarImage: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
   },
 });

@@ -17,7 +17,6 @@ const styles = StyleSheet.create({
   dayContainer: {
     alignItems: "center",
     justifyContent: "center",
-    marginVertical: 16,
   },
   dayText: {
     backgroundColor: "#1c1c1e",
