@@ -1,6 +1,6 @@
 // components/event/chat/GiftedChatMessages.tsx
-import React, { useCallback, useMemo } from "react";
-import { View, StyleSheet, ActivityIndicator } from "react-native";
+import React, { useCallback, useMemo, useState, useEffect } from "react";
+import { View, StyleSheet, ActivityIndicator, Keyboard } from "react-native";
 import { GiftedChat, IMessage, User } from "react-native-gifted-chat";
 import { Message } from "@/contexts/event/EventMessagesContext";
 import { useUserProfile } from "@/contexts/UserProfileContext";
@@ -35,6 +35,30 @@ export const GiftedChatMessages: React.FC<GiftedChatMessagesProps> = ({
 }) => {
   const { user } = useUserProfile();
 
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+
+  // Track keyboard height
+  useEffect(() => {
+    const keyboardDidShowListener = Keyboard.addListener(
+      "keyboardDidShow",
+      (event) => {
+        setKeyboardHeight(event.endCoordinates.height);
+      }
+    );
+
+    const keyboardDidHideListener = Keyboard.addListener(
+      "keyboardDidHide",
+      () => {
+        setKeyboardHeight(0);
+      }
+    );
+
+    return () => {
+      keyboardDidShowListener.remove();
+      keyboardDidHideListener.remove();
+    };
+  }, []);
+
   // Convert messages to GiftedChat format
   const giftedMessages: IMessage[] = useMemo(() => {
     // Reverse the array so newest messages are at the bottom
@@ -65,9 +89,7 @@ export const GiftedChatMessages: React.FC<GiftedChatMessagesProps> = ({
 
   const onSend = useCallback(
     async (newMessages: IMessage[] = []) => {
-      console.log("in on send");
       if (newMessages.length > 0 && newMessages[0].text) {
-        console.log("gonna send new message");
         await onSendMessage(newMessages[0].text);
       }
     },
@@ -121,6 +143,13 @@ export const GiftedChatMessages: React.FC<GiftedChatMessagesProps> = ({
         // Styling
         messagesContainerStyle={styles.messagesContainer}
         bottomOffset={0}
+        listViewProps={
+          {
+            contentContainerStyle: {
+              paddingBottom: keyboardHeight, // This prevents top messages from being cut off
+            },
+          } as any
+        }
         keyboardShouldPersistTaps="never"
       />
     </View>
@@ -131,6 +160,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#000",
+    borderWidth: 1,
+    borderColor: "red",
   },
   messagesContainer: {
     backgroundColor: "#000",
