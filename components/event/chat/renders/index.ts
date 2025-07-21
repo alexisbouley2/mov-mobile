@@ -6,3 +6,4 @@ export { CustomBubble } from "./CustomBubble";
 export { CustomAvatar } from "./CustomAvatar";
 export { CustomMessageContainer } from "./CustomMessageContainer";
 export { CustomDay } from "./CustomDay";
+export { CustomLoadEarlier } from "./CustomLoadEarlier";

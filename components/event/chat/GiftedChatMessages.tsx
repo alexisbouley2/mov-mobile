@@ -12,6 +12,7 @@ import {
   CustomBubble,
   CustomAvatar,
   CustomDay,
+  CustomLoadEarlier,
 } from "./renders";
 
 interface GiftedChatMessagesProps {
@@ -116,6 +117,7 @@ export const GiftedChatMessages: React.FC<GiftedChatMessagesProps> = ({
         renderBubble={CustomBubble}
         renderAvatar={CustomAvatar}
         renderDay={CustomDay}
+        renderLoadEarlier={CustomLoadEarlier}
         // Styling
         messagesContainerStyle={styles.messagesContainer}
         bottomOffset={0}
