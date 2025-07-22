@@ -11,13 +11,14 @@ import { router } from "expo-router";
 import log from "@/utils/logger";
 import { EventWithDetails, UpdateEventRequest, Message } from "@movapp/types";
 import { eventsApi } from "@/services/api/events";
+import { useUserProfile } from "@/contexts/UserProfileContext";
 
 interface EventContextType {
   event: EventWithDetails | null;
   eventLoading: boolean;
   error: string | null;
   lastMessage: Message | null;
-  loadEvent: (_eventId: string) => Promise<void>;
+  loadEvent: (_eventId: string, _userId: string) => Promise<void>;
   updateEvent: (
     _eventId: string,
     _data: UpdateEventRequest,
@@ -26,7 +27,6 @@ interface EventContextType {
       coverThumbnailPath?: string;
     }
   ) => Promise<{ error: any }>;
-  toggleParticipation: (_userId: string) => Promise<void>;
   deleteEvent: () => void;
   clearEventError: () => void;
   clearEvent: () => void;
@@ -41,7 +41,6 @@ const EventContext = createContext<EventContextType>({
   lastMessage: null,
   loadEvent: async () => {},
   updateEvent: async () => ({ error: null }),
-  toggleParticipation: async () => {},
   deleteEvent: () => {},
   clearEventError: () => {},
   clearEvent: () => {},
@@ -52,17 +51,18 @@ const EventContext = createContext<EventContextType>({
 export const useEvent = () => useContext(EventContext);
 
 export function EventProvider({ children }: { children: React.ReactNode }) {
+  const { user } = useUserProfile();
   const [event, setEvent] = useState<EventWithDetails | null>(null);
   const [eventLoading, seteventLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastMessage, setLastMessage] = useState<Message | null>(null);
 
-  const loadEvent = useCallback(async (eventId: string) => {
+  const loadEvent = useCallback(async (eventId: string, userId: string) => {
     try {
       seteventLoading(true);
       setError(null);
 
-      const response = await eventsApi.getEvent(eventId);
+      const response = await eventsApi.getEvent(eventId, userId);
 
       if (!response) {
         throw new Error("Failed to fetch event");
@@ -105,7 +105,9 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
         await eventsApi.update(eventId, eventUpdateData);
 
         // Reload event to get updated data
-        await loadEvent(eventId);
+        if (user?.id) {
+          await loadEvent(eventId, user.id);
+        }
         return { error: null };
       } catch (error) {
         const errorMessage =
@@ -117,52 +119,6 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
       }
     },
     [loadEvent]
-  );
-
-  const updateParticipantConfirmedStatusLocally = useCallback(
-    (userId: string, confirmed: boolean) => {
-      setEvent((prev) => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          participants: prev.participants.map((p) =>
-            p.user.id === userId ? { ...p, confirmed } : p
-          ),
-        };
-      });
-    },
-    []
-  );
-
-  const toggleParticipation = useCallback(
-    async (userId: string) => {
-      if (!event) return;
-
-      // Find current participant status
-      const currentParticipant = event.participants?.find(
-        (p) => p.user.id === userId
-      );
-      if (!currentParticipant) return;
-
-      const newConfirmedStatus = !currentParticipant.confirmed;
-
-      // Optimistically update local state
-      updateParticipantConfirmedStatusLocally(userId, newConfirmedStatus);
-
-      try {
-        await eventsApi.updateParticipantConfirmation(
-          event.id,
-          userId,
-          newConfirmedStatus
-        );
-        // Optionally: schedule a background refresh here
-      } catch {
-        // Revert the change and show error
-        updateParticipantConfirmedStatusLocally(userId, !newConfirmedStatus);
-        setError("Failed to update participation status");
-      }
-    },
-    [event, updateParticipantConfirmedStatusLocally]
   );
 
   const clearEventError = useCallback(() => {
@@ -208,7 +164,6 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
       lastMessage,
       loadEvent,
       updateEvent,
-      toggleParticipation,
       deleteEvent,
       clearEventError,
       clearEvent,
@@ -222,7 +177,6 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
       lastMessage,
       loadEvent,
       updateEvent,
-      toggleParticipation,
       deleteEvent,
       clearEventError,
       clearEvent,

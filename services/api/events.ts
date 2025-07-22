@@ -35,8 +35,15 @@ export const eventsApi = {
     api.get(`/events/user/${userId}`, CategorizedEventsResponseSchema),
 
   // Get single event with details
-  getEvent: (eventId: string): Promise<EventWithDetails | null> =>
-    api.get(`/events/${eventId}`, EventWithDetailsSchema.nullable()),
+  getEvent: (eventId: string, userId: string): Promise<EventWithDetails> => {
+    const params = new URLSearchParams();
+    params.append("userId", userId);
+
+    const queryString = params.toString();
+    const endpoint = `/events/${eventId}?${queryString}`;
+
+    return api.get(endpoint, EventWithDetailsSchema);
+  },
 
   // Update an event
   update: (

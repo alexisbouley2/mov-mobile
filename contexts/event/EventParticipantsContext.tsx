@@ -34,6 +34,16 @@ interface EventParticipantsContextType {
 
   // Participant management
   deleteParticipant: (_participantUserId: string) => Promise<void>;
+  toggleParticipation: (_userId: string) => Promise<void>;
+  addParticipant: (
+    _userId: string,
+    _participantUser: {
+      id: string;
+      username: string;
+      profileThumbnailPath: string | null;
+      profileThumbnailUrl: string | null;
+    }
+  ) => Promise<void>;
 }
 
 const EventParticipantsContext = createContext<EventParticipantsContextType>({
@@ -50,6 +60,8 @@ const EventParticipantsContext = createContext<EventParticipantsContextType>({
   error: null,
   clearError: () => {},
   deleteParticipant: async () => {},
+  toggleParticipation: async () => {},
+  addParticipant: async () => {},
 });
 
 export const useEventParticipants = () => useContext(EventParticipantsContext);
@@ -81,6 +93,16 @@ export function EventParticipantsProvider({
   // Shared state
   const [error, setError] = useState<string | null>(null);
 
+  // Helper function to sort participants alphabetically by username
+  const sortParticipantsAlphabetically = useCallback(
+    (participants: Participant[]) => {
+      return [...participants].sort((a, b) =>
+        a.user.username.localeCompare(b.user.username)
+      );
+    },
+    []
+  );
+
   // Helper to load a page of participants (mutualized)
   const loadParticipantsPage = useCallback(
     async (
@@ -104,14 +126,17 @@ export function EventParticipantsProvider({
             confirmed
           );
         if (pageNum === 1) {
-          setParticipants(data.participants);
+          setParticipants(sortParticipantsAlphabetically(data.participants));
         } else {
           setParticipants((prev) => {
             const existingIds = new Set(prev.map((p) => p.id));
             const newParticipants = data.participants.filter(
               (p: Participant) => !existingIds.has(p.id)
             );
-            return [...prev, ...newParticipants];
+            return sortParticipantsAlphabetically([
+              ...prev,
+              ...newParticipants,
+            ]);
           });
         }
         setHasMore(data.hasMore);
@@ -123,7 +148,7 @@ export function EventParticipantsProvider({
         setLoading(false);
       }
     },
-    [user?.id]
+    [user?.id, sortParticipantsAlphabetically]
   );
 
   // Loaders for confirmed/unconfirmed
@@ -214,6 +239,147 @@ export function EventParticipantsProvider({
     setError(null);
   }, []);
 
+  // Toggle participation status
+  const toggleParticipation = useCallback(
+    async (userId: string) => {
+      if (!event || !user) return;
+
+      // Find current participant status in both lists
+      const confirmedParticipant = confirmedParticipants.find(
+        (p) => p.user.id === userId
+      );
+      const unconfirmedParticipant = unconfirmedParticipants.find(
+        (p) => p.user.id === userId
+      );
+
+      const currentParticipant = confirmedParticipant || unconfirmedParticipant;
+      if (!currentParticipant) return;
+
+      const newConfirmedStatus = !currentParticipant.confirmed;
+
+      // Optimistically update local state
+      if (newConfirmedStatus) {
+        // Moving from unconfirmed to confirmed
+        setUnconfirmedParticipants((prev) =>
+          prev.filter((p) => p.user.id !== userId)
+        );
+        setConfirmedParticipants((prev) =>
+          sortParticipantsAlphabetically([
+            { ...currentParticipant, confirmed: true },
+            ...prev,
+          ])
+        );
+      } else {
+        // Moving from confirmed to unconfirmed
+        setConfirmedParticipants((prev) =>
+          prev.filter((p) => p.user.id !== userId)
+        );
+        setUnconfirmedParticipants((prev) =>
+          sortParticipantsAlphabetically([
+            { ...currentParticipant, confirmed: false },
+            ...prev,
+          ])
+        );
+      }
+
+      setEvent((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          currentUserConfirmed: newConfirmedStatus,
+        };
+      });
+
+      try {
+        await eventsApi.updateParticipantConfirmation(
+          event.id,
+          userId,
+          newConfirmedStatus
+        );
+      } catch (error) {
+        // Revert the change on error
+        if (newConfirmedStatus) {
+          setConfirmedParticipants((prev) =>
+            prev.filter((p) => p.user.id !== userId)
+          );
+          setUnconfirmedParticipants((prev) =>
+            sortParticipantsAlphabetically([
+              { ...currentParticipant, confirmed: false },
+              ...prev,
+            ])
+          );
+        } else {
+          setUnconfirmedParticipants((prev) =>
+            prev.filter((p) => p.user.id !== userId)
+          );
+          setConfirmedParticipants((prev) =>
+            sortParticipantsAlphabetically([
+              { ...currentParticipant, confirmed: true },
+              ...prev,
+            ])
+          );
+        }
+
+        setEvent((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            currentUserConfirmed: !newConfirmedStatus,
+          };
+        });
+
+        setError("Failed to update participation status");
+        throw error;
+      }
+    },
+    [
+      event,
+      user,
+      confirmedParticipants,
+      unconfirmedParticipants,
+      sortParticipantsAlphabetically,
+    ]
+  );
+
+  // Add new participant
+  const addParticipant = useCallback(
+    async (
+      userId: string,
+      participantUser: {
+        id: string;
+        username: string;
+        profileThumbnailPath: string | null;
+        profileThumbnailUrl: string | null;
+      }
+    ) => {
+      if (!event || !user) return;
+
+      const newParticipant: Participant = {
+        id: participantUser.id,
+        joinedAt: new Date(),
+        confirmed: false,
+        user: participantUser,
+      };
+
+      // Optimistically add to unconfirmed list
+      setUnconfirmedParticipants((prev) =>
+        sortParticipantsAlphabetically([newParticipant, ...prev])
+      );
+
+      try {
+        await eventsApi.addParticipant(event.id, participantUser.id, user.id);
+      } catch (error) {
+        // Revert on error
+        setUnconfirmedParticipants((prev) =>
+          prev.filter((p) => p.user.id !== participantUser.id)
+        );
+        setError("Failed to add participant");
+        throw error;
+      }
+    },
+    [event, user, setEvent, sortParticipantsAlphabetically]
+  );
+
   // Delete participant with API call first, then update UI if successful
   const deleteParticipant = useCallback(
     async (participantUserId: string) => {
@@ -233,17 +399,6 @@ export function EventParticipantsProvider({
         setUnconfirmedParticipants((prev) =>
           prev.filter((p) => p.user.id !== participantUserId)
         );
-
-        // Also update the main event participants (preview)
-        setEvent((prev) => {
-          if (!prev) return prev;
-          return {
-            ...prev,
-            participants: prev.participants.filter(
-              (p) => p.user.id !== participantUserId
-            ),
-          };
-        });
       } catch (error) {
         // Don't update UI, just show error
         setError("Failed to delete participant. Please try again.");
@@ -285,6 +440,8 @@ export function EventParticipantsProvider({
       error,
       clearError,
       deleteParticipant,
+      toggleParticipation,
+      addParticipant,
     }),
     [
       confirmedParticipants,
@@ -300,6 +457,8 @@ export function EventParticipantsProvider({
       error,
       clearError,
       deleteParticipant,
+      toggleParticipation,
+      addParticipant,
     ]
   );
 

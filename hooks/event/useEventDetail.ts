@@ -3,29 +3,28 @@ import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
 import { useEvent } from "@/contexts/event/EventContext";
 import { useUserProfile } from "@/contexts/UserProfileContext";
 import { useNotifications } from "@/contexts/NotificationContext";
+import { useEventParticipants } from "@/contexts/event/EventParticipantsContext";
 
 export const useEventDetail = () => {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { user } = useUserProfile();
   const { markEventNotificationsAsRead } = useNotifications();
-  const { event, eventLoading, error, loadEvent, toggleParticipation } =
-    useEvent();
+  const { event, eventLoading, error, loadEvent } = useEvent();
+  const { toggleParticipation } = useEventParticipants();
 
   const [screenKey] = useState(Date.now());
 
   // Load event every time we come to this screen
   useFocusEffect(
     useCallback(() => {
-      if (id) {
-        loadEvent(id);
+      if (id && user?.id) {
+        loadEvent(id, user.id);
 
         // Clear notifications for this event when user visits
-        if (user?.id) {
-          markEventNotificationsAsRead(id).catch((error) => {
-            console.warn("Failed to mark event notifications as read:", error);
-          });
-        }
+        markEventNotificationsAsRead(id).catch((error) => {
+          console.warn("Failed to mark event notifications as read:", error);
+        });
       }
     }, [id, loadEvent, user?.id, markEventNotificationsAsRead])
   );
@@ -38,7 +37,9 @@ export const useEventDetail = () => {
   }, [event, router]);
 
   const handleConfirm = () => {
-    toggleParticipation(user?.id || "");
+    if (user?.id) {
+      toggleParticipation(user.id);
+    }
   };
 
   const handleInvite = useCallback(() => {
@@ -51,10 +52,7 @@ export const useEventDetail = () => {
     if (!event || !user) return [];
 
     const isAdmin = event.adminId === user.id;
-    const currentParticipant = event.participants?.find(
-      (p) => p.user.id === user.id
-    );
-    const isConfirmed = currentParticipant?.confirmed || false;
+    const isConfirmed = event.currentUserConfirmed || false;
 
     return [
       { type: "header", data: event },
