@@ -22,13 +22,8 @@ export default function EventDetailScreen() {
     eventLoading,
     error,
     renderData,
-    flatListRef,
     screenKey,
-    shouldRefresh,
     handleEdit,
-    handleScroll,
-    handleMomentumScrollEnd,
-    handleRefresh,
     handleConfirm,
     handleInvite,
   } = useEventDetail();
@@ -101,17 +96,13 @@ export default function EventDetailScreen() {
   return (
     <View style={styles.container}>
       <FlatList
-        ref={flatListRef}
         key={`event-${screenKey}`}
         data={renderData}
         renderItem={renderItem}
         keyExtractor={(item, index) => `${item.type}-${index}`}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.flatListContent}
-        refreshing={eventLoading && shouldRefresh}
-        onRefresh={handleRefresh}
-        onScroll={handleScroll}
-        onMomentumScrollEnd={handleMomentumScrollEnd}
+        refreshing={false}
         scrollEventThrottle={16}
       />
     </View>
