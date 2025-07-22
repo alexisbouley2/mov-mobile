@@ -5,7 +5,6 @@ import React, {
   useState,
   useCallback,
   useMemo,
-  useEffect,
 } from "react";
 import { eventsApi } from "@/services/api";
 import log from "@/utils/logger";
@@ -14,10 +13,6 @@ import { useEvent } from "@/contexts/event/EventContext";
 import { EventParticipantsResponse, Participant } from "@movapp/types";
 
 interface EventParticipantsContextType {
-  // Preview data (from EventContext)
-  previewParticipants: Participant[];
-  totalCount: number;
-
   // Bottom sheet data
   confirmedParticipants: Participant[];
   unconfirmedParticipants: Participant[];
@@ -27,11 +22,12 @@ interface EventParticipantsContextType {
   unconfirmedHasMore: boolean;
   loadConfirmedParticipants: (_eventId: string) => Promise<void>;
   loadUnconfirmedParticipants: (_eventId: string) => Promise<void>;
-  loadMoreConfirmedParticipants: () => Promise<void>;
-  loadMoreUnconfirmedParticipants: () => Promise<void>;
+
+  // Convenience handlers that use current event
+  handleLoadMoreConfirmed: () => Promise<void>;
+  handleLoadMoreUnconfirmed: () => Promise<void>;
 
   // Shared state
-  currentEventId: string | null;
   error: string | null;
   clearError: () => void;
   loadBothParticipants: (_eventId: string) => Promise<void>;
@@ -41,8 +37,6 @@ interface EventParticipantsContextType {
 }
 
 const EventParticipantsContext = createContext<EventParticipantsContextType>({
-  previewParticipants: [],
-  totalCount: 0,
   confirmedParticipants: [],
   unconfirmedParticipants: [],
   confirmedLoading: false,
@@ -51,9 +45,8 @@ const EventParticipantsContext = createContext<EventParticipantsContextType>({
   unconfirmedHasMore: true,
   loadConfirmedParticipants: async () => {},
   loadUnconfirmedParticipants: async () => {},
-  loadMoreConfirmedParticipants: async () => {},
-  loadMoreUnconfirmedParticipants: async () => {},
-  currentEventId: null,
+  handleLoadMoreConfirmed: async () => {},
+  handleLoadMoreUnconfirmed: async () => {},
   error: null,
   clearError: () => {},
   loadBothParticipants: async () => {},
@@ -87,7 +80,6 @@ export function EventParticipantsProvider({
   const [unconfirmedPage, setUnconfirmedPage] = useState(1);
 
   // Shared state
-  const [currentEventId, setCurrentEventId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   // Helper to load a page of participants (mutualized)
@@ -125,7 +117,6 @@ export function EventParticipantsProvider({
         }
         setHasMore(data.hasMore);
         setPage(pageNum);
-        setCurrentEventId(eventId);
       } catch (err) {
         log.error("Error loading participants:", err);
         setError("Failed to load participants");
@@ -168,45 +159,57 @@ export function EventParticipantsProvider({
   );
 
   // Load more for confirmed/unconfirmed
-  const loadMoreConfirmedParticipants = useCallback(async () => {
-    if (confirmedHasMore && !confirmedLoading && currentEventId) {
-      await loadParticipantsPage(
-        currentEventId,
-        confirmedPage + 1,
-        true,
-        setConfirmedParticipants,
-        setConfirmedHasMore,
-        setConfirmedPage,
-        setConfirmedLoading
-      );
-    }
-  }, [
-    confirmedHasMore,
-    confirmedLoading,
-    currentEventId,
-    confirmedPage,
-    loadParticipantsPage,
-  ]);
+  const loadMoreConfirmedParticipants = useCallback(
+    async (eventId: string) => {
+      if (confirmedHasMore && !confirmedLoading) {
+        await loadParticipantsPage(
+          eventId,
+          confirmedPage + 1,
+          true,
+          setConfirmedParticipants,
+          setConfirmedHasMore,
+          setConfirmedPage,
+          setConfirmedLoading
+        );
+      }
+    },
+    [confirmedHasMore, confirmedLoading, confirmedPage, loadParticipantsPage]
+  );
 
-  const loadMoreUnconfirmedParticipants = useCallback(async () => {
-    if (unconfirmedHasMore && !unconfirmedLoading && currentEventId) {
-      await loadParticipantsPage(
-        currentEventId,
-        unconfirmedPage + 1,
-        false,
-        setUnconfirmedParticipants,
-        setUnconfirmedHasMore,
-        setUnconfirmedPage,
-        setUnconfirmedLoading
-      );
+  const loadMoreUnconfirmedParticipants = useCallback(
+    async (eventId: string) => {
+      if (unconfirmedHasMore && !unconfirmedLoading) {
+        await loadParticipantsPage(
+          eventId,
+          unconfirmedPage + 1,
+          false,
+          setUnconfirmedParticipants,
+          setUnconfirmedHasMore,
+          setUnconfirmedPage,
+          setUnconfirmedLoading
+        );
+      }
+    },
+    [
+      unconfirmedHasMore,
+      unconfirmedLoading,
+      unconfirmedPage,
+      loadParticipantsPage,
+    ]
+  );
+
+  // Convenience handlers that use current event
+  const handleLoadMoreConfirmed = useCallback(async () => {
+    if (event?.id) {
+      await loadMoreConfirmedParticipants(event.id);
     }
-  }, [
-    unconfirmedHasMore,
-    unconfirmedLoading,
-    currentEventId,
-    unconfirmedPage,
-    loadParticipantsPage,
-  ]);
+  }, [event?.id, loadMoreConfirmedParticipants]);
+
+  const handleLoadMoreUnconfirmed = useCallback(async () => {
+    if (event?.id) {
+      await loadMoreUnconfirmedParticipants(event.id);
+    }
+  }, [event?.id, loadMoreUnconfirmedParticipants]);
 
   const clearError = useCallback(() => {
     setError(null);
@@ -251,22 +254,6 @@ export function EventParticipantsProvider({
     [event, user, setEvent]
   );
 
-  // Set current event when event changes
-  useEffect(() => {
-    if (event?.id) {
-      setCurrentEventId(event.id);
-    }
-  }, [event?.id]);
-
-  // Get preview data from EventContext
-  const previewParticipants = useMemo(() => {
-    return event?.participants || [];
-  }, [event?.participants]);
-
-  const totalCount = useMemo(() => {
-    return event?.participants?.length || 0;
-  }, [event?.participants?.length]);
-
   // Load both lists when opening bottom sheet
   const loadBothParticipants = useCallback(
     async (eventId: string) => {
@@ -280,8 +267,6 @@ export function EventParticipantsProvider({
 
   const contextValue = useMemo(
     () => ({
-      previewParticipants,
-      totalCount,
       confirmedParticipants,
       unconfirmedParticipants,
       confirmedLoading,
@@ -290,17 +275,14 @@ export function EventParticipantsProvider({
       unconfirmedHasMore,
       loadConfirmedParticipants,
       loadUnconfirmedParticipants,
-      loadMoreConfirmedParticipants,
-      loadMoreUnconfirmedParticipants,
-      currentEventId,
+      handleLoadMoreConfirmed,
+      handleLoadMoreUnconfirmed,
       error,
       clearError,
       loadBothParticipants,
       deleteParticipant,
     }),
     [
-      previewParticipants,
-      totalCount,
       confirmedParticipants,
       unconfirmedParticipants,
       confirmedLoading,
@@ -309,9 +291,8 @@ export function EventParticipantsProvider({
       unconfirmedHasMore,
       loadConfirmedParticipants,
       loadUnconfirmedParticipants,
-      loadMoreConfirmedParticipants,
-      loadMoreUnconfirmedParticipants,
-      currentEventId,
+      handleLoadMoreConfirmed,
+      handleLoadMoreUnconfirmed,
       error,
       clearError,
       loadBothParticipants,

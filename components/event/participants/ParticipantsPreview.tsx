@@ -2,26 +2,25 @@
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
-import { useEventParticipants } from "@/contexts/event/EventParticipantsContext";
+import { useEvent } from "@/contexts/event/EventContext";
 import { CachedImage } from "@/components/ui/CachedImage";
 
 const MAX_VISIBLE_PARTICIPANTS = 4;
 
 export default function ParticipantsPreview() {
   const router = useRouter();
-  const { previewParticipants } = useEventParticipants();
+  const { event } = useEvent();
+  const participants = event?.participants || [];
+  const totalParticipants = event?._count?.participants || 0;
 
-  if (previewParticipants.length === 0) {
+  if (totalParticipants === 0) {
     return null;
   }
 
-  const visibleParticipants = previewParticipants.slice(
-    0,
-    MAX_VISIBLE_PARTICIPANTS
-  );
+  const visibleParticipants = participants.slice(0, MAX_VISIBLE_PARTICIPANTS);
 
   const hiddenCount = Math.min(
-    previewParticipants.length - MAX_VISIBLE_PARTICIPANTS,
+    totalParticipants - MAX_VISIBLE_PARTICIPANTS,
     99
   );
 

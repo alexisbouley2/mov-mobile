@@ -9,6 +9,7 @@ import {
 import { PanGestureHandler } from "react-native-gesture-handler";
 import Animated from "react-native-reanimated";
 import { useEventParticipants } from "@/contexts/event/EventParticipantsContext";
+import { useEvent } from "@/contexts/event/EventContext";
 import ParticipantListItem from "@/components/event/participants/ParticipantListItem";
 import ParticipantsHeader from "@/components/event/participants/ParticipantsHeader";
 import ParticipantsTabHeader from "@/components/event/participants/ParticipantsTabHeader";
@@ -18,6 +19,7 @@ import { Participant } from "@movapp/types";
 const EDGE_THRESHOLD = 20; // Pixels from left edge to ignore gestures
 
 export default function ParticipantsScreen() {
+  const { event } = useEvent();
   const {
     confirmedParticipants,
     unconfirmedParticipants,
@@ -25,10 +27,9 @@ export default function ParticipantsScreen() {
     unconfirmedLoading,
     confirmedHasMore,
     unconfirmedHasMore,
-    loadMoreConfirmedParticipants,
-    loadMoreUnconfirmedParticipants,
+    handleLoadMoreConfirmed,
+    handleLoadMoreUnconfirmed,
     loadBothParticipants,
-    currentEventId,
   } = useEventParticipants();
 
   const {
@@ -41,10 +42,10 @@ export default function ParticipantsScreen() {
 
   // Load participants when screen opens
   useEffect(() => {
-    if (currentEventId) {
-      loadBothParticipants(currentEventId);
+    if (event?.id) {
+      loadBothParticipants(event.id);
     }
-  }, [currentEventId]);
+  }, [event?.id, loadBothParticipants]);
 
   // Dynamic styles that depend on screenWidth
   const dynamicStyles = {
@@ -100,57 +101,51 @@ export default function ParticipantsScreen() {
           <Animated.View
             style={[dynamicStyles.swipeableContainer, animatedStyle]}
           >
-            {/* Confirmed Participants */}
+            {/* Confirmed Tab */}
             <View style={dynamicStyles.confirmedTabContent}>
               <FlatList
                 data={confirmedParticipants}
                 renderItem={renderParticipant}
                 keyExtractor={(item) => item.id}
-                style={styles.list}
-                contentContainerStyle={styles.listContent}
-                onEndReached={loadMoreConfirmedParticipants}
+                showsVerticalScrollIndicator={false}
+                onEndReached={handleLoadMoreConfirmed}
                 onEndReachedThreshold={0.1}
                 ListFooterComponent={() =>
                   renderFooter(confirmedLoading, confirmedHasMore)
                 }
-                showsVerticalScrollIndicator={false}
-                bounces={true}
-                ListEmptyComponent={
-                  !confirmedLoading ? (
-                    <View style={styles.emptyContainer}>
-                      <Text style={styles.emptyText}>
-                        No confirmed participants yet
-                      </Text>
-                    </View>
-                  ) : null
-                }
+                ListEmptyComponent={() => (
+                  <View style={styles.emptyContainer}>
+                    <Text style={styles.emptyText}>
+                      {confirmedLoading
+                        ? "Loading confirmed participants..."
+                        : "No confirmed participants yet"}
+                    </Text>
+                  </View>
+                )}
               />
             </View>
 
-            {/* Invited Participants */}
+            {/* Unconfirmed Tab */}
             <View style={dynamicStyles.invitedTabContent}>
               <FlatList
                 data={unconfirmedParticipants}
                 renderItem={renderParticipant}
                 keyExtractor={(item) => item.id}
-                style={styles.list}
-                contentContainerStyle={styles.listContent}
-                onEndReached={loadMoreUnconfirmedParticipants}
+                showsVerticalScrollIndicator={false}
+                onEndReached={handleLoadMoreUnconfirmed}
                 onEndReachedThreshold={0.1}
                 ListFooterComponent={() =>
                   renderFooter(unconfirmedLoading, unconfirmedHasMore)
                 }
-                showsVerticalScrollIndicator={false}
-                bounces={true}
-                ListEmptyComponent={
-                  !unconfirmedLoading ? (
-                    <View style={styles.emptyContainer}>
-                      <Text style={styles.emptyText}>
-                        No invited participants yet
-                      </Text>
-                    </View>
-                  ) : null
-                }
+                ListEmptyComponent={() => (
+                  <View style={styles.emptyContainer}>
+                    <Text style={styles.emptyText}>
+                      {unconfirmedLoading
+                        ? "Loading invited participants..."
+                        : "No invited participants yet"}
+                    </Text>
+                  </View>
+                )}
               />
             </View>
           </Animated.View>
