@@ -5,6 +5,7 @@ import React, {
   useState,
   useCallback,
   useMemo,
+  useEffect,
 } from "react";
 import { eventsApi } from "@/services/api";
 import log from "@/utils/logger";
@@ -30,7 +31,6 @@ interface EventParticipantsContextType {
   // Shared state
   error: string | null;
   clearError: () => void;
-  loadBothParticipants: (_eventId: string) => Promise<void>;
 
   // Participant management
   deleteParticipant: (_participantUserId: string) => Promise<void>;
@@ -49,7 +49,6 @@ const EventParticipantsContext = createContext<EventParticipantsContextType>({
   handleLoadMoreUnconfirmed: async () => {},
   error: null,
   clearError: () => {},
-  loadBothParticipants: async () => {},
   deleteParticipant: async () => {},
 });
 
@@ -265,6 +264,12 @@ export function EventParticipantsProvider({
     [loadConfirmedParticipants, loadUnconfirmedParticipants]
   );
 
+  useEffect(() => {
+    if (event?.id) {
+      loadBothParticipants(event.id);
+    }
+  }, [event?.id, loadBothParticipants]);
+
   const contextValue = useMemo(
     () => ({
       confirmedParticipants,
@@ -279,7 +284,6 @@ export function EventParticipantsProvider({
       handleLoadMoreUnconfirmed,
       error,
       clearError,
-      loadBothParticipants,
       deleteParticipant,
     }),
     [
@@ -295,7 +299,6 @@ export function EventParticipantsProvider({
       handleLoadMoreUnconfirmed,
       error,
       clearError,
-      loadBothParticipants,
       deleteParticipant,
     ]
   );

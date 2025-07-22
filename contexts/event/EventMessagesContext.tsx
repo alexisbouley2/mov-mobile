@@ -159,12 +159,11 @@ export function EventMessagesProvider({
     setError(null);
   }, []);
 
-  // Auto-load messages when event changes
   useEffect(() => {
     if (event?.id) {
       loadMessages(event.id);
     }
-  }, [event?.id]);
+  }, [event?.id, loadMessages]);
 
   // Real-time subscription
   useEffect(() => {

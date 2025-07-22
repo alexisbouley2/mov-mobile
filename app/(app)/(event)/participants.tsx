@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import {
   View,
   Text,
@@ -9,7 +9,6 @@ import {
 import { PanGestureHandler } from "react-native-gesture-handler";
 import Animated from "react-native-reanimated";
 import { useEventParticipants } from "@/contexts/event/EventParticipantsContext";
-import { useEvent } from "@/contexts/event/EventContext";
 import ParticipantListItem from "@/components/event/participants/ParticipantListItem";
 import ParticipantsHeader from "@/components/event/participants/ParticipantsHeader";
 import ParticipantsTabHeader from "@/components/event/participants/ParticipantsTabHeader";
@@ -19,7 +18,6 @@ import { Participant } from "@movapp/types";
 const EDGE_THRESHOLD = 20; // Pixels from left edge to ignore gestures
 
 export default function ParticipantsScreen() {
-  const { event } = useEvent();
   const {
     confirmedParticipants,
     unconfirmedParticipants,
@@ -29,7 +27,6 @@ export default function ParticipantsScreen() {
     unconfirmedHasMore,
     handleLoadMoreConfirmed,
     handleLoadMoreUnconfirmed,
-    loadBothParticipants,
   } = useEventParticipants();
 
   const {
@@ -39,13 +36,6 @@ export default function ParticipantsScreen() {
     animatedStyle,
     SCREEN_WIDTH: screenWidth,
   } = useParticipantsSwipe();
-
-  // Load participants when screen opens
-  useEffect(() => {
-    if (event?.id) {
-      loadBothParticipants(event.id);
-    }
-  }, [event?.id, loadBothParticipants]);
 
   // Dynamic styles that depend on screenWidth
   const dynamicStyles = {
