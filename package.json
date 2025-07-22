@@ -20,7 +20,7 @@
   "dependencies": {
     "@expo/ngrok": "^4.1.3",
     "@expo/vector-icons": "^14.1.0",
-    "@movapp/types": "^1.0.47",
+    "@movapp/types": "^1.0.52",
     "@react-native-async-storage/async-storage": "^2.1.2",
     "@react-native-community/datetimepicker": "8.4.1",
     "@react-native-firebase/app": "^22.4.0",

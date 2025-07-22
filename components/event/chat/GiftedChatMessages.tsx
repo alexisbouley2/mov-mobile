@@ -2,7 +2,7 @@
 import React, { useCallback, useMemo, useState, useEffect } from "react";
 import { View, StyleSheet, ActivityIndicator, Keyboard } from "react-native";
 import { GiftedChat, IMessage, User } from "react-native-gifted-chat";
-import { Message } from "@/contexts/event/EventMessagesContext";
+import { Message } from "@movapp/types";
 import { useUserProfile } from "@/contexts/UserProfileContext";
 import { ChatEmptyState } from "./ChatEmptyState";
 import {

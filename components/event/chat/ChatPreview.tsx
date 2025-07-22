@@ -2,12 +2,12 @@
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
-import { useEventMessages } from "@/contexts/event/EventMessagesContext";
 import ParticipantAvatar from "../../ui/ParticipantAvatar";
+import { useEvent } from "@/contexts/event/EventContext";
 
 export default function ChatPreview() {
   const router = useRouter();
-  const { preview, previewLoading } = useEventMessages();
+  const { lastMessage } = useEvent();
 
   const handleOpenChat = () => {
     router.push(`/(app)/(event)/chat`);
@@ -15,29 +15,23 @@ export default function ChatPreview() {
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity
-        style={styles.chatButton}
-        onPress={handleOpenChat}
-        disabled={previewLoading}
-      >
-        {preview?.hasMessages && preview.lastMessage ? (
+      <TouchableOpacity style={styles.chatButton} onPress={handleOpenChat}>
+        {lastMessage ? (
           <>
             <View style={styles.avatarContainer}>
-              <ParticipantAvatar user={preview.lastMessage.sender} size={40} />
+              <ParticipantAvatar user={lastMessage.sender} size={40} />
             </View>
             <View style={styles.messagePreview}>
               <Text style={styles.senderName}>
-                {preview?.lastMessage?.sender?.username}
+                {lastMessage?.sender?.username}
               </Text>
               <Text style={styles.lastMessage} numberOfLines={1}>
-                {preview?.lastMessage?.content}
+                {lastMessage?.content}
               </Text>
             </View>
           </>
         ) : (
-          <Text style={styles.centeredChatButtonText}>
-            {previewLoading ? "Loading..." : "Open Chat"}
-          </Text>
+          <Text style={styles.centeredChatButtonText}>{"Open Chat"}</Text>
         )}
       </TouchableOpacity>
     </View>

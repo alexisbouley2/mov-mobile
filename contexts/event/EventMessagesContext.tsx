@@ -6,59 +6,37 @@ import React, {
   useCallback,
   useMemo,
   useEffect,
-  useRef,
 } from "react";
 import { supabase } from "@/lib/supabase";
 import { messagesApi } from "@/services/api";
 import log from "@/utils/logger";
 import { useUserProfile } from "@/contexts/UserProfileContext";
 import { useEvent } from "@/contexts/event/EventContext";
-import {
-  MessagePreviewResponse,
-  EventMessagesResponse,
-  SendMessageResponse,
-} from "@movapp/types";
-
-export type MessagePreview = MessagePreviewResponse;
-export type Message = SendMessageResponse;
+import { EventMessagesResponse, Message } from "@movapp/types";
 
 interface EventMessagesContextType {
-  // Preview data
-  preview: MessagePreview | null;
-  previewLoading: boolean;
-  loadPreview: (_eventId: string) => Promise<void>;
-
   // Full messages data
   messages: Message[];
   messagesLoading: boolean;
   loadingEarlier: boolean;
   sending: boolean;
   hasMore: boolean;
-  total: number;
   loadMessages: (_eventId: string) => Promise<void>;
   sendMessage: (_content: string) => Promise<void>;
   loadEarlier: () => Promise<void>;
-
-  // Shared state
-  currentEventId: string | null;
   error: string | null;
   clearError: () => void;
 }
 
 const EventMessagesContext = createContext<EventMessagesContextType>({
-  preview: null,
-  previewLoading: false,
-  loadPreview: async () => {},
   messages: [],
   messagesLoading: false,
   loadingEarlier: false,
   sending: false,
   hasMore: true,
-  total: 0,
   loadMessages: async () => {},
   sendMessage: async () => {},
   loadEarlier: async () => {},
-  currentEventId: null,
   error: null,
   clearError: () => {},
 });
@@ -71,11 +49,7 @@ export function EventMessagesProvider({
   children: React.ReactNode;
 }) {
   const { user } = useUserProfile();
-  const { event } = useEvent();
-
-  // Preview state
-  const [preview, setPreview] = useState<MessagePreview | null>(null);
-  const [previewLoading, setPreviewLoading] = useState(false);
+  const { event, setLastMessage } = useEvent();
 
   // Messages state
   const [messages, setMessages] = useState<Message[]>([]);
@@ -84,40 +58,9 @@ export function EventMessagesProvider({
   const [sending, setSending] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(1);
-  const [total, setTotal] = useState(0);
 
   // Shared state
-  const [currentEventId, setCurrentEventId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-
-  // Refs for realtime updates
-  const loadPreviewRef = useRef<
-    ((_eventId: string) => Promise<void>) | undefined
-  >(undefined);
-  const currentEventIdRef = useRef<string | null>(null);
-
-  // Load message preview
-  const loadPreview = useCallback(
-    async (eventId: string) => {
-      if (!user?.id) return;
-      try {
-        setPreviewLoading(true);
-        setError(null);
-        const data = await messagesApi.getMessagePreview(eventId, user.id);
-        setPreview(data);
-      } catch (err) {
-        log.error("Error fetching message preview:", err);
-        setError("Failed to load message preview");
-      } finally {
-        setPreviewLoading(false);
-      }
-    },
-    [user?.id]
-  );
-
-  // Update refs
-  loadPreviewRef.current = loadPreview;
-  currentEventIdRef.current = currentEventId;
 
   // Load initial messages
   const loadMessages = useCallback(
@@ -137,9 +80,7 @@ export function EventMessagesProvider({
 
         setMessages(data.messages);
         setHasMore(data.hasMore);
-        setTotal(data.total);
         setPage(1);
-        setCurrentEventId(eventId);
       } catch (err) {
         log.error("Error loading messages:", err);
         setError("Failed to load messages");
@@ -152,7 +93,7 @@ export function EventMessagesProvider({
 
   // Load earlier messages (pagination)
   const loadEarlier = useCallback(async () => {
-    if (!currentEventId || !user?.id || !hasMore || loadingEarlier) {
+    if (!event?.id || !user?.id || !hasMore || loadingEarlier) {
       return;
     }
 
@@ -161,7 +102,7 @@ export function EventMessagesProvider({
     try {
       const nextPage = page + 1;
       const data: EventMessagesResponse = await messagesApi.getMessages(
-        currentEventId,
+        event.id,
         user.id,
         nextPage,
         30
@@ -182,12 +123,12 @@ export function EventMessagesProvider({
     } finally {
       setLoadingEarlier(false);
     }
-  }, [currentEventId, user?.id, hasMore, loadingEarlier, page]);
+  }, [event?.id, user?.id, hasMore, loadingEarlier, page]);
 
   // Send message
   const sendMessage = useCallback(
     async (content: string) => {
-      if (!currentEventId || !user?.id || sending || !content.trim()) {
+      if (!event?.id || !user?.id || sending || !content.trim()) {
         return;
       }
 
@@ -195,27 +136,15 @@ export function EventMessagesProvider({
       setError(null);
 
       try {
-        const newMessage = await messagesApi.sendMessage(
-          currentEventId,
-          user.id,
-          { content: content.trim(), type: "text" }
-        );
+        const newMessage = await messagesApi.sendMessage(event.id, user.id, {
+          content: content.trim(),
+          type: "text",
+        });
 
         // Add message to the end of the list
         setMessages((prev) => [...prev, newMessage]);
-        setTotal((prev) => prev + 1);
 
-        // Update preview
-        setPreview((prev) => ({
-          hasMessages: true,
-          messageCount: (prev?.messageCount || 0) + 1,
-          lastMessage: {
-            content: newMessage.content,
-            sender: newMessage.sender,
-            createdAt: newMessage.createdAt,
-            type: newMessage.type,
-          },
-        }));
+        setLastMessage(newMessage);
       } catch (err) {
         log.error("Error sending message:", err);
         setError("Failed to send message");
@@ -223,21 +152,19 @@ export function EventMessagesProvider({
         setSending(false);
       }
     },
-    [currentEventId, user?.id, sending]
+    [event?.id, user?.id, sending, setLastMessage]
   );
 
   const clearError = useCallback(() => {
     setError(null);
   }, []);
 
-  // Auto-load preview and messages when event changes
+  // Auto-load messages when event changes
   useEffect(() => {
-    if (event?.id && user?.id) {
-      setCurrentEventId(event.id);
-      loadPreview(event.id);
+    if (event?.id) {
       loadMessages(event.id);
     }
-  }, [event?.id, user?.id]); // Don't include loadPreview and loadMessages to avoid loops
+  }, [event?.id]);
 
   // Real-time subscription
   useEffect(() => {
@@ -268,17 +195,14 @@ export function EventMessagesProvider({
             user.id
           );
 
-          if (messageWithSender && currentEventIdRef.current === event.id) {
+          if (messageWithSender) {
             setMessages((prev) => {
               const exists = prev.some((m) => m.id === messageWithSender.id);
               return exists ? prev : [...prev, messageWithSender];
             });
-            setTotal((prev) => prev + 1);
-          }
 
-          // Update preview
-          if (loadPreviewRef.current) {
-            loadPreviewRef.current(event.id);
+            // Update event's lastMessage
+            setLastMessage(messageWithSender);
           }
         } catch (err) {
           log.error("Error fetching real-time message:", err);
@@ -291,40 +215,30 @@ export function EventMessagesProvider({
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [event?.id, user?.id]);
+  }, [event?.id, user?.id, setLastMessage]);
 
   const contextValue = useMemo(
     () => ({
-      preview,
-      previewLoading,
-      loadPreview,
       messages,
       messagesLoading,
       loadingEarlier,
       sending,
       hasMore,
-      total,
       loadMessages,
       sendMessage,
       loadEarlier,
-      currentEventId,
       error,
       clearError,
     }),
     [
-      preview,
-      previewLoading,
-      loadPreview,
       messages,
       messagesLoading,
       loadingEarlier,
       sending,
       hasMore,
-      total,
       loadMessages,
       sendMessage,
       loadEarlier,
-      currentEventId,
       error,
       clearError,
     ]

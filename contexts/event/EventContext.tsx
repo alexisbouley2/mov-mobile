@@ -9,13 +9,14 @@ import React, {
 import { Alert } from "react-native";
 import { router } from "expo-router";
 import log from "@/utils/logger";
-import { EventWithDetails, UpdateEventRequest } from "@movapp/types";
+import { EventWithDetails, UpdateEventRequest, Message } from "@movapp/types";
 import { eventsApi } from "@/services/api/events";
 
 interface EventContextType {
   event: EventWithDetails | null;
   eventLoading: boolean;
   error: string | null;
+  lastMessage: Message | null;
   loadEvent: (_eventId: string) => Promise<void>;
   updateEvent: (
     _eventId: string,
@@ -30,12 +31,14 @@ interface EventContextType {
   clearEventError: () => void;
   clearEvent: () => void;
   setEvent: React.Dispatch<React.SetStateAction<EventWithDetails | null>>;
+  setLastMessage: React.Dispatch<React.SetStateAction<Message | null>>;
 }
 
 const EventContext = createContext<EventContextType>({
   event: null,
   eventLoading: false,
   error: null,
+  lastMessage: null,
   loadEvent: async () => {},
   updateEvent: async () => ({ error: null }),
   toggleParticipation: async () => {},
@@ -43,6 +46,7 @@ const EventContext = createContext<EventContextType>({
   clearEventError: () => {},
   clearEvent: () => {},
   setEvent: () => {},
+  setLastMessage: () => {},
 });
 
 export const useEvent = () => useContext(EventContext);
@@ -51,6 +55,7 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
   const [event, setEvent] = useState<EventWithDetails | null>(null);
   const [eventLoading, seteventLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [lastMessage, setLastMessage] = useState<Message | null>(null);
 
   const loadEvent = useCallback(async (eventId: string) => {
     try {
@@ -64,6 +69,7 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
       }
 
       setEvent(response);
+      setLastMessage(response.lastMessage);
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Failed to fetch event";
@@ -199,6 +205,7 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
       event,
       eventLoading,
       error,
+      lastMessage,
       loadEvent,
       updateEvent,
       toggleParticipation,
@@ -206,11 +213,13 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
       clearEventError,
       clearEvent,
       setEvent,
+      setLastMessage,
     }),
     [
       event,
       eventLoading,
       error,
+      lastMessage,
       loadEvent,
       updateEvent,
       toggleParticipation,
@@ -218,6 +227,7 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
       clearEventError,
       clearEvent,
       setEvent,
+      setLastMessage,
     ]
   );
 

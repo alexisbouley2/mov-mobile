@@ -1,25 +1,13 @@
 import { api } from "./client";
 import {
   SendMessageRequest,
-  SendMessageResponse,
-  SendMessageResponseSchema,
   EventMessagesResponse,
   EventMessagesResponseSchema,
-  MessagePreviewResponse,
-  MessagePreviewResponseSchema,
+  Message,
+  MessageSchema,
 } from "@movapp/types";
 
 export const messagesApi = {
-  // Get message preview for event detail page
-  getMessagePreview: (
-    eventId: string,
-    userId: string
-  ): Promise<MessagePreviewResponse> =>
-    api.get(
-      `/messages/preview/event/${eventId}/user/${userId}`,
-      MessagePreviewResponseSchema
-    ),
-
   // Get messages with pagination for an event
   getMessages: (
     eventId: string,
@@ -44,17 +32,17 @@ export const messagesApi = {
     eventId: string,
     userId: string,
     messageData: SendMessageRequest
-  ): Promise<SendMessageResponse> =>
+  ): Promise<Message> =>
     api.post(
       `/messages/event/${eventId}/user/${userId}`,
       messageData,
-      SendMessageResponseSchema
+      MessageSchema
     ),
 
   // Get a single message by ID with sender information
   getMessageById: (
     messageId: string,
     userId: string
-  ): Promise<SendMessageResponse | null> =>
-    api.get(`/messages/${messageId}/user/${userId}`, SendMessageResponseSchema),
+  ): Promise<Message | null> =>
+    api.get(`/messages/${messageId}/user/${userId}`, MessageSchema),
 };
