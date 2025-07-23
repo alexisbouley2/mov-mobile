@@ -27,6 +27,7 @@ export default function TermsScreen() {
         startInLoadingState={true}
         javaScriptEnabled={true}
         domStorageEnabled={true}
+        renderLoading={() => <View style={styles.loadingContainer} />}
       />
     </View>
   );
@@ -60,5 +61,9 @@ const styles = StyleSheet.create({
   webview: {
     flex: 1,
     backgroundColor: "#000000",
+  },
+  loadingContainer: {
+    flex: 1,
+    backgroundColor: "#000",
   },
 });

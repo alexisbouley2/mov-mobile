@@ -154,8 +154,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#000",
     justifyContent: "center",
     alignItems: "center",
-    borderWidth: 1,
-    borderColor: "red",
   },
   videoContainer: {
     width: "100%",
