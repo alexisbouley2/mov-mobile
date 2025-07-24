@@ -1,5 +1,5 @@
 import React from "react";
-import { View, FlatList, StyleSheet } from "react-native";
+import { View, FlatList, StyleSheet, Text } from "react-native";
 import { VideoViewerModal } from "./modal";
 import VideoGridItem from "./VideoGridItem";
 import {
@@ -10,48 +10,35 @@ import {
 } from "./VideoFeedStates";
 import { useEventVideos } from "@/contexts/event/EventVideosContext";
 
-export default function EventVideoFeed() {
+interface EventVideoFeedProps {
+  eventDate: Date;
+}
+
+export default function EventVideoFeed({ eventDate }: EventVideoFeedProps) {
   const {
-    allVideos,
-    userVideos,
-    allVideosLoading,
-    userVideosLoading,
-    allVideosLoadingMore,
-    userVideosLoadingMore,
-    loadMoreAllVideos,
-    loadMoreUserVideos,
-    refreshAllVideos,
-    refreshUserVideos,
+    videos,
+    loading,
+    loadingMore,
+    loadMoreVideos,
+    refreshVideos,
     openVideoModal,
     modalVisible,
-    activeTab,
     error,
   } = useEventVideos();
 
-  // Get current videos based on active tab from context
-  const currentVideos = activeTab === "all" ? allVideos : userVideos;
-  const isLoading = activeTab === "all" ? allVideosLoading : userVideosLoading;
-  const isLoadingMore =
-    activeTab === "all" ? allVideosLoadingMore : userVideosLoadingMore;
+  // Check if event is in the future (allow uploads)
+  const isEventFuture = new Date() < eventDate;
 
   const handleLoadMore = () => {
-    if (activeTab === "all") {
-      loadMoreAllVideos();
-    } else {
-      loadMoreUserVideos();
-    }
+    loadMoreVideos();
   };
 
   const handleRefresh = () => {
-    if (activeTab === "all") {
-      refreshAllVideos();
-    } else {
-      refreshUserVideos();
-    }
+    refreshVideos();
   };
 
   const handleVideoPress = (index: number) => {
-    openVideoModal(index, activeTab);
+    openVideoModal(index);
   };
 
   const renderVideoItem = ({ item, index }: { item: any; index: number }) => (
@@ -59,32 +46,43 @@ export default function EventVideoFeed() {
   );
 
   const renderFooter = () => {
-    return isLoadingMore ? <LoadingFooter /> : null;
+    return loadingMore ? <LoadingFooter /> : null;
   };
 
   const renderEmpty = () => {
-    return isLoading ? null : <EmptyState activeTab={activeTab} />;
+    return loading ? null : <EmptyState />;
   };
 
+  // Show warning if event is in the future
+  if (isEventFuture) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.warningText}>
+          Wait for the event to start to give your POV
+        </Text>
+      </View>
+    );
+  }
+
   // Early returns for loading and error states
-  if (isLoading && currentVideos.length === 0) {
+  if (loading && videos.length === 0) {
     return <LoadingState />;
   }
 
-  if (error && currentVideos.length === 0) {
+  if (error && videos.length === 0) {
     return <ErrorState error={error} onRetry={handleRefresh} />;
   }
 
   return (
     <View style={styles.container}>
       <FlatList
-        data={currentVideos}
+        data={videos}
         renderItem={renderVideoItem}
         keyExtractor={(item) => item.id}
         numColumns={3}
         onEndReached={handleLoadMore}
         onEndReachedThreshold={0.1}
-        refreshing={isLoading}
+        refreshing={loading}
         onRefresh={handleRefresh}
         ListFooterComponent={renderFooter}
         ListEmptyComponent={renderEmpty}
@@ -93,7 +91,7 @@ export default function EventVideoFeed() {
         nestedScrollEnabled={true}
       />
 
-      <VideoViewerModal visible={modalVisible} videos={currentVideos} />
+      <VideoViewerModal visible={modalVisible} videos={videos} />
     </View>
   );
 }
@@ -102,5 +100,13 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#000",
+  },
+  warningText: {
+    fontSize: 24,
+    color: "#808080",
+    marginTop: 20,
+    paddingHorizontal: 20,
+    textAlign: "center",
+    fontWeight: "600",
   },
 });

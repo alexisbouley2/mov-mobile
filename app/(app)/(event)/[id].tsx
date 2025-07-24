@@ -12,7 +12,7 @@ import EventActions from "@/components/event/global/EventActions";
 import EventInformation from "@/components/event/global/EventInformation";
 import ParticipantsPreview from "@/components/event/participants/ParticipantsPreview";
 import ChatPreview from "@/components/event/chat/ChatPreview";
-import EventGallery from "@/components/event/gallery/EventGallery";
+import EventVideoFeed from "@/components/event/gallery/EventVideoFeed";
 import { useEventDetail } from "@/hooks/event/useEventDetail";
 
 export default function EventDetailScreen() {
@@ -86,7 +86,7 @@ export default function EventDetailScreen() {
         );
 
       case "gallery":
-        return <EventGallery eventDate={item.data.eventDate} />;
+        return <EventVideoFeed eventDate={item.data.eventDate} />;
 
       default:
         return null;

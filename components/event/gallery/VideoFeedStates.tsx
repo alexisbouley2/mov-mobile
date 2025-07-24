@@ -16,10 +16,6 @@ interface ErrorStateProps {
   onRetry: () => void;
 }
 
-interface EmptyStateProps {
-  activeTab: "all" | "you";
-}
-
 export function LoadingState({
   text = "Loading videos...",
 }: LoadingStateProps) {
@@ -50,14 +46,10 @@ export function ErrorState({ error, onRetry }: ErrorStateProps) {
   );
 }
 
-export function EmptyState({ activeTab }: EmptyStateProps) {
+export function EmptyState() {
   return (
     <View style={styles.emptyContainer}>
-      <Text style={styles.emptyText}>
-        {activeTab === "you"
-          ? "You haven't uploaded any videos yet"
-          : "No videos in this event yet"}
-      </Text>
+      <Text style={styles.emptyText}>No videos in this event yet</Text>
     </View>
   );
 }
