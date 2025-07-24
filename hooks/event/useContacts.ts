@@ -13,6 +13,15 @@ export interface ContactPermissionState {
   canAskAgain: boolean;
 }
 
+// Helper function to chunk array into smaller arrays
+function chunkArray<T>(array: T[], chunkSize: number): T[][] {
+  const chunks: T[][] = [];
+  for (let i = 0; i < array.length; i += chunkSize) {
+    chunks.push(array.slice(i, i + chunkSize));
+  }
+  return chunks;
+}
+
 export function useContacts() {
   const [contacts, setContacts] = useState<InviteContact[]>([]);
   const [permissionState, setPermissionState] =
@@ -75,16 +84,30 @@ export function useContacts() {
     }
   }, []);
 
-  // Check which contacts are MOV users with event participation
+  // Check which contacts are MOV users with event participation (chunked)
   const checkContacts = useCallback(
     async (phoneNumbers: string[]): Promise<UserContact[]> => {
       if (!phoneNumbers.length || !event?.id) return [];
 
       try {
-        const response = await usersApi.checkContacts(phoneNumbers, event.id);
-        if (!response.success) return [];
+        // Chunk phone numbers into batches of 100
+        const phoneNumberChunks = chunkArray(phoneNumbers, 100);
+        const allUserContacts: UserContact[] = [];
 
-        return response.contacts;
+        // Process each chunk sequentially to avoid overwhelming the backend
+        for (const chunk of phoneNumberChunks) {
+          try {
+            const response = await usersApi.checkContacts(chunk, event.id);
+            if (response.success) {
+              allUserContacts.push(...response.contacts);
+            }
+          } catch (error) {
+            console.error("Error checking contacts chunk:", error);
+            // Continue with other chunks even if one fails
+          }
+        }
+
+        return allUserContacts;
       } catch (error) {
         console.error("Error checking contacts:", error);
         return [];
