@@ -6,20 +6,29 @@ import {
   StyleSheet,
   TouchableOpacity,
   Dimensions,
+  Alert,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { CachedImage } from "@/components/ui/CachedImage";
 import { EventWithDetails } from "@movapp/types";
 import { Ionicons } from "@expo/vector-icons";
+import ThreeDotsButton from "@/components/ui/ThreeDotsButton";
 
 interface EventHeaderProps {
   event: EventWithDetails;
   onBack: () => void;
+  onLeave?: () => void;
+  isAdmin?: boolean;
 }
 
 const { width } = Dimensions.get("window");
 
-export default function EventHeader({ event, onBack }: EventHeaderProps) {
+export default function EventHeader({
+  event,
+  onBack,
+  onLeave,
+  isAdmin = false,
+}: EventHeaderProps) {
   // Calculate height based on 16:9 aspect ratio using full screen width
   const containerHeight = (width * 9) / 16;
 
@@ -55,6 +64,20 @@ export default function EventHeader({ event, onBack }: EventHeaderProps) {
     return `${datePart} - ${timePart}`;
   };
 
+  const handleLeavePress = () => {
+    Alert.alert("Leave Event", "Are you sure you want to leave this event?", [
+      {
+        text: "Cancel",
+        style: "cancel",
+      },
+      {
+        text: "Leave",
+        style: "destructive",
+        onPress: onLeave,
+      },
+    ]);
+  };
+
   return (
     <View style={[styles.container, { height: containerHeight }]}>
       {/* Background Image */}
@@ -88,12 +111,23 @@ export default function EventHeader({ event, onBack }: EventHeaderProps) {
         style={styles.gradientOverlay}
       />
 
-      {/* Content Overlay */}
-      <View style={styles.contentOverlay}>
+      {/* Header with buttons */}
+      <View style={styles.headerContainer}>
         <TouchableOpacity onPress={onBack} style={styles.backButton}>
           <Ionicons name="chevron-back" size={36} color="#007AFF" />
         </TouchableOpacity>
 
+        {/* Three Dots Button for non-admin users */}
+        {!isAdmin && onLeave && (
+          <ThreeDotsButton
+            onPress={handleLeavePress}
+            style={styles.threeDotsButton}
+          />
+        )}
+      </View>
+
+      {/* Content Overlay */}
+      <View style={styles.contentOverlay}>
         {/* Event Info */}
         <View style={styles.eventInfo}>
           <Text style={styles.eventTitle}>{event.name}</Text>
@@ -132,16 +166,28 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
   },
+  headerContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingTop: 20,
+    paddingBottom: 20,
+    paddingHorizontal: 20,
+    zIndex: 1,
+  },
   contentOverlay: {
     flex: 1,
     justifyContent: "flex-end",
     paddingBottom: 20,
   },
   backButton: {
-    position: "absolute",
-    left: 10,
-    top: 15,
-    zIndex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  threeDotsButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
   },
   eventInfo: {
     alignItems: "center",

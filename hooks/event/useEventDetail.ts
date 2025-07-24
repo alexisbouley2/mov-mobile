@@ -1,9 +1,11 @@
 import { useCallback, useState } from "react";
 import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
+import { Alert } from "react-native";
 import { useEvent } from "@/contexts/event/EventContext";
 import { useUserProfile } from "@/contexts/UserProfileContext";
 import { useNotifications } from "@/contexts/NotificationContext";
 import { useEventParticipants } from "@/contexts/event/EventParticipantsContext";
+import { eventsApi } from "@/services/api/events";
 
 export const useEventDetail = () => {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -47,6 +49,25 @@ export const useEventDetail = () => {
     router.push(`/(app)/(event)/invite?id=${event.id}`);
   }, [event, router]);
 
+  // Handler for leaving the event
+  const handleLeave = useCallback(async () => {
+    if (!event?.id || !user?.id) return;
+
+    try {
+      await eventsApi.leaveEvent(event.id, user.id);
+
+      // Navigate back to events list after leaving
+      router.push("/(app)/(tabs)/events");
+    } catch (error) {
+      console.error("Failed to leave event:", error);
+
+      // Show error alert to user
+      Alert.alert("Error", "Failed to leave the event. Please try again.", [
+        { text: "OK" },
+      ]);
+    }
+  }, [event?.id, user?.id, router]);
+
   // Prepare data for rendering
   const getRenderData = () => {
     if (!event || !user) return [];
@@ -86,5 +107,6 @@ export const useEventDetail = () => {
     handleEdit,
     handleConfirm,
     handleInvite,
+    handleLeave,
   };
 };

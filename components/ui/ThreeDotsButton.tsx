@@ -11,15 +11,32 @@ const ThreeDotsButton: React.FC<ThreeDotsButtonProps> = ({
   style,
 }) => {
   return (
-    <TouchableOpacity style={style} onPress={onPress}>
-      <View style={styles.dot} />
-      <View style={styles.dot} />
-      <View style={styles.dot} />
+    <TouchableOpacity
+      style={[styles.container, style]}
+      onPress={onPress}
+      activeOpacity={0.7}
+    >
+      <View style={styles.dotsContainer}>
+        <View style={styles.dot} />
+        <View style={styles.dot} />
+        <View style={styles.dot} />
+      </View>
     </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
+  container: {
+    minWidth: 44,
+    minHeight: 44,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  dotsContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+  },
   dot: {
     width: 6,
     height: 6,

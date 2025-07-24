@@ -21,11 +21,13 @@ export default function EventDetailScreen() {
     event,
     eventLoading,
     error,
+    user,
     renderData,
     screenKey,
     handleEdit,
     handleConfirm,
     handleInvite,
+    handleLeave,
   } = useEventDetail();
 
   if (eventLoading && !event) {
@@ -46,10 +48,19 @@ export default function EventDetailScreen() {
     );
   }
 
+  const isAdmin = event.adminId === user?.id;
+
   const renderItem = ({ item }: { item: any }) => {
     switch (item.type) {
       case "header":
-        return <EventHeader event={item.data} onBack={() => router.back()} />;
+        return (
+          <EventHeader
+            event={item.data}
+            onBack={() => router.back()}
+            onLeave={handleLeave}
+            isAdmin={isAdmin}
+          />
+        );
 
       case "actions":
         return (

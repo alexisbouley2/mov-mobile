@@ -142,4 +142,13 @@ export const eventsApi = {
     const endpoint = `/events/${eventId}/participants/${participantUserId}?adminId=${adminId}`;
     return api.delete(endpoint, DeleteParticipantResponseSchema);
   },
+
+  // Leave an event (for non-admin participants)
+  leaveEvent: (
+    eventId: string,
+    userId: string
+  ): Promise<{ message: string }> => {
+    const endpoint = `/events/${eventId}/leave?userId=${userId}`;
+    return api.delete(endpoint, DeleteParticipantResponseSchema);
+  },
 };
