@@ -1,7 +1,7 @@
 // app/(app)/(tabs)/events.tsx - Updated to use UserEventsContext
 import React, { useCallback } from "react";
-import { View, StyleSheet, ScrollView } from "react-native";
-import { useRouter, useFocusEffect } from "expo-router";
+import { View, StyleSheet, ScrollView, RefreshControl } from "react-native";
+import { useRouter } from "expo-router";
 import { useUserEvents } from "@/contexts/UserEventsContext";
 import EventsHeader from "@/components/events/EventsHeader";
 import EventsContent from "@/components/events/EventsContent";
@@ -12,18 +12,8 @@ export default function EventsScreen() {
   useDebugLifecycle("EventsScreen");
 
   const router = useRouter();
-  const { events, refetch, hasInitialData } = useUserEvents();
+  const { events, refetch, refreshing } = useUserEvents();
   const { user } = useUserProfile();
-
-  // Refetch events when returning to this screen
-  useFocusEffect(
-    useCallback(() => {
-      // Only refetch if we have initial data (prevents infinite loops)
-      if (hasInitialData) {
-        refetch();
-      }
-    }, [hasInitialData, refetch])
-  );
 
   const handleCreateEvent = () => {
     router.push("/(app)/(events)/create");
@@ -33,11 +23,23 @@ export default function EventsScreen() {
     router.push(`/(app)/(event)/${eventId}`);
   };
 
+  const handleRefresh = useCallback(async () => {
+    await refetch();
+  }, [refetch]);
+
   return (
     <View style={styles.container}>
       <ScrollView
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            tintColor="#fff"
+            colors={["#fff"]}
+          />
+        }
       >
         <EventsHeader onCreateEvent={handleCreateEvent} />
 

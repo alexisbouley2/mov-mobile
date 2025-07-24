@@ -22,7 +22,6 @@ interface UserEventsContextType {
   loading: boolean;
   refreshing: boolean;
   error: string | null;
-  hasInitialData: boolean;
   refetch: () => Promise<void>;
   clearEventsError: () => void;
 }
@@ -32,7 +31,6 @@ const UserEventsContext = createContext<UserEventsContextType>({
   loading: false,
   refreshing: false,
   error: null,
-  hasInitialData: false,
   refetch: async () => {},
   clearEventsError: () => {},
 });
@@ -53,7 +51,6 @@ export function UserEventsProvider({
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [hasInitialData, setHasInitialData] = useState(false);
 
   const preloadEventImages = useCallback(
     async (eventsData: CategorizedEvents) => {
@@ -123,7 +120,6 @@ export function UserEventsProvider({
         );
 
         setEvents(data);
-        setHasInitialData(true);
 
         // Preload event cover images in background
         await preloadEventImages(data);
@@ -167,7 +163,6 @@ export function UserEventsProvider({
       log.info("User logged out, clearing events data");
       setEvents({ current: [], planned: [], past: [] });
       setError(null);
-      setHasInitialData(false);
     }
   }, [isAuthenticated, supabaseUser?.id, fetchUserEvents]);
 
@@ -177,19 +172,10 @@ export function UserEventsProvider({
       loading,
       refreshing,
       error,
-      hasInitialData,
       refetch,
       clearEventsError,
     }),
-    [
-      events,
-      loading,
-      refreshing,
-      error,
-      hasInitialData,
-      refetch,
-      clearEventsError,
-    ]
+    [events, loading, refreshing, error, refetch, clearEventsError]
   );
 
   return (
