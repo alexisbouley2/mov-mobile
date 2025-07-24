@@ -115,10 +115,12 @@ export function useContacts() {
               phoneNumber,
               user?.countryCode
             );
+            const contactName = contact.name || "Unknown";
 
             return {
               id: contact.id || `contact-${index}`,
-              name: contact.name || "Unknown",
+              name: contactName,
+              nameLower: contactName.toLowerCase(), // Pre-compute lowercase for search optimization
               phone: phoneNumber,
               normalizedPhone: normalizedPhone,
             };
@@ -148,9 +150,7 @@ export function useContacts() {
 
         // Sort contacts alphabetically by name
         const sortedContacts = contactsWithUser.sort((a, b) => {
-          const nameA = a.name.toLowerCase();
-          const nameB = b.name.toLowerCase();
-          return nameA.localeCompare(nameB);
+          return a.nameLower.localeCompare(b.nameLower);
         });
 
         setContacts(sortedContacts);

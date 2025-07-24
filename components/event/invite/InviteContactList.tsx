@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -34,6 +34,7 @@ export default function InviteContactList({
   inviteUrl,
 }: InviteContactListProps) {
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [added, setAdded] = useState<string[]>([]);
   const [addingParticipant, setAddingParticipant] = useState<string | null>(
     null
@@ -42,8 +43,18 @@ export default function InviteContactList({
   const { user } = useUserProfile();
   const { addParticipant } = useEventParticipants();
 
+  // Debounce search input to optimize performance
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 300); // Wait 300ms after user stops typing
+
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  // Use pre-computed nameLower field for search optimization
   const filtered = contacts.filter((c) =>
-    c.name.toLowerCase().includes(search.toLowerCase())
+    c.nameLower.includes(debouncedSearch.toLowerCase())
   );
 
   const handleAddParticipant = async (contact: InviteContact) => {

@@ -7,6 +7,7 @@ import { UserContact } from "@movapp/types";
 export interface InviteContact {
   id: string;
   name: string;
+  nameLower: string; // Pre-computed lowercase name for search optimization
   phone?: string;
   normalizedPhone?: string;
 

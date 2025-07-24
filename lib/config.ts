@@ -4,11 +4,12 @@ import { validateMobileEnv, type MobileEnvConfig } from "./validation.schema";
 const environments = {
   development: {
     NODE_ENV: "development",
-    EXPO_PUBLIC_API_URL: "http://192.168.1.157:3000", //Rue de patay
+    // EXPO_PUBLIC_API_URL: "http://192.168.1.157:3000", //Rue de patay
     // EXPO_PUBLIC_API_URL: "http://192.168.1.55:3000", //Parallel
     // EXPO_PUBLIC_API_URL: "http://MacBook-Air-de-Alexis.local:3000", //Partage de co
     // EXPO_PUBLIC_API_URL: "http://192.168.1.172:3000", //La Ville du Bois
     // EXPO_PUBLIC_API_URL: "http://192.168.1.163:3000", //SGDB
+    EXPO_PUBLIC_API_URL: "http://192.168.178.58:3000", //Zurich
 
     EXPO_PUBLIC_SUPABASE_URL: "https://sqzpncgvzsmgynpnpvpu.supabase.co",
     EXPO_PUBLIC_SUPABASE_ANON_KEY:
