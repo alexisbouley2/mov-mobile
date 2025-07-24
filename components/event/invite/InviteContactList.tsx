@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import InviteContactItem, { InviteContact } from "./InviteContactItem";
 import ContactsPermissionDenied from "./ContactsPermissionDenied";
-import { ContactPermissionState } from "@/hooks/event/useContacts";
+import { ContactPermissionState } from "@/contexts/event/EventContactsContext";
 import { useEvent } from "@/contexts/event/EventContext";
 import { useUserProfile } from "@/contexts/UserProfileContext";
 import { useEventParticipants } from "@/contexts/event/EventParticipantsContext";

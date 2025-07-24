@@ -5,21 +5,20 @@ import { eventsApi } from "@/services/api/events";
 import { config } from "@/lib/config";
 import { useUserProfile } from "@/contexts/UserProfileContext";
 import { useEvent } from "@/contexts/event/EventContext";
+import { useEventContacts } from "@/contexts/event/EventContactsContext";
 import InviteHeader from "@/components/event/invite/InviteHeader";
 import InviteContactList from "@/components/event/invite/InviteContactList";
-import { useContacts } from "@/hooks/event/useContacts";
 
 export default function EventInviteScreen() {
   const { id: eventId } = useLocalSearchParams<{ id: string }>();
   const { user } = useUserProfile();
   const { event } = useEvent();
+  const { contacts, permissionState, loading, requestPermission } =
+    useEventContacts();
   const router = useRouter();
   const [shareLoading, setShareLoading] = useState(false);
   const [inviteUrl, setInviteUrl] = useState<string | null>(null);
   const [inviteUrlLoading, setInviteUrlLoading] = useState(true);
-
-  const { contacts, permissionState, loading, requestPermission } =
-    useContacts();
 
   // Generate invite URL once when component loads
   const generateInviteUrl = useCallback(async () => {

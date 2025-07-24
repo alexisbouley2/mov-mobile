@@ -1,4 +1,11 @@
-import { useState, useEffect, useCallback } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useMemo,
+  useEffect,
+} from "react";
 import { Alert, Linking } from "react-native";
 import * as Contacts from "expo-contacts";
 import { InviteContact } from "@/components/event/invite/InviteContactItem";
@@ -22,7 +29,34 @@ function chunkArray<T>(array: T[], chunkSize: number): T[][] {
   return chunks;
 }
 
-export function useContacts() {
+interface EventContactsContextType {
+  contacts: InviteContact[];
+  permissionState: ContactPermissionState;
+  loading: boolean;
+  requestPermission: () => Promise<{ status: string; canAskAgain: boolean }>;
+  checkPermission: () => Promise<{ status: string; canAskAgain: boolean }>;
+  fetchContacts: () => Promise<void>;
+}
+
+const EventContactsContext = createContext<EventContactsContextType>({
+  contacts: [],
+  permissionState: {
+    status: "undetermined",
+    canAskAgain: true,
+  },
+  loading: false,
+  requestPermission: async () => ({ status: "denied", canAskAgain: false }),
+  checkPermission: async () => ({ status: "denied", canAskAgain: false }),
+  fetchContacts: async () => {},
+});
+
+export const useEventContacts = () => useContext(EventContactsContext);
+
+export function EventContactsProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const [contacts, setContacts] = useState<InviteContact[]>([]);
   const [permissionState, setPermissionState] =
     useState<ContactPermissionState>({
@@ -186,24 +220,44 @@ export function useContacts() {
     }
   }, [user?.countryCode, checkContacts]);
 
-  // Initialize on mount
+  // Initialize on mount - check permission status
   useEffect(() => {
     checkPermission();
   }, [checkPermission]);
 
-  // Auto-fetch contacts if permission is granted
+  // Auto-fetch contacts if permission is granted and event changes
   useEffect(() => {
-    if (permissionState.status === "granted" && contacts.length === 0) {
+    if (
+      permissionState.status === "granted" &&
+      event?.id &&
+      contacts.length === 0
+    ) {
       fetchContacts();
     }
-  }, [permissionState.status, contacts.length, fetchContacts]);
+  }, [permissionState.status, event?.id, contacts.length, fetchContacts]);
 
-  return {
-    contacts,
-    permissionState,
-    loading,
-    requestPermission,
-    checkPermission,
-    fetchContacts,
-  };
+  const contextValue = useMemo(
+    () => ({
+      contacts,
+      permissionState,
+      loading,
+      requestPermission,
+      checkPermission,
+      fetchContacts,
+    }),
+    [
+      contacts,
+      permissionState,
+      loading,
+      requestPermission,
+      checkPermission,
+      fetchContacts,
+    ]
+  );
+
+  return (
+    <EventContactsContext.Provider value={contextValue}>
+      {children}
+    </EventContactsContext.Provider>
+  );
 }
