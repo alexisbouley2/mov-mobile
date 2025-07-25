@@ -30,7 +30,7 @@ export abstract class UploadProcessor {
     try {
       const result = await ImageManipulator.manipulateAsync(
         thumbnailUri,
-        [{ resize: { width: 300, height: 300 } }],
+        [{ resize: { width: 333 } }], // Only specify width, height scales automatically
         {
           compress: 0.8,
           format: ImageManipulator.SaveFormat.JPEG,

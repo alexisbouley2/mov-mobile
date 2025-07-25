@@ -1,5 +1,5 @@
 // hooks/media/useCamera.ts
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { useRouter } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
 import {
@@ -13,7 +13,7 @@ import { useRecording } from "@/contexts/RecordingContext";
 
 export const useCamera = (userId?: string) => {
   const MAX_VIDEO_DURATION = 6;
-  const DEACTIVATION_DELAY = 1000; // 1000ms delay before deactivating camera
+  const DEACTIVATION_DELAY = 1000;
   const DOUBLE_TAP_DELAY = 300;
   const router = useRouter();
   const { isRecording, setIsRecording } = useRecording();
@@ -48,6 +48,52 @@ export const useCamera = (userId?: string) => {
   );
   const lastTapRef = useRef(0);
 
+  // Helper function to check if resolution is 16:9
+  const is16by9 = (width: number, height: number): boolean => {
+    const aspectRatio = width / height;
+    return Math.abs(aspectRatio - 16 / 9) < 0.01; // Allow small tolerance for floating point
+  };
+
+  // Get the best 16:9 format for video recording
+  const format = useMemo(() => {
+    if (!device) return undefined;
+
+    const formats = device.formats.filter((format) => {
+      // Filter for video formats that support 16:9 aspect ratio
+      console.log("format", format);
+      return (
+        format.videoWidth &&
+        format.videoHeight &&
+        is16by9(format.videoWidth, format.videoHeight) &&
+        format.supportsVideoHdr === false && // Avoid HDR for faster processing
+        format.maxFps >= 30
+      ); // Ensure good frame rate
+    });
+
+    if (formats.length === 0) {
+      // Fallback: find any format with decent resolution
+      log.warn("No 16:9 formats found, using best available format");
+      return device.formats
+        .filter((f) => f.videoWidth && f.videoHeight && f.maxFps >= 30)
+        .sort(
+          (a, b) =>
+            b.videoWidth! * b.videoHeight! - a.videoWidth! * a.videoHeight!
+        )[0];
+    }
+
+    // Sort by resolution (higher is better) and return the best one
+    const bestFormat = formats.sort((a, b) => {
+      const aPixels = a.videoWidth! * a.videoHeight!;
+      const bPixels = b.videoWidth! * b.videoHeight!;
+      return bPixels - aPixels;
+    })[0];
+
+    log.info(
+      `Selected video format: ${bestFormat.videoWidth}x${bestFormat.videoHeight} @ ${bestFormat.maxFps}fps`
+    );
+    return bestFormat;
+  }, [device]);
+
   // Request permissions on mount
   useEffect(() => {
     if (!hasCameraPermission) requestCameraPermission();
@@ -65,23 +111,19 @@ export const useCamera = (userId?: string) => {
   }, []);
 
   const activateCamera = useCallback(() => {
-    // Clear any pending deactivation
     if (deactivationTimeoutRef.current) {
       clearTimeout(deactivationTimeoutRef.current);
       deactivationTimeoutRef.current = null;
     }
-
     setIsCameraActive(true);
   }, []);
 
   const deactivateCamera = useCallback(() => {
     setIsCameraActive(false);
-
     if (durationInterval.current) {
       cancelAnimationFrame(durationInterval.current);
       durationInterval.current = null;
     }
-
     setIsRecording(false);
     setIsProcessing(false);
     setHasVideoCaptured(false);
@@ -89,32 +131,24 @@ export const useCamera = (userId?: string) => {
   }, []);
 
   const scheduleDeactivation = useCallback(() => {
-    // Clear any existing timeout
     if (deactivationTimeoutRef.current) {
       clearTimeout(deactivationTimeoutRef.current);
     }
-
-    // Schedule deactivation after delay
     deactivationTimeoutRef.current = setTimeout(() => {
       deactivateCamera();
       deactivationTimeoutRef.current = null;
     }, DEACTIVATION_DELAY);
   }, [deactivateCamera]);
 
-  // Smart camera lifecycle management
   const manageCameraLifecycle = useCallback(
     (isTabActive: boolean, isSwipingTowardsCamera: boolean = false) => {
       if (isTabActive && isFocused) {
-        // Camera tab is active AND screen is focused - activate immediately
         activateCamera();
       } else if (isSwipingTowardsCamera && isFocused) {
-        // User is swiping towards camera AND screen is focused - activate immediately
         activateCamera();
       } else if (!isFocused) {
-        // Screen is not focused - deactivate immediately (regardless of tab state)
         scheduleDeactivation();
       } else {
-        // Camera tab is not active and not swiping towards it - schedule deactivation
         scheduleDeactivation();
       }
     },
@@ -127,11 +161,13 @@ export const useCamera = (userId?: string) => {
       return;
     }
 
-    log.info("Starting recording");
+    log.info(
+      "Starting recording with format:",
+      format ? `${format.videoWidth}x${format.videoHeight}` : "default"
+    );
     setIsRecording(true);
     setRecordingDuration(0);
 
-    // Update duration at 60fps for smooth animation
     const startTime = Date.now();
     const updateDuration = () => {
       const elapsed = (Date.now() - startTime) / 1000;
@@ -148,22 +184,17 @@ export const useCamera = (userId?: string) => {
     try {
       await cameraRef.current.startRecording({
         flash: flash === "on" ? "on" : "off",
-        // Optimized settings for faster processing
         videoCodec: "h264",
-        // videoBitRate: "high",
         fileType: "mp4",
         onRecordingFinished: (video) => {
           log.info("Recording finished:", video.path);
+          log.info("Video dimensions should be 16:9");
 
-          // Set video captured state to prevent UI flicker
           setHasVideoCaptured(true);
-
-          // Clear state
           setIsRecording(false);
           setIsProcessing(false);
           setRecordingDuration(0);
 
-          // Navigate with the actual video path
           if (userId) {
             router.push({
               pathname: "/(app)/(media)/preview",
@@ -176,7 +207,6 @@ export const useCamera = (userId?: string) => {
         },
         onRecordingError: (error) => {
           log.error("Recording error:", error);
-
           setIsRecording(false);
           setIsProcessing(false);
           setRecordingDuration(0);
@@ -187,17 +217,23 @@ export const useCamera = (userId?: string) => {
       setIsRecording(false);
       setRecordingDuration(0);
     }
-  }, [cameraRef, isCameraActive, device, isRecording, flash, userId, router]);
+  }, [
+    cameraRef,
+    isCameraActive,
+    device,
+    isRecording,
+    flash,
+    userId,
+    router,
+    format,
+  ]);
 
   const stopRecording = useCallback(async () => {
     if (!cameraRef.current || !isRecording) return;
 
     log.info("Stopping recording");
-
-    // Show processing state immediately
     setIsProcessing(true);
 
-    // Clear animation frame
     if (durationInterval.current) {
       cancelAnimationFrame(durationInterval.current);
       durationInterval.current = null;
@@ -218,7 +254,6 @@ export const useCamera = (userId?: string) => {
 
   const handleCameraPress = useCallback(() => {
     const now = Date.now();
-
     if (now - lastTapRef.current < DOUBLE_TAP_DELAY) {
       toggleCameraType();
     }
@@ -233,7 +268,6 @@ export const useCamera = (userId?: string) => {
     setHasVideoCaptured(false);
   }, []);
 
-  // Focus-based lifecycle management
   useFocusEffect(
     useCallback(() => {
       setIsFocused(true);
@@ -258,6 +292,7 @@ export const useCamera = (userId?: string) => {
     isCameraActive,
     recordingProgress,
     device,
+    format, // Export format for Camera component
 
     // Refs
     cameraRef,

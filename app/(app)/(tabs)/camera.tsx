@@ -33,6 +33,7 @@ export default function CameraScreen() {
     isCameraActive,
     recordingProgress,
     device,
+    format, // Get the 16:9 format
     cameraRef,
     startRecording,
     stopRecording,
@@ -90,6 +91,7 @@ export default function CameraScreen() {
           ref={cameraRef}
           style={styles.camera}
           device={device}
+          format={format} // Apply the 16:9 format
           isActive={isCameraActive}
           video={true}
           audio={true}
@@ -97,6 +99,7 @@ export default function CameraScreen() {
           videoStabilizationMode="auto"
           photoHdr={false}
           lowLightBoost={false}
+          outputOrientation="preview"
         />
       </TouchableOpacity>
 
