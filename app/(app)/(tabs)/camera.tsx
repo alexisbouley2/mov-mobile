@@ -1,5 +1,5 @@
 // app/(tabs)/index.tsx
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Image,
   StyleSheet,
@@ -20,6 +20,8 @@ export default function CameraScreen() {
   const { user } = useUserProfile();
   const { isTabActive, isSwipingTowardsCamera } = useTab();
   const isCameraTabActive = isTabActive(1);
+
+  const [isPreviewActive, setIsPreviewActive] = useState(false);
 
   useDebugLifecycle("CameraScreen");
 
@@ -100,7 +102,18 @@ export default function CameraScreen() {
           photoHdr={false}
           lowLightBoost={false}
           outputOrientation="preview"
+          onPreviewStarted={() => setIsPreviewActive(true)}
+          onPreviewStopped={() => setIsPreviewActive(false)}
         />
+
+        {(!isCameraActive || !isPreviewActive) && (
+          <View
+            style={[
+              StyleSheet.absoluteFill,
+              { backgroundColor: "black", zIndex: 1000 },
+            ]}
+          />
+        )}
       </TouchableOpacity>
 
       {/* Camera Controls */}

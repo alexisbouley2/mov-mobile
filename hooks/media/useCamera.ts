@@ -60,7 +60,6 @@ export const useCamera = (userId?: string) => {
 
     const formats = device.formats.filter((format) => {
       // Filter for video formats that support 16:9 aspect ratio
-      console.log("format", format);
       return (
         format.videoWidth &&
         format.videoHeight &&

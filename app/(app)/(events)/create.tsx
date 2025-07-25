@@ -8,11 +8,14 @@ import EventForm from "@/components/event-form/EventForm";
 import { useUserProfile } from "@/contexts/UserProfileContext";
 import { components, typography } from "@/styles";
 import BackButton from "@/components/ui/button/BackButton";
+import { useDebugLifecycle } from "@/utils/debugLifecycle";
 
 export default function CreateEventScreen() {
   const { user } = useUserProfile();
   const { refetch } = useUserEvents();
   const router = useRouter();
+
+  useDebugLifecycle("CreateEventScreen");
 
   const {
     formData,

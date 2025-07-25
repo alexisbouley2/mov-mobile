@@ -4,6 +4,7 @@ import { PanGestureHandler } from "react-native-gesture-handler";
 import Animated from "react-native-reanimated";
 import { usePathname } from "expo-router";
 import { TabProvider, useTab } from "@/contexts/TabContext";
+import { useDebugLifecycle } from "@/utils/debugLifecycle";
 
 interface SwipableTabsProps {
   children: React.ReactNode[];
@@ -73,6 +74,8 @@ export const SwipableTabs: React.FC<SwipableTabsProps> = ({
 }) => {
   const pathname = usePathname();
   const childrenCount = children.length;
+
+  useDebugLifecycle("SwipableTabs");
 
   // Determine the correct initial index based on the current route
   const getInitialIndexFromRoute = () => {

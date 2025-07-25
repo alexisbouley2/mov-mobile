@@ -14,6 +14,7 @@ import ParticipantsPreview from "@/components/event/participants/ParticipantsPre
 import ChatPreview from "@/components/event/chat/ChatPreview";
 import EventVideoFeed from "@/components/event/gallery/EventVideoFeed";
 import { useEventDetail } from "@/hooks/event/useEventDetail";
+import { useDebugLifecycle } from "@/utils/debugLifecycle";
 
 export default function EventDetailScreen() {
   const router = useRouter();
@@ -29,6 +30,8 @@ export default function EventDetailScreen() {
     handleInvite,
     handleLeave,
   } = useEventDetail();
+
+  useDebugLifecycle("EventDetailScreen");
 
   if (eventLoading && !event) {
     return (
