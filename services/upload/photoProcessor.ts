@@ -135,7 +135,7 @@ export class EventPhotoUploadProcessor extends PhotoUploadProcessor {
   } {
     return {
       thumbnail: { width: 200, height: 200 },
-      full: { width: 1600, height: 900 }, // 16:9 aspect ratio
+      full: { width: 900, height: 900 },
     };
   }
 }

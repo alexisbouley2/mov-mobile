@@ -13,7 +13,7 @@ export function useEventPhoto({
     initialImageUrl,
     onImageChange,
     uploadType: "event_photo",
-    aspectRatio: [16, 9], // 16:9 aspect ratio for event photos
+    aspectRatio: [1, 1],
     photoDataKey: {
       imagePath: "coverImagePath",
       thumbnailPath: "coverThumbnailPath",

@@ -29,8 +29,8 @@ export default function EventHeader({
   onLeave,
   isAdmin = false,
 }: EventHeaderProps) {
-  // Calculate height based on 16:9 aspect ratio using full screen width
-  const containerHeight = (width * 9) / 16;
+  // Calculate height based on 1:1 aspect ratio using full screen width
+  const containerHeight = width;
 
   const formatEventDate = (dateString: string) => {
     const eventDate = new Date(dateString);

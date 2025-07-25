@@ -18,11 +18,11 @@ export default function EventPhotoSection({
   pickImage,
   previewImage,
 }: EventPhotoSectionProps) {
-  // Calculate height based on 16:9 aspect ratio
+  // Calculate height based on 1:1 aspect ratio
   // Account for horizontal padding (20px on each side from EventForm)
   const screenWidth = Dimensions.get("window").width;
   const containerWidth = screenWidth - 40; // 20px padding on each side
-  const containerHeight = (containerWidth * 9) / 16; // 16:9 aspect ratio
+  const containerHeight = containerWidth; // 1:1 aspect ratio
 
   return (
     <TouchableOpacity
