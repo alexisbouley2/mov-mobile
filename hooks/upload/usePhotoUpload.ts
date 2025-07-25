@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import { Alert, Linking } from "react-native";
 import * as ImagePicker from "expo-image-picker";
+import * as FileSystem from "expo-file-system";
 import { mediaUploadManager } from "@/services/upload";
 import { useUploadStatus } from "@/hooks/upload/useUploadStatus";
 import { UploadType } from "@/services/upload/types";
@@ -65,6 +66,27 @@ export function usePhotoUpload({
 
       if (!result.canceled && result.assets[0] && supabaseUser) {
         const imageUri = result.assets[0].uri;
+
+        // Check file size (limit: 20MB)
+        try {
+          const fileInfo = await FileSystem.getInfoAsync(imageUri);
+          const maxSize = 20 * 1024 * 1024; // 20MB in bytes
+          if (fileInfo.exists) {
+            if (fileInfo.size > maxSize) {
+              Alert.alert(
+                "Image Too Large",
+                "Please select an image smaller than 20MB.",
+                [{ text: "OK" }]
+              );
+              return;
+            }
+          }
+        } catch (error) {
+          log.error("Failed to get file info for size check:", error);
+          Alert.alert("Error", "Could not check image size. Please try again.");
+          return;
+        }
+
         setPreviewImage(imageUri);
         onImageChange?.(imageUri);
 
