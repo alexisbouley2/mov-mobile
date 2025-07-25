@@ -39,15 +39,7 @@ export default function VideoCarousel({
   const isAnimating = useRef(false);
   const pendingIndex = useRef<number | null>(null);
 
-  const {
-    loadMoreAllVideos,
-    loadMoreUserVideos,
-    activeTab,
-    allVideosLoadingMore,
-    userVideosLoadingMore,
-    allVideosHasMore,
-    userVideosHasMore,
-  } = useEventVideos();
+  const { loadMoreVideos, loadingMore, hasMore } = useEventVideos();
 
   // Load videos with priority
   const loadVideosWithPriority = useCallback(
@@ -103,30 +95,12 @@ export default function VideoCarousel({
 
       // Check if we need to load more videos
       if (targetIndex >= videos.length - 3) {
-        const isLoading =
-          activeTab === "all" ? allVideosLoadingMore : userVideosLoadingMore;
-        const hasMore =
-          activeTab === "all" ? allVideosHasMore : userVideosHasMore;
-
-        if (!isLoading && hasMore) {
-          if (activeTab === "all") {
-            loadMoreAllVideos();
-          } else {
-            loadMoreUserVideos();
-          }
+        if (!loadingMore && hasMore) {
+          loadMoreVideos();
         }
       }
     },
-    [
-      videos,
-      activeTab,
-      allVideosLoadingMore,
-      userVideosLoadingMore,
-      allVideosHasMore,
-      userVideosHasMore,
-      loadMoreAllVideos,
-      loadMoreUserVideos,
-    ]
+    [videos, loadingMore, hasMore, loadMoreVideos]
   );
 
   // Initial load
