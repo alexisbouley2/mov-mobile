@@ -56,7 +56,7 @@ function RootLayoutContent() {
         flex: 1,
         backgroundColor: "black",
         paddingTop: insets.top,
-        marginBottom: insets.bottom,
+        paddingBottom: insets.bottom,
         paddingLeft: insets.left,
         paddingRight: insets.right,
       }}
