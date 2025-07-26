@@ -65,7 +65,8 @@ export const useCamera = (userId?: string) => {
         format.videoHeight &&
         is16by9(format.videoWidth, format.videoHeight) &&
         format.supportsVideoHdr === false && // Avoid HDR for faster processing
-        format.maxFps >= 30
+        format.maxFps >= 30 &&
+        format.videoWidth <= 1920 // Limit resolution for Android compatibility
       ); // Ensure good frame rate
     });
 
