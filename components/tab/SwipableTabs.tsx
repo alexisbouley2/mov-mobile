@@ -79,9 +79,9 @@ export const SwipableTabs: React.FC<SwipableTabsProps> = ({
 
   // Determine the correct initial index based on the current route
   const getInitialIndexFromRoute = () => {
-    if (pathname.includes("/(tabs)/events")) return 0;
-    if (pathname.includes("/(tabs)/camera")) return 1;
-    if (pathname.includes("/(tabs)/profile")) return 2;
+    if (pathname.includes("/events")) return 0;
+    if (pathname.includes("/camera")) return 1;
+    if (pathname.includes("/profile")) return 2;
     return initialIndex; // fallback to provided initialIndex
   };
   const routeBasedInitialIndex = getInitialIndexFromRoute();
