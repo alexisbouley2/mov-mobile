@@ -105,16 +105,12 @@ export function useCreateEvent(userId: string) {
           ]);
         } catch (error) {
           log.error("Failed to associate video with event:", error);
-          Alert.alert(
-            "Warning",
-            "Event created but failed to add video. You can add it later.",
-            [
-              {
-                text: "OK",
-                onPress: () => router.push("/(app)/(tabs)/events"),
-              },
-            ]
-          );
+          Alert.alert("Warning", "Event created but failed to add video.", [
+            {
+              text: "OK",
+              onPress: () => router.push("/(app)/(tabs)/events"),
+            },
+          ]);
         }
       } else {
         // Normal event creation without video
@@ -137,9 +133,11 @@ export function useCreateEvent(userId: string) {
     jobId: string,
     eventIds: string[]
   ) => {
-    const job = mediaUploadManager.getJob(jobId);
-    if (!job || job.status !== "uploaded" || !job.uploadResult?.videoPath) {
-      throw new Error("Video not ready for association");
+    // Wait for job to complete if it's still uploading
+    const job = await mediaUploadManager.waitForJob(jobId);
+
+    if (!job.uploadResult?.videoPath) {
+      throw new Error("Unable to associate video with events");
     }
 
     const associationData: AssociateEventsRequest = {

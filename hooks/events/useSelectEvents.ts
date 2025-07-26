@@ -64,9 +64,11 @@ export const useSelectEvents = ({ jobId }: UseSelectEventsProps) => {
     jobId: string,
     eventIds: string[]
   ) => {
-    const job = mediaUploadManager.getJob(jobId);
-    if (!job || job.status !== "uploaded" || !job.uploadResult?.videoPath) {
-      throw new Error("Video not ready for association");
+    // Wait for job to complete if it's still uploading
+    const job = await mediaUploadManager.waitForJob(jobId);
+
+    if (!job.uploadResult?.videoPath) {
+      throw new Error("Unable to associate video with events");
     }
 
     const associationData: AssociateEventsRequest = {
