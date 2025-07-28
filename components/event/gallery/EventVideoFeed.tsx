@@ -1,6 +1,6 @@
 import React from "react";
 import { View, FlatList, StyleSheet, Text } from "react-native";
-import { VideoViewerModal } from "./modal";
+import { useRouter } from "expo-router";
 import VideoGridItem from "./VideoGridItem";
 import {
   LoadingState,
@@ -15,14 +15,14 @@ interface EventVideoFeedProps {
 }
 
 export default function EventVideoFeed({ eventDate }: EventVideoFeedProps) {
+  const router = useRouter();
   const {
     videos,
     loading,
     loadingMore,
     loadMoreVideos,
     refreshVideos,
-    openVideoModal,
-    modalVisible,
+    openVideoViewer,
     error,
   } = useEventVideos();
 
@@ -38,7 +38,8 @@ export default function EventVideoFeed({ eventDate }: EventVideoFeedProps) {
   };
 
   const handleVideoPress = (index: number) => {
-    openVideoModal(index);
+    openVideoViewer(index);
+    router.push(`/video-viewer?initialIndex=${index}`);
   };
 
   const renderVideoItem = ({ item, index }: { item: any; index: number }) => (
@@ -90,8 +91,6 @@ export default function EventVideoFeed({ eventDate }: EventVideoFeedProps) {
         scrollEnabled={true}
         nestedScrollEnabled={true}
       />
-
-      <VideoViewerModal visible={modalVisible} videos={videos} />
     </View>
   );
 }

@@ -1,11 +1,10 @@
+// Alternative fix for VirtualVideoPlayer if the gesture handler solution doesn't work
+// Import TapGestureHandler from react-native-gesture-handler
+
 import React, { useRef, useEffect, useState } from "react";
-import {
-  View,
-  StyleSheet,
-  ActivityIndicator,
-  TouchableOpacity,
-} from "react-native";
+import { View, StyleSheet, ActivityIndicator, Pressable } from "react-native";
 import Video from "react-native-video";
+import { TapGestureHandler, State } from "react-native-gesture-handler";
 import { VideoItem } from "@/contexts/event/EventVideosContext";
 import { videoCacheService } from "@/services/videoCacheService";
 import VideoOverlay from "./VideoOverlay";
@@ -37,22 +36,16 @@ export default function VirtualVideoPlayer({
   const [isVideoReady, setIsVideoReady] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
 
-  // Initialize video source ONCE when component mounts - never change it
   useEffect(() => {
     if (!video) return;
 
     const initializeVideoSource = async () => {
-      // Check if video is cached
       const cached = videoCacheService.getCachedVideo(video.id);
 
       if (cached?.isReady) {
-        // Use cached version immediately
         setVideoSource(cached.localUri);
       } else {
-        // Use original URL and start preloading in background
         setVideoSource(video.videoUrl);
-
-        // Preload for future use (don't switch source here to avoid re-initialization)
         videoCacheService.preloadVideo(video).catch((error) => {
           log.error("Failed to preload video:", error);
         });
@@ -60,9 +53,8 @@ export default function VirtualVideoPlayer({
     };
 
     initializeVideoSource();
-  }, [video?.id]); // Only run when video ID changes (component creation)
+  }, [video?.id]);
 
-  // Update playing state based on isActive prop
   useEffect(() => {
     setIsPlaying(isActive);
   }, [isActive]);
@@ -96,6 +88,12 @@ export default function VirtualVideoPlayer({
     );
   };
 
+  const handleTapGesture = (event: any) => {
+    if (event.nativeEvent.state === State.ACTIVE) {
+      handleVideoPress();
+    }
+  };
+
   if (!video || !videoSource) {
     return (
       <View style={[styles.container, style]}>
@@ -106,30 +104,30 @@ export default function VirtualVideoPlayer({
 
   return (
     <View style={[styles.container, style]}>
-      <TouchableOpacity
-        style={styles.videoContainer}
-        onPress={handleVideoPress}
-        activeOpacity={1}
-      >
-        <Video
-          ref={videoRef}
-          source={{ uri: videoSource }}
-          style={styles.video}
-          paused={!isPlaying}
-          repeat={true}
-          resizeMode="cover"
-          onLoad={handleVideoLoad}
-          onError={handleVideoError}
-          onLoadStart={handleLoadStart}
-          controls={false}
-          muted={isMuted}
-          playWhenInactive={false}
-          playInBackground={false}
-          ignoreSilentSwitch="ignore"
-          // Keep video decoded in GPU memory even when paused
-          preventsDisplaySleepDuringVideoPlayback={false}
-        />
-      </TouchableOpacity>
+      <TapGestureHandler onHandlerStateChange={handleTapGesture}>
+        <View style={styles.videoContainer}>
+          <Video
+            ref={videoRef}
+            source={{ uri: videoSource }}
+            style={styles.video}
+            paused={!isPlaying}
+            repeat={true}
+            resizeMode="cover"
+            onLoad={handleVideoLoad}
+            onError={handleVideoError}
+            onLoadStart={handleLoadStart}
+            controls={false}
+            muted={isMuted}
+            playWhenInactive={false}
+            playInBackground={false}
+            ignoreSilentSwitch="ignore"
+            preventsDisplaySleepDuringVideoPlayback={false}
+          />
+
+          {/* Alternative: Use Pressable with absolute positioning */}
+          <Pressable style={styles.tapOverlay} onPress={handleVideoPress} />
+        </View>
+      </TapGestureHandler>
 
       {!isVideoReady && (
         <View style={styles.loadingOverlay}>
@@ -137,7 +135,6 @@ export default function VirtualVideoPlayer({
         </View>
       )}
 
-      {/* Add overlay with user info, three dots button, download button, close button, and mute button */}
       <VideoOverlay
         video={video}
         onClose={onClose}
@@ -177,5 +174,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  tapOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
 });

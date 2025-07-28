@@ -29,8 +29,7 @@ interface EventVideosContextType {
   hasMore: boolean;
   nextCursor: string | null;
 
-  // Modal states
-  modalVisible: boolean;
+  // Video viewer states
   currentVideoIndex: number;
 
   // Methods
@@ -38,9 +37,8 @@ interface EventVideosContextType {
   loadMoreVideos: () => Promise<void>;
   refreshVideos: () => Promise<void>;
 
-  // Modal methods
-  openVideoModal: (_index: number) => void;
-  closeVideoModal: () => void;
+  // Video viewer methods
+  openVideoViewer: (_index: number) => void;
   setCurrentVideoIndex: (_index: number) => void;
 
   // Error states
@@ -57,13 +55,11 @@ const EventVideosContext = createContext<EventVideosContextType>({
   loadingMore: false,
   hasMore: true,
   nextCursor: null,
-  modalVisible: false,
   currentVideoIndex: 0,
   loadVideos: async () => {},
   loadMoreVideos: async () => {},
   refreshVideos: async () => {},
-  openVideoModal: () => {},
-  closeVideoModal: () => {},
+  openVideoViewer: () => {},
   setCurrentVideoIndex: () => {},
   error: null,
   clearError: () => {},
@@ -91,8 +87,7 @@ export function EventVideosProvider({
   const [hasMore, setHasMore] = useState(true);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
 
-  // Modal states
-  const [modalVisible, setModalVisible] = useState(false);
+  // Video viewer states
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
 
   // Error state
@@ -158,21 +153,16 @@ export function EventVideosProvider({
     }
   }, [event?.id, loadVideos]);
 
-  // Modal management
-  const openVideoModal = useCallback(
+  // Video viewer management
+  const openVideoViewer = useCallback(
     (index: number) => {
       setCurrentVideoIndex(index);
-      setModalVisible(true);
 
       // Start preloading videos around the opened index
       videoCacheService.preloadVideosAround(videos, index);
     },
     [videos]
   );
-
-  const closeVideoModal = useCallback(() => {
-    setModalVisible(false);
-  }, []);
 
   const updateCurrentVideoIndex = useCallback(
     (index: number) => {
@@ -217,10 +207,7 @@ export function EventVideosProvider({
                   prev.filter((video) => video.id !== videoId)
                 );
 
-                // Close modal since user was viewing the reported video
-                if (modalVisible) {
-                  closeVideoModal();
-                }
+                // Video was reported successfully
               } catch (error) {
                 log.error("Error reporting video:", error);
                 setError("Failed to report video. Please try again.");
@@ -230,7 +217,7 @@ export function EventVideosProvider({
         ]
       );
     },
-    [event?.id, user?.id, modalVisible, closeVideoModal]
+    [event?.id, user?.id]
   );
 
   // Auto-load videos when event changes
@@ -254,13 +241,11 @@ export function EventVideosProvider({
       loadingMore,
       hasMore,
       nextCursor,
-      modalVisible,
       currentVideoIndex,
       loadVideos,
       loadMoreVideos,
       refreshVideos,
-      openVideoModal,
-      closeVideoModal,
+      openVideoViewer,
       setCurrentVideoIndex: updateCurrentVideoIndex,
       error,
       clearError,
@@ -272,13 +257,11 @@ export function EventVideosProvider({
       loadingMore,
       hasMore,
       nextCursor,
-      modalVisible,
       currentVideoIndex,
       loadVideos,
       loadMoreVideos,
       refreshVideos,
-      openVideoModal,
-      closeVideoModal,
+      openVideoViewer,
       updateCurrentVideoIndex,
       error,
       clearError,

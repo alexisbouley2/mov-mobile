@@ -52,7 +52,10 @@
         "visible": true
       },
       "userInterfaceStyle": "dark",
-      "googleServicesFile": "./google-services.json"
+      "googleServicesFile": "./google-services.json",
+      "config": {
+        "largeHeap": true
+      }
     },
     "web": {
       "bundler": "metro",
@@ -117,6 +120,12 @@
         {
           "ios": {
             "useFrameworks": "static"
+          },
+          "android": {
+            "minSdkVersion": 21,
+            "proguardMinifyEnabled": true,
+            "enableProguardInReleaseBuilds": true,
+            "javaMaxHeapSize": "4g"
           }
         }
       ]
