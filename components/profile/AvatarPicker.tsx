@@ -6,12 +6,14 @@ interface AvatarPickerProps {
   imageUri?: string | null;
   onPress: () => void;
   size?: number;
+  shouldCache?: boolean;
 }
 
 export default function AvatarPicker({
   imageUri,
   onPress,
   size = 100,
+  shouldCache = true,
 }: AvatarPickerProps) {
   return (
     <TouchableOpacity style={styles.container} onPress={onPress}>
@@ -23,6 +25,7 @@ export default function AvatarPicker({
           showLoading={true}
           loadingSize="small"
           loadingColor="#666"
+          shouldCache={shouldCache}
           style={[
             styles.avatar,
             { width: size, height: size, borderRadius: size / 2 },

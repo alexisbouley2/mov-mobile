@@ -14,6 +14,7 @@ interface CachedImageProps extends Omit<ImageProps, "source"> {
   showLoading?: boolean;
   loadingSize?: "small" | "large";
   loadingColor?: string;
+  shouldCache?: boolean;
 }
 
 export function CachedImage({
@@ -23,6 +24,7 @@ export function CachedImage({
   showLoading = true,
   loadingSize = "small",
   loadingColor = "#666",
+  shouldCache = true,
   style,
   ...imageProps
 }: CachedImageProps) {
@@ -47,13 +49,18 @@ export function CachedImage({
           return;
         }
 
-        // If not cached, try to cache it
-        const newCachedPath = await imageCacheService.cache(uri, cachePolicy);
+        // If not cached and shouldCache is true, try to cache it
+        if (shouldCache) {
+          const newCachedPath = await imageCacheService.cache(uri, cachePolicy);
 
-        if (newCachedPath && isMounted) {
-          setImageSource(newCachedPath);
-        } else if (isMounted) {
-          // If caching fails, fall back to original URI
+          if (newCachedPath && isMounted) {
+            setImageSource(newCachedPath);
+          } else if (isMounted) {
+            // If caching fails, fall back to original URI
+            setImageSource(uri);
+          }
+        } else {
+          // If shouldCache is false, use original URI directly
           setImageSource(uri);
         }
       } catch (err) {
@@ -79,7 +86,7 @@ export function CachedImage({
     return () => {
       isMounted = false;
     };
-  }, [uri, cachePolicy]);
+  }, [uri, cachePolicy, shouldCache]);
 
   const handleImageError = () => {
     setError(true);

@@ -23,6 +23,7 @@ interface UserEventsContextType {
   refreshing: boolean;
   error: string | null;
   refetch: () => Promise<void>;
+  refreshEvents: () => Promise<void>;
   clearEventsError: () => void;
 }
 
@@ -32,6 +33,7 @@ const UserEventsContext = createContext<UserEventsContextType>({
   refreshing: false,
   error: null,
   refetch: async () => {},
+  refreshEvents: async () => {},
   clearEventsError: () => {},
 });
 
@@ -149,6 +151,10 @@ export function UserEventsProvider({
     await fetchUserEvents(true);
   }, [fetchUserEvents]);
 
+  const refreshEvents = useCallback(async () => {
+    await fetchUserEvents(false);
+  }, [fetchUserEvents]);
+
   const clearEventsError = useCallback(() => {
     setError(null);
   }, []);
@@ -173,9 +179,18 @@ export function UserEventsProvider({
       refreshing,
       error,
       refetch,
+      refreshEvents,
       clearEventsError,
     }),
-    [events, loading, refreshing, error, refetch, clearEventsError]
+    [
+      events,
+      loading,
+      refreshing,
+      error,
+      refetch,
+      refreshEvents,
+      clearEventsError,
+    ]
   );
 
   return (

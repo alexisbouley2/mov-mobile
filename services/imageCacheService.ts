@@ -64,6 +64,7 @@ class ImageCacheService {
     // Initialize directory and start cleanup (fire-and-forget)
     this.initializeCacheDirectory();
     this.startPeriodicCleanup();
+    this.getCacheStats();
   }
 
   private async initializeCacheDirectory() {
@@ -269,15 +270,6 @@ class ImageCacheService {
     }
   }
 
-  /**
-   * Preload an image (cache it in background)
-   */
-  async preload(presignedUrl: string, policy: CachePolicy): Promise<void> {
-    this.cache(presignedUrl, policy).catch((error) => {
-      log.error("Failed to preload image:", error);
-    });
-  }
-
   private async cleanupExpired(): Promise<void> {
     await this.loadMetadata();
 
@@ -357,43 +349,6 @@ class ImageCacheService {
   }
 
   /**
-   * Clear all cached images
-   */
-  async clearCache(): Promise<void> {
-    await this.loadMetadata();
-
-    // Delete all cached files
-    for (const entry of Object.values(this.metadata)) {
-      try {
-        const fileInfo = await FileSystem.getInfoAsync(entry.localPath);
-        if (fileInfo.exists) {
-          await FileSystem.deleteAsync(entry.localPath);
-        }
-      } catch (error) {
-        log.error("Failed to delete cached image file:", error);
-      }
-    }
-
-    this.metadata = {};
-    await this.saveMetadata();
-
-    // Optionally, delete the entire cache directory and recreate
-    try {
-      const dirInfo = await FileSystem.getInfoAsync(this.cacheDir);
-      if (dirInfo.exists) {
-        await FileSystem.deleteAsync(this.cacheDir);
-        await FileSystem.makeDirectoryAsync(this.cacheDir, {
-          intermediates: true,
-        });
-      }
-    } catch (error) {
-      log.error("Failed to clear image cache directory:", error);
-    }
-
-    log.info("Image cache cleared");
-  }
-
-  /**
    * Get cache statistics
    */
   async getCacheStats(): Promise<{
@@ -420,17 +375,9 @@ class ImageCacheService {
       stats.policiesStats[entry.policy].size += entry.size;
     }
 
-    return stats;
-  }
+    log.info("cache stats: ", stats);
 
-  /**
-   * Cleanup resources
-   */
-  destroy(): void {
-    if (this.cleanupInterval) {
-      clearInterval(this.cleanupInterval);
-      this.cleanupInterval = null;
-    }
+    return stats;
   }
 }
 

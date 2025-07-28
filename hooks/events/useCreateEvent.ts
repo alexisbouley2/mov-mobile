@@ -4,7 +4,6 @@ import { Alert } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEventForm } from "../event/useEventForm";
 import { useEventPhoto } from "../event/useEventPhoto";
-import { useUserEvents } from "@/contexts/UserEventsContext";
 import { mediaUploadManager } from "@/services/upload";
 import { eventsApi, videosApi } from "@/services/api";
 import log from "@/utils/logger";
@@ -16,9 +15,6 @@ export function useCreateEvent(userId: string) {
     jobId?: string;
     selectedEventIds?: string;
   }>();
-
-  // Use context to refresh events after creation
-  const { refetch } = useUserEvents();
 
   const { formData, updateField, validateEventDateTime } = useEventForm();
   const [loading, setLoading] = useState(false);
@@ -79,9 +75,6 @@ export function useCreateEvent(userId: string) {
       };
 
       const newEvent = await eventsApi.create(eventData);
-
-      // Refresh events context to include the new event
-      await refetch();
 
       // If we have a video job, associate it with the new event
       if (jobId) {

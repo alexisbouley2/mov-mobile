@@ -37,6 +37,7 @@ export default function ProfileForm({
         imageUri={previewImage}
         onPress={onImagePress}
         size={avatarSize}
+        shouldCache={false}
       />
 
       <TextInput

@@ -6,10 +6,12 @@ import EventForm from "@/components/event-form/EventForm";
 import { components, typography } from "@/styles";
 import BackButton from "@/components/ui/button/BackButton";
 import ThreeDotsButton from "@/components/ui/ThreeDotsButton";
+import { useUserEvents } from "@/contexts/UserEventsContext";
 
 export default function EditEventScreen() {
   const router = useRouter();
 
+  const { refreshEvents } = useUserEvents();
   const {
     formData,
     loading,
@@ -26,7 +28,8 @@ export default function EditEventScreen() {
     router.back();
   };
 
-  const handleEditSuccess = () => {
+  const handleEditSuccess = async () => {
+    await refreshEvents();
     router.back();
   };
 

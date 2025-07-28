@@ -4,10 +4,10 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Image,
   Dimensions,
 } from "react-native";
 import { IconSymbol } from "@/components/ui/IconSymbol";
+import { CachedImage } from "../ui/CachedImage";
 
 interface EventPhotoSectionProps {
   pickImage: () => Promise<void>;
@@ -30,7 +30,15 @@ export default function EventPhotoSection({
       onPress={pickImage}
     >
       {previewImage ? (
-        <Image source={{ uri: previewImage }} style={styles.eventPhoto} />
+        <CachedImage
+          uri={previewImage}
+          cachePolicy="cover-image"
+          style={styles.eventPhoto}
+          fallbackSource={undefined}
+          showLoading={true}
+          loadingColor="#666"
+          shouldCache={false}
+        />
       ) : (
         <View style={styles.photoPlaceholder}>
           <IconSymbol name="camera" size={32} color="#666" />
