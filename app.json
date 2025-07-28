@@ -120,12 +120,6 @@
         {
           "ios": {
             "useFrameworks": "static"
-          },
-          "android": {
-            "minSdkVersion": 21,
-            "proguardMinifyEnabled": true,
-            "enableProguardInReleaseBuilds": true,
-            "javaMaxHeapSize": "4g"
           }
         }
       ]
