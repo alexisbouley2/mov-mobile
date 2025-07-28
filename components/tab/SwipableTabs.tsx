@@ -2,7 +2,7 @@ import React from "react";
 import { View, StyleSheet } from "react-native";
 import { PanGestureHandler } from "react-native-gesture-handler";
 import Animated from "react-native-reanimated";
-import { usePathname } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
 import { TabProvider, useTab } from "@/contexts/TabContext";
 import { useDebugLifecycle } from "@/utils/debugLifecycle";
 
@@ -72,24 +72,38 @@ export const SwipableTabs: React.FC<SwipableTabsProps> = ({
   initialIndex = 1,
   isRecording = false,
 }) => {
-  const pathname = usePathname();
+  const params = useLocalSearchParams();
   const childrenCount = children.length;
 
   useDebugLifecycle("SwipableTabs");
 
-  // Determine the correct initial index based on the current route
-  const getInitialIndexFromRoute = () => {
-    if (pathname.includes("/events")) return 0;
-    if (pathname.includes("/camera")) return 1;
-    if (pathname.includes("/profile")) return 2;
-    return initialIndex; // fallback to provided initialIndex
+  // Get screen from route params and map to tab index
+  const getTabIndexFromScreen = (
+    screen: string | string[] | undefined
+  ): number => {
+    if (!screen || Array.isArray(screen)) return initialIndex;
+
+    switch (screen) {
+      case "events":
+        return 0;
+      case "camera":
+        return 1;
+      case "profile":
+        return 2;
+      default:
+        return initialIndex;
+    }
   };
-  const routeBasedInitialIndex = getInitialIndexFromRoute();
+
+  // Only use route params on initial mount, then TabProvider handles state
+  const routeInitialIndex = getTabIndexFromScreen(params.screen);
 
   return (
     <TabProvider
       childrenCount={childrenCount}
-      initialIndex={routeBasedInitialIndex}
+      initialIndex={routeInitialIndex}
+      // Add a key to reset TabProvider when screen param changes
+      key={`tabs-${params.screen || "default"}`}
     >
       <SwipableTabsContent
         tabBarComponent={tabBarComponent}

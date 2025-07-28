@@ -7,9 +7,12 @@ import { components, typography } from "@/styles";
 import BackButton from "@/components/ui/button/BackButton";
 import ThreeDotsButton from "@/components/ui/ThreeDotsButton";
 import { useUserEvents } from "@/contexts/UserEventsContext";
+import { useDebugLifecycle } from "@/utils/debugLifecycle";
 
 export default function EditEventScreen() {
   const router = useRouter();
+
+  useDebugLifecycle("EditEventScreen");
 
   const { refreshEvents } = useUserEvents();
   const {

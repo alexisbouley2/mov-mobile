@@ -1,4 +1,4 @@
-import {
+import React, {
   useState,
   createContext,
   useContext,
@@ -14,7 +14,6 @@ import {
   withTiming,
   runOnJS,
 } from "react-native-reanimated";
-import React from "react";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -149,8 +148,7 @@ export const TabProvider: React.FC<TabProviderProps> = ({
       isTabActive,
       isSwipingTowardsCamera,
       handleTabPress,
-      gestureHandler,
-      animatedStyle,
+      // Removed gestureHandler and animatedStyle from dependencies
     ]
   );
 
