@@ -1,7 +1,7 @@
 // hooks/useCreateEvent.ts - Updated to use API
 import { useState } from "react";
 import { Alert } from "react-native";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
 import { useEventForm } from "../event/useEventForm";
 import { useEventPhoto } from "../event/useEventPhoto";
 import { mediaUploadManager } from "@/services/upload";
@@ -10,7 +10,6 @@ import log from "@/utils/logger";
 import { CreateEventRequest, AssociateEventsRequest } from "@movapp/types";
 
 export function useCreateEvent(userId: string) {
-  const router = useRouter();
   const { jobId, selectedEventIds } = useLocalSearchParams<{
     jobId?: string;
     selectedEventIds?: string;
@@ -30,7 +29,7 @@ export function useCreateEvent(userId: string) {
     previewImage,
   } = useEventPhoto();
 
-  const handleSubmit = async (onSuccess?: () => void) => {
+  const handleSubmit = async (onSuccess: () => void) => {
     if (!validateEventDateTime(formData.date)) {
       return;
     }
@@ -90,28 +89,18 @@ export function useCreateEvent(userId: string) {
           // Associate video with all selected events
           await associateVideoWithEvents(jobId, allEventIds);
 
-          Alert.alert("Success", "Event created and video added!", [
-            {
-              text: "OK",
-              onPress: () => router.push("/(app)/(tabs)/events"),
-            },
-          ]);
+          // Call onSuccess callback if provided, otherwise navigate directly
+
+          onSuccess();
         } catch (error) {
           log.error("Failed to associate video with event:", error);
-          Alert.alert("Warning", "Event created but failed to add video.", [
-            {
-              text: "OK",
-              onPress: () => router.push("/(app)/(tabs)/events"),
-            },
-          ]);
+
+          onSuccess();
         }
       } else {
         // Normal event creation without video
-        if (onSuccess) {
-          onSuccess();
-        } else {
-          router.push("/(app)/(tabs)/events");
-        }
+
+        onSuccess();
       }
     } catch (error) {
       log.error("Error creating event:", error);
