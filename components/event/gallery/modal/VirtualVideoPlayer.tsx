@@ -1,8 +1,5 @@
-// Alternative fix for VirtualVideoPlayer if the gesture handler solution doesn't work
-// Import TapGestureHandler from react-native-gesture-handler
-
 import React, { useRef, useEffect, useState } from "react";
-import { View, StyleSheet, ActivityIndicator, Pressable } from "react-native";
+import { View, StyleSheet, Pressable } from "react-native";
 import Video from "react-native-video";
 import { TapGestureHandler, State } from "react-native-gesture-handler";
 import { VideoItem } from "@/contexts/event/EventVideosContext";
@@ -33,11 +30,13 @@ export default function VirtualVideoPlayer({
 }: VirtualVideoPlayerProps) {
   const videoRef = useRef<any>(null);
   const [videoSource, setVideoSource] = useState<string | null>(null);
-  const [isVideoReady, setIsVideoReady] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
 
   useEffect(() => {
-    if (!video) return;
+    if (!video) {
+      setVideoSource(null);
+      return;
+    }
 
     const initializeVideoSource = async () => {
       const cached = videoCacheService.getCachedVideo(video.id);
@@ -46,6 +45,7 @@ export default function VirtualVideoPlayer({
         setVideoSource(cached.localUri);
       } else {
         setVideoSource(video.videoUrl);
+
         videoCacheService.preloadVideo(video).catch((error) => {
           log.error("Failed to preload video:", error);
         });
@@ -53,14 +53,13 @@ export default function VirtualVideoPlayer({
     };
 
     initializeVideoSource();
-  }, [video?.id]);
+  }, [video?.id, isActive]);
 
   useEffect(() => {
     setIsPlaying(isActive);
   }, [isActive]);
 
   const handleVideoLoad = () => {
-    setIsVideoReady(true);
     log.info(`[VirtualVideoPlayer] Video loaded: ${video?.id}`);
     onLoad?.();
   };
@@ -70,12 +69,10 @@ export default function VirtualVideoPlayer({
       `[VirtualVideoPlayer] Video playback error for ${video?.id}:`,
       error
     );
-    setIsVideoReady(false);
     onError?.(error);
   };
 
   const handleLoadStart = () => {
-    setIsVideoReady(false);
     log.info(`[VirtualVideoPlayer] Video load started: ${video?.id}`);
   };
 
@@ -122,18 +119,20 @@ export default function VirtualVideoPlayer({
             playInBackground={false}
             ignoreSilentSwitch="ignore"
             preventsDisplaySleepDuringVideoPlayback={false}
+            // Add buffer config to reduce memory usage
+            bufferConfig={{
+              minBufferMs: 2000,
+              maxBufferMs: 5000,
+              bufferForPlaybackMs: 1000,
+              bufferForPlaybackAfterRebufferMs: 1000,
+            }}
+            // Reduce max bit rate to save memory
+            maxBitRate={2000000} // 2 Mbps
           />
 
-          {/* Alternative: Use Pressable with absolute positioning */}
           <Pressable style={styles.tapOverlay} onPress={handleVideoPress} />
         </View>
       </TapGestureHandler>
-
-      {!isVideoReady && (
-        <View style={styles.loadingOverlay}>
-          <ActivityIndicator size="large" color="white" />
-        </View>
-      )}
 
       <VideoOverlay
         video={video}
@@ -165,16 +164,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#111",
     width: "100%",
   },
-  loadingOverlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-  },
+
   tapOverlay: {
     position: "absolute",
     top: 0,

@@ -45,6 +45,15 @@ export default function MediaPreviewScreen() {
         resizeMode="cover"
         controls={false}
         muted={isMuted}
+        // Add buffer config to reduce memory usage
+        bufferConfig={{
+          minBufferMs: 2000,
+          maxBufferMs: 5000,
+          bufferForPlaybackMs: 1000,
+          bufferForPlaybackAfterRebufferMs: 1000,
+        }}
+        // Reduce max bit rate to save memory
+        maxBitRate={2000000} // 2 Mbps
       />
 
       {/* Top Controls */}
