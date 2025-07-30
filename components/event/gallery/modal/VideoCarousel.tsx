@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
-import { View, StyleSheet, Text, Dimensions } from "react-native";
+import { View, StyleSheet, Text, Dimensions, Platform } from "react-native";
 import {
   PanGestureHandler,
   PanGestureHandlerGestureEvent,
@@ -11,11 +11,12 @@ import Animated, {
   withTiming,
   runOnJS,
 } from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import VirtualVideoPlayer from "./VirtualVideoPlayer";
 import { VideoItem, useEventVideos } from "@/contexts/event/EventVideosContext";
 import { videoCacheService } from "@/services/videoCacheService";
 
-const { height: SCREEN_HEIGHT } = Dimensions.get("window");
+const { height: WINDOW_HEIGHT } = Dimensions.get("window");
 
 interface VideoCarouselProps {
   videos: VideoItem[];
@@ -35,9 +36,21 @@ export default function VideoCarousel({
     new Set([initialIndex])
   );
   const [isMuted, setIsMuted] = useState(false);
-  const translateY = useSharedValue(-initialIndex * SCREEN_HEIGHT);
   const isAnimating = useRef(false);
   const pendingIndex = useRef<number | null>(null);
+
+  // Get safe area insets
+  const insets = useSafeAreaInsets();
+
+  // Calculate the actual screen height accounting for safe areas consistently
+  let SCREEN_HEIGHT: number;
+  if (Platform.OS === "ios") {
+    SCREEN_HEIGHT = WINDOW_HEIGHT - insets.top - insets.bottom;
+  } else {
+    SCREEN_HEIGHT = WINDOW_HEIGHT;
+  }
+
+  const translateY = useSharedValue(-initialIndex * SCREEN_HEIGHT);
 
   const { loadMoreVideos, loadingMore, hasMore } = useEventVideos();
 
@@ -211,7 +224,12 @@ export default function VideoCarousel({
           {videos.map((video, index) => {
             // Skip rendering if too far from current index
             if (Math.abs(index - currentIndex) > renderRange) {
-              return <View key={video.id} style={styles.videoSlot} />;
+              return (
+                <View
+                  key={video.id}
+                  style={[styles.videoSlot, { height: SCREEN_HEIGHT }]}
+                />
+              );
             }
 
             // Only mount video player if loaded
@@ -219,7 +237,10 @@ export default function VideoCarousel({
             const isActive = index === currentIndex && !isAnimating.current;
 
             return (
-              <View key={video.id} style={styles.videoSlot}>
+              <View
+                key={video.id}
+                style={[styles.videoSlot, { height: SCREEN_HEIGHT }]}
+              >
                 {isLoaded ? (
                   <VirtualVideoPlayer
                     video={video}
@@ -253,10 +274,12 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
+    borderWidth: 0,
+    borderColor: "yellow",
   },
   videoSlot: {
-    height: SCREEN_HEIGHT,
     width: "100%",
+    // height is now set dynamically based on SCREEN_HEIGHT
   },
   video: {
     flex: 1,
