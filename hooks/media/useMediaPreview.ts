@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { useRouter } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
 import { mediaUploadManager } from "@/services/upload";
@@ -28,6 +28,27 @@ export const useMediaPreview = ({
   const videoRef = useRef<any>(null);
   const [paused, setPaused] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
+  const [jobId, setJobId] = useState<string | null>(null);
+
+  // Create upload job immediately when component mounts
+  useEffect(() => {
+    try {
+      log.info("Creating upload job for video");
+      const newJobId = mediaUploadManager.createJob(mediaUri, userId, "video", {
+        quality: 0.8,
+        time: 1000,
+      });
+
+      // Start upload in background
+      mediaUploadManager.startUpload(newJobId, (progress) => {
+        log.debug(`Upload progress: ${progress}%`);
+      });
+
+      setJobId(newJobId);
+    } catch (error) {
+      log.error("Failed to create upload job:", error);
+    }
+  }, [mediaUri, userId]);
 
   // Auto-play when screen focuses
   useFocusEffect(
@@ -45,21 +66,13 @@ export const useMediaPreview = ({
 
   const handleSend = async () => {
     try {
-      log.info("Creating upload job for video");
+      if (!jobId) {
+        log.error("No job ID available for upload");
+        return;
+      }
 
       // Pause video
       setPaused(true);
-
-      // Create upload job
-      const jobId = mediaUploadManager.createJob(mediaUri, userId, "video", {
-        quality: 0.8,
-        time: 1000,
-      });
-
-      // Start upload in background
-      mediaUploadManager.startUpload(jobId, (progress) => {
-        log.debug(`Upload progress: ${progress}%`);
-      });
 
       // Navigate based on available events
       const currentEvents = events.current || [];
@@ -76,12 +89,15 @@ export const useMediaPreview = ({
         });
       }
     } catch (error) {
-      log.error("Failed to create upload job:", error);
+      log.error("Failed to start upload:", error);
     }
   };
 
   const handleDismiss = () => {
     setPaused(true);
+    if (jobId) {
+      mediaUploadManager.cancelJob(jobId);
+    }
     router.back();
   };
 

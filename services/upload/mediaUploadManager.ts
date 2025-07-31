@@ -129,6 +129,22 @@ export class MediaUploadManager {
       job.status = "failed";
       job.error = error instanceof Error ? error.message : "Upload failed";
       this.notifyListeners(jobId);
+
+      // Delete uploaded files if the job failed after some files were uploaded
+      const processor = this.processors.get(job.uploadType);
+      if (processor && processor.getUploadedFiles().length > 0) {
+        try {
+          await processor.deleteUploadedFiles(job.userId);
+          log.info(`Deleted uploaded files for failed job ${jobId}`);
+        } catch (deleteError) {
+          log.error(
+            `Failed to delete uploaded files for failed job ${jobId}:`,
+            deleteError
+          );
+          // Don't throw error - we still want to mark the job as failed
+        }
+      }
+
       throw error;
     }
   }
@@ -195,13 +211,44 @@ export class MediaUploadManager {
   /**
    * Cancel job
    */
-  cancelJob(jobId: string): void {
+  async cancelJob(jobId: string): Promise<void> {
     const job = this.jobs.get(jobId);
     if (job) {
+      log.info(`Cancelling job ${jobId} (${job.uploadType})`);
       job.status = "cancelled";
       this.notifyListeners(jobId);
+
+      // Delete uploaded files from R2 if any were uploaded
+      const processor = this.processors.get(job.uploadType);
+      if (processor) {
+        const uploadedFiles = processor.getUploadedFiles();
+        if (uploadedFiles.length > 0) {
+          log.info(
+            `Job ${jobId} has ${uploadedFiles.length} uploaded files to delete:`,
+            uploadedFiles
+          );
+          try {
+            await processor.deleteUploadedFiles(job.userId);
+            log.info(
+              `Successfully deleted ${uploadedFiles.length} uploaded files for cancelled job ${jobId}`
+            );
+          } catch (error) {
+            log.error(
+              `Failed to delete uploaded files for cancelled job ${jobId}:`,
+              error
+            );
+            // Don't throw error - we still want to cancel the job even if cleanup fails
+          }
+        } else {
+          log.info(`Job ${jobId} has no uploaded files to delete`);
+        }
+      }
+
       this.jobs.delete(jobId);
       this.listeners.delete(jobId);
+      log.info(`Job ${jobId} cancelled and cleaned up`);
+    } else {
+      log.warn(`Attempted to cancel non-existent job ${jobId}`);
     }
   }
 

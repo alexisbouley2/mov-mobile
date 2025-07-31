@@ -7,6 +7,8 @@ import { GetUploadUrlsResponse, MediaEntityType } from "@movapp/types";
 
 // Abstract base class for upload processors
 export abstract class UploadProcessor {
+  protected uploadedFiles: string[] = [];
+
   abstract processFiles(
     _originalUri: string,
     _options: UploadOptions
@@ -84,5 +86,31 @@ export abstract class UploadProcessor {
     } catch (error) {
       log.error("Could not delete temporary file:", fileUri, error);
     }
+  }
+
+  protected trackUploadedFile(fileName: string): void {
+    this.uploadedFiles.push(fileName);
+  }
+
+  async deleteUploadedFiles(userId: string): Promise<void> {
+    if (this.uploadedFiles.length === 0) {
+      return;
+    }
+
+    try {
+      await mediaApi.deleteMedia({
+        fileNames: this.uploadedFiles,
+        userId,
+      });
+      log.info(`Deleted ${this.uploadedFiles.length} uploaded files from R2`);
+      this.uploadedFiles = [];
+    } catch (error) {
+      log.error("Failed to delete uploaded files from R2:", error);
+      throw error;
+    }
+  }
+
+  getUploadedFiles(): string[] {
+    return [...this.uploadedFiles];
   }
 }

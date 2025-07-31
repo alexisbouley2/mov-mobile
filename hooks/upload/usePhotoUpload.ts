@@ -159,9 +159,9 @@ export function usePhotoUpload({
     }
   }, [currentJobId]);
 
-  const cancelJob = useCallback(() => {
+  const cancelJob = useCallback(async () => {
     if (currentJobId) {
-      mediaUploadManager.cancelJob(currentJobId);
+      await mediaUploadManager.cancelJob(currentJobId);
       setCurrentJobId(null);
     }
   }, [currentJobId]);

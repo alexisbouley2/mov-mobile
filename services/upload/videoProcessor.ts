@@ -70,6 +70,10 @@ export class VideoUploadProcessor extends UploadProcessor {
 
       await Promise.all(uploadPromises);
 
+      // Track uploaded files
+      this.trackUploadedFile(videoUrl.fileName);
+      this.trackUploadedFile(thumbnailUrl.fileName);
+
       onProgress?.(80);
 
       await VideoUploadProcessor.confirmUpload(

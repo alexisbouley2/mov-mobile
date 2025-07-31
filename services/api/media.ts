@@ -3,6 +3,9 @@ import {
   GetUploadUrlsResponse,
   GetUploadUrlsResponseSchema,
   MediaEntityType,
+  DeleteMediaRequest,
+  DeleteMediaResponse,
+  DeleteMediaResponseSchema,
 } from "@movapp/types";
 
 export const mediaApi = {
@@ -20,5 +23,12 @@ export const mediaApi = {
       `/media/upload-urls?${params.toString()}`,
       GetUploadUrlsResponseSchema
     );
+  },
+
+  // Delete media files from R2
+  deleteMedia: (
+    deleteData: DeleteMediaRequest
+  ): Promise<DeleteMediaResponse> => {
+    return api.post("/media/delete", deleteData, DeleteMediaResponseSchema);
   },
 };

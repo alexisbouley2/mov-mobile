@@ -93,6 +93,10 @@ export abstract class PhotoUploadProcessor extends UploadProcessor {
         this.uploadFile(processedFiles.image, imageUrl.uploadUrl, "image/jpeg"),
       ]);
 
+      // Track uploaded files
+      this.trackUploadedFile(thumbnailUrl.fileName);
+      this.trackUploadedFile(imageUrl.fileName);
+
       onProgress?.(100);
 
       return {
