@@ -70,15 +70,27 @@ export const TabProvider: React.FC<TabProviderProps> = ({
     (index: number) => currentIndex === index,
     [currentIndex]
   );
-
   const gestureHandler =
     useAnimatedGestureHandler<PanGestureHandlerGestureEvent>({
       onStart: (_, context: any) => {
         context.startX = translateX.value;
+        context.startTime = Date.now();
+        context.isHorizontalGesture = null; // Will be determined in onActive
       },
       onActive: (event, context: any) => {
-        // Only handle horizontal gestures
-        if (Math.abs(event.translationX) > Math.abs(event.translationY)) {
+        // Determine gesture direction early
+        if (context.isHorizontalGesture === null) {
+          const absX = Math.abs(event.translationX);
+          const absY = Math.abs(event.translationY);
+
+          // Only consider it a horizontal gesture if horizontal movement is significantly larger
+          if (absX > 10 || absY > 10) {
+            context.isHorizontalGesture = absX > absY * 1.5; // More strict horizontal detection
+          }
+        }
+
+        // Only handle if we've determined this is a horizontal gesture
+        if (context.isHorizontalGesture) {
           const newTranslateX = context.startX + event.translationX;
           // Limit the swipe to prevent going beyond the first and last tabs
           const maxTranslateX = 0;
@@ -95,12 +107,11 @@ export const TabProvider: React.FC<TabProviderProps> = ({
 
           // Update the context state
           runOnJS(setIsSwipingTowardsCamera)(isSwipingTowardsCamera);
-        } else {
         }
       },
-      onEnd: (event, _context: any) => {
-        // Only handle horizontal gestures
-        if (Math.abs(event.translationX) > Math.abs(event.translationY)) {
+      onEnd: (event, context: any) => {
+        // Always complete the animation if it was determined to be a horizontal gesture
+        if (context.isHorizontalGesture) {
           const shouldSwipeLeft =
             event.velocityX < -500 || event.translationX < -SCREEN_WIDTH * 0.3;
           const shouldSwipeRight =
@@ -123,10 +134,24 @@ export const TabProvider: React.FC<TabProviderProps> = ({
 
           // Clear swipe towards camera state when gesture ends
           runOnJS(setIsSwipingTowardsCamera)(false);
+        } else {
+          // If it wasn't a horizontal gesture, snap back to current tab position
+          const targetTranslateX = -currentIndex * SCREEN_WIDTH;
+          translateX.value = withTiming(targetTranslateX, { duration: 100 });
+
+          // Clear swipe towards camera state
+          runOnJS(setIsSwipingTowardsCamera)(false);
         }
       },
-    });
+      onCancel: (_event, _context: any) => {
+        // Always snap back to current position on cancel
+        const targetTranslateX = -currentIndex * SCREEN_WIDTH;
+        translateX.value = withTiming(targetTranslateX, { duration: 100 });
 
+        // Clear swipe towards camera state when gesture is cancelled
+        runOnJS(setIsSwipingTowardsCamera)(false);
+      },
+    });
   const animatedStyle = useAnimatedStyle(() => {
     return {
       transform: [{ translateX: translateX.value }],

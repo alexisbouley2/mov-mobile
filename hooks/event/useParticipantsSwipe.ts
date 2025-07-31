@@ -30,12 +30,24 @@ export function useParticipantsSwipe() {
     useAnimatedGestureHandler<PanGestureHandlerGestureEvent>({
       onStart: (event, context: any) => {
         context.startX = translateX.value;
+        context.startTime = Date.now();
+        context.isHorizontalGesture = null; // Will be determined in onActive
       },
       onActive: (event, context: any) => {
-        // Only handle horizontal gestures
-        if (Math.abs(event.translationX) > Math.abs(event.translationY)) {
+        // Determine gesture direction early
+        if (context.isHorizontalGesture === null) {
+          const absX = Math.abs(event.translationX);
+          const absY = Math.abs(event.translationY);
+
+          // Only consider it a horizontal gesture if horizontal movement is significantly larger
+          if (absX > 10 || absY > 10) {
+            context.isHorizontalGesture = absX > absY * 1.5; // More strict horizontal detection
+          }
+        }
+
+        // Only handle if we've determined this is a horizontal gesture
+        if (context.isHorizontalGesture) {
           const newTranslateX = context.startX + event.translationX;
-          // Limit the swipe to prevent going beyond the tabs
           const maxTranslateX = 0;
           const minTranslateX = -SCREEN_WIDTH;
           translateX.value = Math.max(
@@ -44,9 +56,9 @@ export function useParticipantsSwipe() {
           );
         }
       },
-      onEnd: (event) => {
-        // Only handle horizontal gestures
-        if (Math.abs(event.translationX) > Math.abs(event.translationY)) {
+      onEnd: (event, context: any) => {
+        // Always complete the animation if it was determined to be a horizontal gesture
+        if (context.isHorizontalGesture) {
           const shouldSwipeLeft =
             event.velocityX < -500 || event.translationX < -SCREEN_WIDTH * 0.3;
           const shouldSwipeRight =
@@ -65,7 +77,17 @@ export function useParticipantsSwipe() {
           translateX.value = withTiming(targetTranslateX, { duration: 200 });
 
           runOnJS(setActiveTab)(targetTab);
+        } else {
+          // If it wasn't a horizontal gesture, snap back to current tab position
+          const targetTranslateX =
+            activeTab === "confirmed" ? 0 : -SCREEN_WIDTH;
+          translateX.value = withTiming(targetTranslateX, { duration: 200 });
         }
+      },
+      onCancel: (_event, _context: any) => {
+        // Always snap back to current position on cancel
+        const targetTranslateX = activeTab === "confirmed" ? 0 : -SCREEN_WIDTH;
+        translateX.value = withTiming(targetTranslateX, { duration: 200 });
       },
     });
 
