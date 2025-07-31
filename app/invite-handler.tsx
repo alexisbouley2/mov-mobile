@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, ActivityIndicator, Alert } from "react-native";
+import { View, Text, StyleSheet, ActivityIndicator } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/contexts/UserProfileContext";
@@ -46,15 +46,8 @@ export default function InviteHandlerScreen() {
             });
 
             if (acceptResponse.success) {
-              Alert.alert("Success", acceptResponse.message, [
-                {
-                  text: "OK",
-                  onPress: () => {
-                    router.push("/(app)/(tabs)/events");
-                    router.push(`/(app)/(event)/${acceptResponse.eventId}`);
-                  },
-                },
-              ]);
+              router.push("/(app)/(tabs)/events");
+              router.push(`/(app)/(event)/${acceptResponse.eventId}`);
             } else {
               setError(acceptResponse.message);
             }

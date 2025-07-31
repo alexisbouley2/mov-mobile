@@ -108,12 +108,7 @@ export const useSelectEvents = ({ jobId }: UseSelectEventsProps) => {
       // Otherwise, associate with selected events
       await associateVideoWithEvents(jobId, Array.from(selectedEventIds));
 
-      Alert.alert("Success", "Video added to events!", [
-        {
-          text: "OK",
-          onPress: () => router.push("/(app)/(tabs)/events"),
-        },
-      ]);
+      router.push("/(app)/(tabs)/events");
     } catch (error) {
       log.error("Failed to associate events:", error);
       Alert.alert("Error", "Failed to add video to events");

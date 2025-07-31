@@ -39,7 +39,6 @@ export function InviteProvider({ children }: { children: React.ReactNode }) {
         });
 
         if (response.success) {
-          Alert.alert("Success", response.message);
           setPendingInviteToken(null);
           return { success: true, eventId: response.eventId || undefined };
         } else {
