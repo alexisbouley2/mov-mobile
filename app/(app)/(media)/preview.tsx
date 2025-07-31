@@ -45,6 +45,7 @@ export default function MediaPreviewScreen() {
         resizeMode="cover"
         controls={false}
         muted={isMuted}
+        disableAudioSessionManagement={true}
         // Add buffer config to reduce memory usage
         bufferConfig={{
           minBufferMs: 2000,
