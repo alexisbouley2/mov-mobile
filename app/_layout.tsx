@@ -107,6 +107,9 @@ function RootLayoutContent() {
 }
 
 export default function RootLayout() {
+  // @ts-ignore
+  globalThis.RNFB_SILENCE_MODULAR_DEPRECATION_WARNINGS = true;
+
   const [loaded] = useFonts({
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
   });

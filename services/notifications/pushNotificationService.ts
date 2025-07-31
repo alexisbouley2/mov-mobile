@@ -53,7 +53,9 @@ export class PushNotificationService {
     try {
       if (!this.fcmToken) {
         // Register device for remote messages first
-        await messaging().registerDeviceForRemoteMessages();
+        if (!messaging().isDeviceRegisteredForRemoteMessages) {
+          await messaging().registerDeviceForRemoteMessages();
+        }
         this.fcmToken = await messaging().getToken();
       }
       return this.fcmToken;

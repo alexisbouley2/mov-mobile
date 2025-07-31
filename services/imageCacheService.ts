@@ -375,7 +375,7 @@ class ImageCacheService {
       stats.policiesStats[entry.policy].size += entry.size;
     }
 
-    log.info("cache stats: ", stats);
+    // log.info("cache stats: ", stats);
 
     return stats;
   }
