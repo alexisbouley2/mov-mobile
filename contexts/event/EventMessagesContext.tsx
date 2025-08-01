@@ -6,6 +6,7 @@ import React, {
   useCallback,
   useMemo,
   useEffect,
+  useRef,
 } from "react";
 import { supabase } from "@/lib/supabase";
 import { messagesApi } from "@/services/api";
@@ -13,6 +14,7 @@ import log from "@/utils/logger";
 import { useUserProfile } from "@/contexts/UserProfileContext";
 import { useEvent } from "@/contexts/event/EventContext";
 import { EventMessagesResponse, Message } from "@movapp/types";
+import { useFocusEffect } from "@react-navigation/native";
 
 interface EventMessagesContextType {
   // Full messages data
@@ -61,6 +63,12 @@ export function EventMessagesProvider({
 
   // Shared state
   const [error, setError] = useState<string | null>(null);
+
+  // Track active subscription
+  const activeSubscriptionRef = useRef<{
+    channelName: string;
+    channel: any;
+  } | null>(null);
 
   // Load initial messages
   const loadMessages = useCallback(
@@ -172,49 +180,85 @@ export function EventMessagesProvider({
     }
 
     const channelName = `event-messages-${event.id}`;
-    const channel = supabase.channel(channelName).on(
-      "postgres_changes",
-      {
-        event: "INSERT",
-        schema: "public",
-        table: "Message",
-        filter: `eventId=eq.${event.id}`,
-      },
-      async (payload) => {
-        const newMessage = payload.new as any;
 
-        // Skip our own messages
-        if (newMessage.senderId === user?.id) {
-          return;
-        }
+    const setupSubscription = async () => {
+      const channel = supabase.channel(channelName).on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "Message",
+          filter: `eventId=eq.${event.id}`,
+        },
+        async (payload) => {
+          const newMessage = payload.new as any;
 
-        try {
-          const messageWithSender = await messagesApi.getMessageById(
-            newMessage.id,
-            user.id
-          );
-
-          if (messageWithSender) {
-            setMessages((prev) => {
-              const exists = prev.some((m) => m.id === messageWithSender.id);
-              return exists ? prev : [...prev, messageWithSender];
-            });
-
-            // Update event's lastMessage
-            setLastMessage(messageWithSender);
+          // Skip our own messages
+          if (newMessage.senderId === user?.id) {
+            return;
           }
-        } catch (err) {
-          log.error("Error fetching real-time message:", err);
-        }
-      }
-    );
 
-    channel.subscribe();
+          try {
+            const messageWithSender = await messagesApi.getMessageById(
+              newMessage.id,
+              user.id
+            );
+
+            if (messageWithSender) {
+              setMessages((prev) => {
+                const exists = prev.some((m) => m.id === messageWithSender.id);
+                return exists ? prev : [...prev, messageWithSender];
+              });
+
+              // Update event's lastMessage
+              setLastMessage(messageWithSender);
+            }
+          } catch (err) {
+            log.error("Error fetching real-time message:", err);
+          }
+        }
+      );
+
+      try {
+        channel.subscribe();
+        activeSubscriptionRef.current = { channelName, channel };
+      } catch (error) {
+        log.error("Error subscribing to channel:", error);
+      }
+    };
+
+    setupSubscription();
 
     return () => {
-      supabase.removeChannel(channel);
+      if (activeSubscriptionRef.current) {
+        try {
+          supabase.removeChannel(activeSubscriptionRef.current.channel);
+        } catch (error) {
+          log.error("Error removing channel in cleanup:", error);
+        }
+        activeSubscriptionRef.current = null;
+      }
     };
   }, [event?.id, user?.id, setLastMessage]);
+
+  // Inside your component
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        if (activeSubscriptionRef.current) {
+          try {
+            supabase.removeChannel(activeSubscriptionRef.current.channel);
+          } catch (error) {
+            log.error(
+              "Error removing channel in cleanup from useFocusEffect:",
+              error
+            );
+          }
+          activeSubscriptionRef.current = null;
+        }
+      };
+    }, [])
+  );
 
   const contextValue = useMemo(
     () => ({
