@@ -11,8 +11,10 @@ import {
 import { Camera } from "react-native-vision-camera";
 import { useFocusEffect } from "@react-navigation/native";
 import CameraControls from "@/components/camera/CameraControls";
+import CameraPermissionDenied from "@/components/camera/CameraPermissionDenied";
 import { useUserProfile } from "@/contexts/UserProfileContext";
 import { useCamera } from "@/hooks/media/useCamera";
+import { useCameraPermission } from "@/hooks/media/useCameraPermission";
 import { useTab } from "@/contexts/TabContext";
 import { useDebugLifecycle } from "@/utils/debugLifecycle";
 
@@ -26,8 +28,6 @@ export default function CameraScreen() {
   useDebugLifecycle("CameraScreen");
 
   const {
-    hasCameraPermission,
-    hasMicrophonePermission,
     flash,
     isRecording,
     isProcessing,
@@ -46,6 +46,12 @@ export default function CameraScreen() {
     handleCameraPress,
   } = useCamera(user?.id);
 
+  const {
+    hasAllPermissions,
+    canRequestPermissions,
+    requestPermissionsSequentially,
+  } = useCameraPermission();
+
   // Smart camera lifecycle management
   useEffect(() => {
     manageCameraLifecycle(isCameraTabActive, isSwipingTowardsCamera);
@@ -58,7 +64,20 @@ export default function CameraScreen() {
     }, [resetVideoCaptured])
   );
 
-  if (!hasCameraPermission || !hasMicrophonePermission || !device) {
+  // Show permission denied screen if permissions are missing
+  if (!hasAllPermissions) {
+    return (
+      <View style={styles.container}>
+        <CameraPermissionDenied
+          canAskAgain={canRequestPermissions}
+          onRequestPermission={requestPermissionsSequentially}
+        />
+      </View>
+    );
+  }
+
+  // Show loading state if device is not ready
+  if (!device) {
     return <View style={styles.container} />;
   }
 
@@ -166,6 +185,11 @@ const styles = StyleSheet.create({
     zIndex: 2,
   },
   processingText: {
+    color: "white",
+    fontSize: 16,
+    marginTop: 10,
+  },
+  loadingText: {
     color: "white",
     fontSize: 16,
     marginTop: 10,

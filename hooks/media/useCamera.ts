@@ -2,12 +2,7 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { useRouter } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
-import {
-  Camera,
-  useCameraDevice,
-  useCameraPermission,
-  useMicrophonePermission,
-} from "react-native-vision-camera";
+import { Camera, useCameraDevice } from "react-native-vision-camera";
 import log from "@/utils/logger";
 import { useRecording } from "@/contexts/RecordingContext";
 import { mediaUploadManager } from "@/services/upload";
@@ -18,16 +13,6 @@ export const useCamera = (userId?: string) => {
   const DOUBLE_TAP_DELAY = 300;
   const router = useRouter();
   const { isRecording, setIsRecording } = useRecording();
-
-  // Permissions
-  const {
-    hasPermission: hasCameraPermission,
-    requestPermission: requestCameraPermission,
-  } = useCameraPermission();
-  const {
-    hasPermission: hasMicrophonePermission,
-    requestPermission: requestMicrophonePermission,
-  } = useMicrophonePermission();
 
   // Camera state
   const [cameraPosition, setCameraPosition] = useState<"back" | "front">(
@@ -94,12 +79,6 @@ export const useCamera = (userId?: string) => {
     );
     return bestFormat;
   }, [device]);
-
-  // Request permissions on mount
-  useEffect(() => {
-    if (!hasCameraPermission) requestCameraPermission();
-    if (!hasMicrophonePermission) requestMicrophonePermission();
-  }, [hasCameraPermission, hasMicrophonePermission]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -310,8 +289,6 @@ export const useCamera = (userId?: string) => {
 
   return {
     // State
-    hasCameraPermission,
-    hasMicrophonePermission,
     cameraPosition,
     flash,
     isRecording,
