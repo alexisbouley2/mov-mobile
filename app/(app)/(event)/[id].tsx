@@ -6,7 +6,7 @@ import {
   ActivityIndicator,
   FlatList,
 } from "react-native";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import EventHeader from "@/components/event/global/EventHeader";
 import EventActions from "@/components/event/global/EventActions";
 import EventInformation from "@/components/event/global/EventInformation";
@@ -18,6 +18,7 @@ import { useDebugLifecycle } from "@/utils/debugLifecycle";
 
 export default function EventDetailScreen() {
   const router = useRouter();
+  const { fromExternal } = useLocalSearchParams<{ fromExternal?: string }>();
   const {
     event,
     eventLoading,
@@ -30,6 +31,14 @@ export default function EventDetailScreen() {
     handleInvite,
     handleLeave,
   } = useEventDetail();
+
+  const handleBack = () => {
+    if (fromExternal === "true") {
+      router.replace("/(app)/(tabs)/events");
+    } else {
+      router.back();
+    }
+  };
 
   useDebugLifecycle("EventDetailScreen");
 
@@ -59,7 +68,7 @@ export default function EventDetailScreen() {
         return (
           <EventHeader
             event={item.data}
-            onBack={() => router.back()}
+            onBack={handleBack}
             onLeave={handleLeave}
             isAdmin={isAdmin}
           />

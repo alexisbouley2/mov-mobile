@@ -54,8 +54,9 @@ export default function InviteHandlerScreen() {
             });
 
             if (acceptResponse.success) {
-              router.push("/(app)/(tabs)/events");
-              router.push(`/(app)/(event)/${acceptResponse.eventId}`);
+              router.replace(
+                `/(app)/(event)/${acceptResponse.eventId}?fromExternal=true`
+              );
             } else {
               setError(acceptResponse.message);
             }

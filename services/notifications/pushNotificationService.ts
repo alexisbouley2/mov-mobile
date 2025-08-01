@@ -115,7 +115,10 @@ export class PushNotificationService {
   private handleNotificationNavigation(remoteMessage: any) {
     const { data } = remoteMessage;
     const notificationData = data as NotificationData;
-    router.push(`/(app)/(event)/${notificationData.eventId}`);
+    // router.push("/(app)/(tabs)/events");
+    router.replace(
+      `/(app)/(event)/${notificationData.eventId}?fromExternal=true`
+    );
   }
 
   async saveFCMToken(userId: string): Promise<boolean> {
