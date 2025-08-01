@@ -10,6 +10,7 @@ import {
 } from "react-native-vision-camera";
 import log from "@/utils/logger";
 import { useRecording } from "@/contexts/RecordingContext";
+import { mediaUploadManager } from "@/services/upload";
 
 export const useCamera = (userId?: string) => {
   const MAX_VIDEO_DURATION = 6;
@@ -196,13 +197,41 @@ export const useCamera = (userId?: string) => {
           setRecordingDuration(0);
 
           if (userId) {
-            router.push({
-              pathname: "/(app)/(media)/preview",
-              params: {
-                mediaUri: video.path,
-                userId: userId,
-              },
-            });
+            // Create upload job when recording finishes
+            try {
+              log.info("Creating upload job for video");
+              const jobId = mediaUploadManager.createJob(
+                video.path,
+                userId,
+                "video",
+                {
+                  quality: 1,
+                  time: 1000,
+                }
+              );
+
+              // Start upload in background
+              mediaUploadManager.startUpload(jobId, (progress) => {
+                log.debug(`Upload progress: ${progress}%`);
+              });
+
+              router.push({
+                pathname: "/(app)/(media)/preview",
+                params: {
+                  mediaUri: video.path,
+                  jobId: jobId,
+                },
+              });
+            } catch (error) {
+              log.error("Failed to create upload job:", error);
+              // Still navigate to preview even if upload job creation fails
+              router.push({
+                pathname: "/(app)/(media)/preview",
+                params: {
+                  mediaUri: video.path,
+                },
+              });
+            }
           }
         },
         onRecordingError: (error) => {

@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState } from "react";
 import { useRouter } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
 import { mediaUploadManager } from "@/services/upload";
@@ -6,8 +6,7 @@ import { useUserEvents } from "@/contexts/UserEventsContext";
 import log from "@/utils/logger";
 
 interface UseMediaPreviewProps {
-  mediaUri: string;
-  userId: string;
+  jobId?: string;
 }
 
 interface UseMediaPreviewReturn {
@@ -20,35 +19,13 @@ interface UseMediaPreviewReturn {
 }
 
 export const useMediaPreview = ({
-  mediaUri,
-  userId,
+  jobId,
 }: UseMediaPreviewProps): UseMediaPreviewReturn => {
   const router = useRouter();
   const { events } = useUserEvents();
   const videoRef = useRef<any>(null);
   const [paused, setPaused] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
-  const [jobId, setJobId] = useState<string | null>(null);
-
-  // Create upload job immediately when component mounts
-  useEffect(() => {
-    try {
-      log.info("Creating upload job for video");
-      const newJobId = mediaUploadManager.createJob(mediaUri, userId, "video", {
-        quality: 0.8,
-        time: 1000,
-      });
-
-      // Start upload in background
-      mediaUploadManager.startUpload(newJobId, (progress) => {
-        log.debug(`Upload progress: ${progress}%`);
-      });
-
-      setJobId(newJobId);
-    } catch (error) {
-      log.error("Failed to create upload job:", error);
-    }
-  }, [mediaUri, userId]);
 
   // Auto-play when screen focuses
   useFocusEffect(

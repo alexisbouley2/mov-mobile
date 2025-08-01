@@ -17,7 +17,7 @@ export class VideoUploadProcessor extends UploadProcessor {
         normalizedUri = `file://${originalUri}`;
       }
 
-      const { time = 1000, quality = 0.8 } = options;
+      const { time = 1000, quality = 1 } = options;
 
       const { uri: thumbnailUri } = await VideoThumbnails.getThumbnailAsync(
         normalizedUri,

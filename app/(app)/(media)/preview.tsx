@@ -17,7 +17,7 @@ import { Ionicons } from "@expo/vector-icons";
 export default function MediaPreviewScreen() {
   const params = useLocalSearchParams();
   const mediaUri = params.mediaUri as string;
-  const userId = params.userId as string;
+  const jobId = params.jobId as string;
 
   useDebugLifecycle("MediaPreviewScreen");
 
@@ -29,8 +29,7 @@ export default function MediaPreviewScreen() {
     handleDismiss,
     handleMuteToggle,
   } = useMediaPreview({
-    mediaUri,
-    userId,
+    jobId,
   });
 
   return (
