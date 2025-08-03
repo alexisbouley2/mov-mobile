@@ -73,6 +73,8 @@ export default function PhoneInput({
           keyboardType="phone-pad"
           autoFocus={autoFocus}
           maxLength={selectedCountry.maxLength + 5}
+          returnKeyType="done"
+          blurOnSubmit={false}
         />
       </View>
     </View>

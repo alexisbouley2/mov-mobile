@@ -1,5 +1,5 @@
 // components/otp/OTPInput.tsx
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useState } from "react";
 import { View, TextInput, StyleSheet, Text, Pressable } from "react-native";
 
 interface OTPInputProps {
@@ -19,20 +19,6 @@ const OTPInput = ({
 }: OTPInputProps) => {
   const inputRef = useRef<TextInput>(null);
   const [isFocused, setIsFocused] = useState(false);
-
-  useEffect(() => {
-    if (autoFocus) {
-      // Longer delay to ensure iOS has time to register the field
-      const timer = setTimeout(() => {
-        inputRef.current?.focus();
-        // Additional focus call after a brief moment
-        setTimeout(() => {
-          inputRef.current?.focus();
-        }, 500);
-      }, 300);
-      return () => clearTimeout(timer);
-    }
-  }, [autoFocus]);
 
   // Function to focus the input when container is pressed
   const handleContainerPress = () => {
@@ -62,7 +48,8 @@ const OTPInput = ({
         onChangeText={onChangeText}
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
-        keyboardType="number-pad"
+        // keyboardType="number-pad"
+        keyboardType="phone-pad"
         textContentType="oneTimeCode" // Critical for iOS SMS autofill
         autoComplete="one-time-code" // Cross-platform support
         autoFocus={autoFocus}
