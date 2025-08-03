@@ -10,8 +10,17 @@ export function useEventsLogic(events: CategorizedEvents) {
     return groupEventsByMonth(events.past);
   }, [events.past]);
 
+  const hasNoEvents = useMemo(() => {
+    return (
+      events.current.length === 0 &&
+      events.planned.length === 0 &&
+      Object.keys(pastEventsByMonth).length === 0
+    );
+  }, [events.current.length, events.planned.length, pastEventsByMonth]);
+
   return {
     pastEventsByMonth,
+    hasNoEvents,
   };
 }
 

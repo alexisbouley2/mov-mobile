@@ -17,7 +17,19 @@ export default function EventsContent({
   onEventPress,
   user,
 }: EventsContentProps) {
-  const { pastEventsByMonth } = useEventsLogic(events);
+  const { pastEventsByMonth, hasNoEvents } = useEventsLogic(events);
+
+  // Show placeholder when there are no events
+  if (hasNoEvents) {
+    return (
+      <View style={styles.emptyContainer}>
+        <Text style={styles.emptyTitle}>No MOV yet.</Text>
+        <Text style={styles.emptySubtitle}>
+          Schedule one with your friends or start a Quick MOV from the Camera!
+        </Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -68,6 +80,26 @@ export default function EventsContent({
 const styles = StyleSheet.create({
   container: {
     paddingHorizontal: 20,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 40,
+    paddingVertical: 60,
+  },
+  emptyTitle: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: "#fff",
+    textAlign: "center",
+    marginBottom: 12,
+  },
+  emptySubtitle: {
+    fontSize: 16,
+    color: "#999",
+    textAlign: "center",
+    lineHeight: 24,
   },
   section: {},
   monthTitle: {
