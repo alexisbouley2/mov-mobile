@@ -15,10 +15,7 @@ interface NotificationData {
 export class PushNotificationService {
   private static instance: PushNotificationService;
   private fcmToken: string | null = null;
-  private isInitialized = false;
   private currentUserId: string | null = null;
-
-  // Track notification counts locally for immediate UI updates
 
   static getInstance(): PushNotificationService {
     if (!PushNotificationService.instance) {
@@ -27,11 +24,18 @@ export class PushNotificationService {
     return PushNotificationService.instance;
   }
 
-  async initialize() {
-    if (this.isInitialized) return;
-
+  async checkPermissionStatus() {
     try {
-      // Demander la permission
+      const authStatus = await messaging().hasPermission();
+      return authStatus;
+    } catch (error) {
+      log.error("Error checking notification permission:", error);
+      return messaging.AuthorizationStatus.DENIED;
+    }
+  }
+
+  async requestPermission() {
+    try {
       const authStatus = await messaging().requestPermission();
       const enabled =
         authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
@@ -40,12 +44,14 @@ export class PushNotificationService {
       if (enabled) {
         await this.getFCMToken();
         this.setupMessageHandlers();
-        this.isInitialized = true;
+        return true;
       } else {
         log.warn("Push notification permission denied");
+        return false;
       }
     } catch (error) {
-      log.error("Error initializing push notifications:", error);
+      log.error("Error requesting push notification permission:", error);
+      return false;
     }
   }
 
@@ -65,6 +71,45 @@ export class PushNotificationService {
     }
   }
 
+  async saveFCMToken(userId: string): Promise<boolean> {
+    if (!this.fcmToken) {
+      log.warn("No FCM token available to save");
+      return false;
+    }
+
+    try {
+      this.currentUserId = userId;
+      await pushNotificationsApi.createToken({
+        userId,
+        token: this.fcmToken,
+      });
+      return true;
+    } catch (error) {
+      log.error("Error saving FCM token:", error);
+      return false;
+    }
+  }
+
+  async removeFCMToken(userId: string): Promise<boolean> {
+    if (!this.fcmToken) return true;
+
+    try {
+      await pushNotificationsApi.removeToken({
+        userId,
+        token: this.fcmToken,
+      });
+
+      if (this.currentUserId === userId) {
+        this.currentUserId = null;
+      }
+
+      return true;
+    } catch (error) {
+      log.error("Error removing FCM token:", error);
+      return false;
+    }
+  }
+
   private setupMessageHandlers() {
     // Message reçu quand l'app est en foreground
     messaging().onMessage(async (remoteMessage) => {
@@ -79,14 +124,8 @@ export class PushNotificationService {
           await Notifications.setBadgeCountAsync(response.count);
         } catch (error) {
           log.error("Error fetching badge count in onMessage:", error);
-          // Fallback to incrementing locally if API call fails
         }
-      } else {
-        log.warn("No user ID available for badge count fetch");
       }
-
-      // Here you can show a local notification or toast if needed
-      // For now, we just update the badge
     });
 
     // Message reçu quand l'app est en background/fermée et l'ouvre
@@ -115,52 +154,9 @@ export class PushNotificationService {
   private handleNotificationNavigation(remoteMessage: any) {
     const { data } = remoteMessage;
     const notificationData = data as NotificationData;
-    // router.push("/(app)/(tabs)/events");
     router.replace(
       `/(app)/(event)/${notificationData.eventId}?fromExternal=true`
     );
-  }
-
-  async saveFCMToken(userId: string): Promise<boolean> {
-    if (!this.fcmToken) {
-      log.warn("No FCM token available to save");
-      return false;
-    }
-
-    try {
-      // Store the user ID for badge count fetching
-      this.currentUserId = userId;
-
-      await pushNotificationsApi.createToken({
-        userId,
-        token: this.fcmToken,
-      });
-      return true;
-    } catch (error) {
-      log.error("Error saving FCM token:", error);
-      return false;
-    }
-  }
-
-  async removeFCMToken(userId: string): Promise<boolean> {
-    if (!this.fcmToken) return true;
-
-    try {
-      await pushNotificationsApi.removeToken({
-        userId,
-        token: this.fcmToken,
-      });
-
-      // Clear the stored user ID when removing token
-      if (this.currentUserId === userId) {
-        this.currentUserId = null;
-      }
-
-      return true;
-    } catch (error) {
-      log.error("Error removing FCM token:", error);
-      return false;
-    }
   }
 
   /**

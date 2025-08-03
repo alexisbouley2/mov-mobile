@@ -11,23 +11,24 @@ import React, {
 import { PushNotificationService } from "@/services/notifications/pushNotificationService";
 import { useUserProfile } from "@/contexts/UserProfileContext";
 import log from "@/utils/logger";
+import messaging from "@react-native-firebase/messaging";
 
 interface NotificationContextType {
   fcmToken: string | null;
-  isInitialized: boolean;
-  hasPermission: boolean;
+  permissionStatus: number | null;
+  permissionChecked: boolean;
+  checkPermissionStatus: () => Promise<number>;
   requestPermission: () => Promise<boolean>;
-  refreshToken: () => Promise<string | null>;
   syncBadgeCount: () => Promise<number>;
   markEventNotificationsAsRead: (_eventId: string) => Promise<number>;
 }
 
 const NotificationContext = createContext<NotificationContextType>({
   fcmToken: null,
-  isInitialized: false,
-  hasPermission: false,
+  permissionStatus: null,
+  permissionChecked: false,
+  checkPermissionStatus: async () => 0,
   requestPermission: async () => false,
-  refreshToken: async () => null,
   syncBadgeCount: async () => 0,
   markEventNotificationsAsRead: async (_eventId: string) => 0,
 });
@@ -41,8 +42,8 @@ export function NotificationProvider({
 }) {
   const { user } = useUserProfile();
   const [fcmToken, setFcmToken] = useState<string | null>(null);
-  const [isInitialized, setIsInitialized] = useState(false);
-  const [hasPermission, setHasPermission] = useState(false);
+  const [permissionStatus, setPermissionStatus] = useState<number | null>(null);
+  const [permissionChecked, setPermissionChecked] = useState(false);
 
   // Track previous user ID to handle FCM token removal
   const previousUserIdRef = useRef<string | null>(null);
@@ -52,82 +53,85 @@ export function NotificationProvider({
     []
   );
 
-  // Initialize notifications when user profile is loaded
+  // Check notification permission status when user profile is loaded
   useEffect(() => {
-    if (user && !isInitialized) {
-      previousUserIdRef.current = user.id; // Track current user
-      initializeNotifications();
-    }
-    // Cleanup when user is no longer available
-    else if (!user && isInitialized && previousUserIdRef.current) {
-      // Remove FCM token from database before clearing local state
-      notificationService
-        .removeFCMToken(previousUserIdRef.current)
-        .catch((error) => {
-          log.error("Failed to remove FCM token on user logout:", error);
-        });
+    if (user && !permissionChecked) {
+      const checkPermission = async () => {
+        try {
+          const status = await notificationService.checkPermissionStatus();
+          setPermissionStatus(status);
 
-      // Clear local state
-      setFcmToken(null);
-      setIsInitialized(false);
-      setHasPermission(false);
-      previousUserIdRef.current = null;
+          // If already authorized, get token and save it
+          if (status === messaging.AuthorizationStatus.AUTHORIZED) {
+            const token = await notificationService.getFCMToken();
+            if (token) {
+              setFcmToken(token);
+              await notificationService.saveFCMToken(user.id);
+            }
+          }
+        } catch (error) {
+          log.error("Error checking notification permission:", error);
+          setPermissionStatus(messaging.AuthorizationStatus.DENIED);
+        } finally {
+          setPermissionChecked(true);
+        }
+      };
+
+      checkPermission();
     }
-    // Update tracked user ID when user changes (but not on initial mount)
-    else if (
-      user &&
-      previousUserIdRef.current &&
-      user.id !== previousUserIdRef.current
-    ) {
-      // We should never be here
+    // Clear permission status when user logs out
+    else if (!user && permissionChecked) {
+      setPermissionStatus(null);
+      setPermissionChecked(false);
+    }
+  }, [user, permissionChecked, notificationService]);
+
+  // Remove FCM token when user logs out
+  useEffect(() => {
+    if (previousUserIdRef.current && !user) {
+      notificationService.removeFCMToken(previousUserIdRef.current);
+      previousUserIdRef.current = null;
+      setFcmToken(null);
+    }
+    if (user) {
       previousUserIdRef.current = user.id;
     }
-  }, [user, isInitialized, notificationService]);
-
-  // Save FCM token when we get it and user is available
-  useEffect(() => {
-    if (fcmToken && user?.id && isInitialized) {
-      saveFCMToken();
-    }
-  }, [fcmToken, user?.id, isInitialized]);
+  }, [user, notificationService]);
 
   // Sync badge count when user is available and notifications are initialized
   useEffect(() => {
-    if (user?.id && isInitialized && fcmToken) {
+    if (user?.id && fcmToken) {
       syncBadgeCount();
     }
-  }, [user?.id, isInitialized, fcmToken]);
+  }, [user?.id, fcmToken]);
 
-  const initializeNotifications = useCallback(async () => {
+  const checkPermissionStatus = useCallback(async (): Promise<number> => {
     try {
-      log.info("Initializing push notifications...");
-      await notificationService.initialize();
-
-      const token = await notificationService.getFCMToken();
-      if (token) {
-        setFcmToken(token);
-        setHasPermission(true);
-        setIsInitialized(true);
-        log.info("Push notifications initialized successfully");
-      }
+      return await notificationService.checkPermissionStatus();
     } catch (error) {
-      log.error("Failed to initialize push notifications:", error);
-      setIsInitialized(true); // Mark as initialized even if failed to avoid retries
+      log.error("Failed to check notification permission status:", error);
+      return 0; // DENIED
     }
   }, [notificationService]);
 
-  const saveFCMToken = useCallback(async () => {
-    if (!user?.id || !fcmToken) return;
-
+  const requestPermission = useCallback(async (): Promise<boolean> => {
     try {
-      const success = await notificationService.saveFCMToken(user.id);
+      const success = await notificationService.requestPermission();
       if (success) {
-        log.info("FCM token saved for user:", user.id);
+        const token = await notificationService.getFCMToken();
+        if (token) {
+          setFcmToken(token);
+          if (user?.id) {
+            await notificationService.saveFCMToken(user.id);
+          }
+        }
       }
+      return success;
     } catch (error) {
-      log.error("Failed to save FCM token:", error);
+      log.error("Failed to request notification permission:", error);
+      return false;
     }
-  }, [notificationService, user?.id, fcmToken]);
+  }, [notificationService, user?.id]);
 
   const syncBadgeCount = useCallback(async (): Promise<number> => {
     if (!user?.id) return 0;
@@ -160,51 +164,22 @@ export function NotificationProvider({
     [notificationService, user?.id]
   );
 
-  const requestPermission = useCallback(async (): Promise<boolean> => {
-    try {
-      await notificationService.initialize();
-      const token = await notificationService.getFCMToken();
-
-      if (token) {
-        setFcmToken(token);
-        setHasPermission(true);
-        setIsInitialized(true);
-        return true;
-      }
-      return false;
-    } catch (error) {
-      log.error("Failed to request notification permission:", error);
-      return false;
-    }
-  }, [notificationService]);
-
-  const refreshToken = useCallback(async (): Promise<string | null> => {
-    try {
-      const token = await notificationService.getFCMToken();
-      setFcmToken(token);
-      return token;
-    } catch (error) {
-      log.error("Failed to refresh FCM token:", error);
-      return null;
-    }
-  }, [notificationService]);
-
   const contextValue = useMemo(
     () => ({
       fcmToken,
-      isInitialized,
-      hasPermission,
+      permissionStatus,
+      permissionChecked,
+      checkPermissionStatus,
       requestPermission,
-      refreshToken,
       syncBadgeCount,
       markEventNotificationsAsRead,
     }),
     [
       fcmToken,
-      isInitialized,
-      hasPermission,
+      permissionStatus,
+      permissionChecked,
+      checkPermissionStatus,
       requestPermission,
-      refreshToken,
       syncBadgeCount,
       markEventNotificationsAsRead,
     ]
