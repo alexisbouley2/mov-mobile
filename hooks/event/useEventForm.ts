@@ -36,10 +36,24 @@ export function useEventForm() {
     return true;
   }, []);
 
+  const postProcessFormData = useCallback(
+    (data: EventFormData): EventFormData => {
+      return {
+        ...data,
+        name: data.name.trim() || "Quick MOV",
+        information:
+          data.information.trim() ||
+          "Let's get the MOV going!\n1 - Invite everyone to the MOV\n2 - Capture the best memories of your time together",
+      };
+    },
+    []
+  );
+
   return {
     formData,
     updateField,
     setFormData,
     validateEventDateTime,
+    postProcessFormData,
   };
 }

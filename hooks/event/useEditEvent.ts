@@ -9,7 +9,8 @@ import { UpdateEventRequest } from "@movapp/types";
 
 export function useEditEvent() {
   const { event, updateEvent, deleteEvent } = useEvent(); // Get from context
-  const { formData, updateField, setFormData } = useEventForm();
+  const { formData, updateField, setFormData, postProcessFormData } =
+    useEventForm();
   const [loading, setLoading] = useState(false);
   // Initialize photo with event's current image
   const {
@@ -36,11 +37,6 @@ export function useEditEvent() {
   }, [event, setFormData]);
 
   const handleSubmit = async (onSuccess: () => void) => {
-    if (!formData.name.trim()) {
-      Alert.alert("Error", "Event name is required");
-      return;
-    }
-
     setLoading(true);
 
     try {
@@ -58,10 +54,13 @@ export function useEditEvent() {
         cleanup();
       }
 
+      // Process form data with default values
+      const processedData = postProcessFormData(formData);
+
       // Prepare update data
       const eventUpdateData: UpdateEventRequest = {
-        name: formData.name.trim(),
-        information: formData.information.trim(),
+        name: processedData.name,
+        information: processedData.information,
         // Note: Don't include date in edit - it can't be changed
       };
 

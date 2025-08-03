@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Dimensions,
   Alert,
+  Image,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { CachedImage } from "@/components/ui/CachedImage";
@@ -90,7 +91,10 @@ export default function EventHeader({
           loadingColor="#666"
         />
       ) : (
-        <View style={[styles.backgroundImage, styles.fallbackBackground]} />
+        <Image
+          source={require("@/assets/images/logo/quick-mov-background-expanded.png")}
+          style={styles.backgroundImage}
+        />
       )}
 
       {/* Gradient Overlay */}
@@ -153,9 +157,6 @@ const styles = StyleSheet.create({
     bottom: 0,
     width: "100%",
     height: "100%",
-  },
-  fallbackBackground: {
-    backgroundColor: "#000",
   },
   gradientOverlay: {
     position: "absolute",

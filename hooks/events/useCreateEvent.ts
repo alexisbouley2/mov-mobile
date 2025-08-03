@@ -15,7 +15,8 @@ export function useCreateEvent(userId: string) {
     selectedEventIds?: string;
   }>();
 
-  const { formData, updateField, validateEventDateTime } = useEventForm();
+  const { formData, updateField, validateEventDateTime, postProcessFormData } =
+    useEventForm();
   const [loading, setLoading] = useState(false);
 
   const {
@@ -39,11 +40,6 @@ export function useCreateEvent(userId: string) {
       return;
     }
 
-    if (!formData.name.trim()) {
-      Alert.alert("Error", "Event name is required");
-      return;
-    }
-
     setLoading(true);
 
     try {
@@ -61,11 +57,14 @@ export function useCreateEvent(userId: string) {
         cleanup();
       }
 
+      // Process form data with default values
+      const processedData = postProcessFormData(formData);
+
       // Create event data
       const eventData: CreateEventRequest = {
-        name: formData.name.trim(),
-        information: formData.information.trim() || undefined,
-        date: formData.date,
+        name: processedData.name,
+        information: processedData.information,
+        date: processedData.date,
         adminId: userId,
         ...(photoData && {
           coverImagePath: photoData.coverImagePath,
