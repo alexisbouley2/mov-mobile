@@ -63,7 +63,7 @@ export function validatePhoneNumber(
   }
 
   // Format the complete number
-  const formattedNumber = `${country.dialCode}${cleanedNumber}`;
+  const formattedNumber = normalizePhoneNumber(cleanedNumber, country.dialCode);
 
   return {
     isValid: true,
@@ -97,14 +97,24 @@ function validateByCountry(
       break;
 
     case "FR":
-      // French mobile numbers start with 06 or 07
-      if (number.length !== 9) {
-        return { isValid: false, error: "Phone number must be 9 digits" };
-      }
-      if (!number.startsWith("6") && !number.startsWith("7")) {
+      if (number.length === 9) {
+        if (!number.startsWith("6") && !number.startsWith("7")) {
+          return {
+            isValid: false,
+            error: "Mobile number must start with 6 or 7",
+          };
+        }
+      } else if (number.length === 10) {
+        if (!number.startsWith("06") && !number.startsWith("07")) {
+          return {
+            isValid: false,
+            error: "Mobile number must start with 06 or 07",
+          };
+        }
+      } else {
         return {
           isValid: false,
-          error: "Mobile number must start with 6 or 7",
+          error: "Phone number must be 9 or 10 digits",
         };
       }
       break;
@@ -265,6 +275,15 @@ export function formatPhoneNumberForDisplay(
           5,
           7
         )} ${cleanedNumber.slice(7)}`;
+      }
+      if (cleanedNumber.length === 10) {
+        return `${cleanedNumber.slice(0, 2)} ${cleanedNumber.slice(
+          2,
+          4
+        )} ${cleanedNumber.slice(4, 6)} ${cleanedNumber.slice(
+          6,
+          8
+        )} ${cleanedNumber.slice(8)}`;
       }
       break;
 

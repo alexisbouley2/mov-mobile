@@ -80,7 +80,7 @@ export const countries: Country[] = [
     dialCode: "+33",
     flag: "🇫🇷",
     minLength: 9,
-    maxLength: 9,
+    maxLength: 10,
   },
   {
     name: "Germany",
