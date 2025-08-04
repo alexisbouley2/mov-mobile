@@ -184,7 +184,9 @@ const styles = StyleSheet.create({
     backgroundColor: "#1a1a1a",
     paddingHorizontal: 20,
     paddingVertical: 16,
-    borderRadius: 12,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "#808080",
   },
   actionButtonIcon: {
     width: 20,
