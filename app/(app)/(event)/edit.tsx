@@ -1,11 +1,10 @@
 import React from "react";
-import { StyleSheet, View, Text } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useEditEvent } from "@/hooks/event/useEditEvent";
 import EventForm from "@/components/event-form/EventForm";
-import { components, typography } from "@/styles";
-import BackButton from "@/components/ui/button/BackButton";
-import ThreeDotsButton from "@/components/ui/ThreeDotsButton";
+import Header from "@/components/ui/Header";
+import ThreeDotsButton from "@/components/ui/button/ThreeDotsButton";
 import { useUserEvents } from "@/contexts/UserEventsContext";
 import { useDebugLifecycle } from "@/utils/debugLifecycle";
 
@@ -42,11 +41,11 @@ export default function EditEventScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={components.header}>
-        <BackButton onPress={onBack} />
-        <Text style={typography.headerTitle}>{"Manage Event"}</Text>
-        <ThreeDotsButton onPress={deleteEvent} style={styles.deleteButton} />
-      </View>
+      <Header
+        title="Manage Event"
+        onBack={onBack}
+        rightComponent={<ThreeDotsButton onPress={deleteEvent} />}
+      />
 
       <EventForm
         formData={formData}
@@ -66,13 +65,5 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#000",
-  },
-  deleteButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    position: "absolute",
-    right: 20,
-    top: 0,
-    bottom: 0,
   },
 });

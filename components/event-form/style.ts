@@ -1,24 +1,17 @@
 import { StyleSheet } from "react-native";
 
-export default StyleSheet.create({
-  header: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    paddingTop: 20,
-    paddingBottom: 20,
-  },
-  eventFormSection: {
+const styles = StyleSheet.create({
+  section: {
     marginTop: 24,
   },
-  eventFormSectionLabel: {
+  sectionLabel: {
     fontSize: 14,
     fontWeight: "600",
     color: "#fff",
     marginLeft: 8,
     marginBottom: 8,
   },
-  eventFormTextInput: {
+  textInput: {
     backgroundColor: "#1a1a1a",
     borderRadius: 12,
     paddingHorizontal: 16,
@@ -29,3 +22,5 @@ export default StyleSheet.create({
     borderColor: "#333",
   },
 });
+
+export default styles;

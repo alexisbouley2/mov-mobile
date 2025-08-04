@@ -14,7 +14,6 @@ import log from "@/utils/logger";
 import { useDebugLifecycle } from "@/utils/debugLifecycle";
 import { useUserProfile } from "@/contexts/UserProfileContext";
 import AvatarPicker from "@/components/profile/AvatarPicker";
-import { typography } from "@/styles";
 import { config } from "@/lib/config";
 
 export default function ProfileScreen() {
@@ -62,7 +61,7 @@ export default function ProfileScreen() {
     <View style={styles.container}>
       <View style={styles.header}>
         <View style={styles.placeholder}></View>
-        <Text style={typography.headerTitle}>Profile</Text>
+        <Text style={styles.headerTitle}>Profile</Text>
         <TouchableOpacity onPress={handleEditProfile} style={styles.editButton}>
           <Image
             source={require("@/assets/images/icon/white-edit.png")}
@@ -138,7 +137,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#000",
   },
   header: {
-    marginTop: 30,
+    marginTop: 20,
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
@@ -148,6 +147,11 @@ const styles = StyleSheet.create({
   placeholder: {
     width: 32,
     height: 32,
+  },
+  headerTitle: {
+    fontSize: 26,
+    color: "#fff",
+    fontWeight: "600",
   },
   editButton: {
     width: 32,

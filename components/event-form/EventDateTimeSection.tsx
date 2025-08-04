@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
-import { components } from "@/styles";
+import eventFormStyles from "./style";
 
 interface EventDateTimeSectionProps {
   date: Date;
@@ -51,8 +51,8 @@ export default function EventDateTimeSection({
   };
 
   return (
-    <View style={components.eventFormSection}>
-      <Text style={components.eventFormSectionLabel}>Start Time</Text>
+    <View style={eventFormStyles.section}>
+      <Text style={eventFormStyles.sectionLabel}>Start Time</Text>
 
       <View style={styles.dateTimeContainer}>
         <TouchableOpacity

@@ -6,11 +6,12 @@ import {
   FlatList,
   ActivityIndicator,
 } from "react-native";
+import { useRouter } from "expo-router";
 import { PanGestureHandler } from "react-native-gesture-handler";
 import Animated from "react-native-reanimated";
 import { useEventParticipants } from "@/contexts/event/EventParticipantsContext";
 import ParticipantListItem from "@/components/event/participants/ParticipantListItem";
-import ParticipantsHeader from "@/components/event/participants/ParticipantsHeader";
+import Header from "@/components/ui/Header";
 import ParticipantsTabHeader from "@/components/event/participants/ParticipantsTabHeader";
 import { useParticipantsSwipe } from "@/hooks/event/useParticipantsSwipe";
 import { Participant } from "@movapp/types";
@@ -18,6 +19,7 @@ import { Participant } from "@movapp/types";
 const EDGE_THRESHOLD = 20; // Pixels from left edge to ignore gestures
 
 export default function ParticipantsScreen() {
+  const router = useRouter();
   const {
     confirmedParticipants,
     unconfirmedParticipants,
@@ -69,7 +71,7 @@ export default function ParticipantsScreen() {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <ParticipantsHeader />
+      <Header title="Participants" onBack={() => router.back()} />
 
       {/* Tabs */}
       <ParticipantsTabHeader

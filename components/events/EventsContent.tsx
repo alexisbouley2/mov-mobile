@@ -3,7 +3,6 @@ import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { useEventsLogic } from "@/hooks/events/useEventsLogic";
 import EventSection from "@/components/events/EventSection";
-import typography from "@/styles/typography";
 import { CategorizedEventsResponse, User } from "@movapp/types";
 
 interface EventsContentProps {
@@ -58,7 +57,7 @@ export default function EventsContent({
       {/* Past Events (Memories) */}
       {Object.keys(pastEventsByMonth).length > 0 && (
         <View style={styles.section}>
-          <Text style={typography.eventSectionTitle}>Memories</Text>
+          <Text style={styles.eventSectionTitle}>Memories</Text>
           {Object.entries(pastEventsByMonth).map(([monthYear, monthEvents]) => (
             <View key={monthYear}>
               <Text style={styles.monthTitle}>{monthYear}</Text>
@@ -102,6 +101,14 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   section: {},
+  eventSectionTitle: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#fff",
+    marginTop: 10,
+    marginBottom: 10,
+    marginLeft: 8,
+  },
   monthTitle: {
     fontSize: 16,
     color: "#fff",

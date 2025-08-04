@@ -1,14 +1,13 @@
 // app/(app)/(profile)/edit-profile.tsx
 import React, { useEffect } from "react";
-import { StyleSheet, Alert, View, Text } from "react-native";
+import { StyleSheet, Alert, View } from "react-native";
 import { router } from "expo-router";
 import { useUserProfile } from "@/contexts/UserProfileContext";
 import ProfileForm from "@/components/profile/ProfileForm";
-import BackButton from "@/components/ui/button/BackButton";
+import Header from "@/components/ui/Header";
 import { useProfilePhoto } from "@/hooks/profile/useProfilePhoto";
 import { useProfileForm } from "@/hooks/profile/useProfileForm";
 import log from "@/utils/logger";
-import { components, typography } from "@/styles";
 
 export default function EditProfileScreen() {
   const { user, updateUserProfile, profileError, clearProfileError } =
@@ -98,10 +97,7 @@ export default function EditProfileScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={components.header}>
-        <BackButton onPress={handleBack} />
-        <Text style={typography.headerTitle}>{"Edit Profile"}</Text>
-      </View>
+      <Header title="Edit Profile" onBack={handleBack} />
 
       <ProfileForm
         username={username}

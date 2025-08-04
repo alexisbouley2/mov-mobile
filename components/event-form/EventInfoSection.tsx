@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { IconSymbol } from "@/components/ui/IconSymbol";
-import { components } from "@/styles";
+import eventFormStyles from "./style";
 
 interface EventInfoSectionProps {
   mode: "create" | "edit";
@@ -14,7 +14,7 @@ export default function EventInfoSection({ mode }: EventInfoSectionProps) {
       : "As the admin, you can update event details. Date cannot be changed once set.";
 
   return (
-    <View style={components.eventFormSection}>
+    <View style={eventFormStyles.section}>
       <View style={styles.infoItem}>
         <IconSymbol name="info.circle" size={16} color="#666" />
         <Text style={styles.infoText}>{infoText}</Text>

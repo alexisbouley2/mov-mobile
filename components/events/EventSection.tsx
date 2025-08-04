@@ -1,8 +1,7 @@
 // components/events/EventSection.tsx
 import React from "react";
-import { View, Text } from "react-native";
+import { View, Text, StyleSheet } from "react-native";
 import EventCard from "@/components/events/EventCard";
-import typography from "@/styles/typography";
 import { EventForList, User } from "@movapp/types";
 
 interface EventSectionProps {
@@ -25,7 +24,7 @@ export default function EventSection({
   return (
     <View>
       {showTitle && title && (
-        <Text style={typography.eventSectionTitle}>{title}</Text>
+        <Text style={styles.eventSectionTitle}>{title}</Text>
       )}
       {events.map((event) => (
         <EventCard
@@ -39,3 +38,14 @@ export default function EventSection({
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  eventSectionTitle: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#fff",
+    marginTop: 10,
+    marginBottom: 10,
+    marginLeft: 8,
+  },
+});

@@ -1,7 +1,7 @@
 // components/event-form/EventNameSection.tsx
 import React from "react";
 import { View, Text, TextInput } from "react-native";
-import { components } from "@/styles";
+import eventFormStyles from "./style";
 
 interface EventNameSectionProps {
   name: string;
@@ -13,10 +13,10 @@ export default function EventNameSection({
   onNameChange,
 }: EventNameSectionProps) {
   return (
-    <View style={components.eventFormSection}>
-      <Text style={components.eventFormSectionLabel}>Title</Text>
+    <View style={eventFormStyles.section}>
+      <Text style={eventFormStyles.sectionLabel}>Title</Text>
       <TextInput
-        style={components.eventFormTextInput}
+        style={eventFormStyles.textInput}
         value={name}
         onChangeText={onNameChange}
         placeholder="Enter Event's Title"

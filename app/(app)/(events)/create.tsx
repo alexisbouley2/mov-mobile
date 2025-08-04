@@ -1,13 +1,12 @@
 // app/(app)/(events)/create.tsx - Updated with context refresh
 import React from "react";
-import { StyleSheet, View, Text } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useCreateEvent } from "@/hooks/events/useCreateEvent";
 import { useUserEvents } from "@/contexts/UserEventsContext";
 import EventForm from "@/components/event-form/EventForm";
 import { useUserProfile } from "@/contexts/UserProfileContext";
-import { components, typography } from "@/styles";
-import BackButton from "@/components/ui/button/BackButton";
+import Header from "@/components/ui/Header";
 import { useDebugLifecycle } from "@/utils/debugLifecycle";
 
 export default function CreateEventScreen() {
@@ -44,10 +43,7 @@ export default function CreateEventScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={components.header}>
-        <BackButton onPress={onBack} />
-        <Text style={typography.headerTitle}>{"Create Event"}</Text>
-      </View>
+      <Header title="Create Event" onBack={onBack} />
 
       <EventForm
         formData={formData}

@@ -2,7 +2,7 @@ import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Image } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { CachedImage } from "@/components/ui/CachedImage";
-import ThreeDotsButton from "@/components/ui/ThreeDotsButton";
+import ThreeDotsButton from "@/components/ui/button/ThreeDotsButton";
 import { useVideoDownload } from "@/hooks/media/useVideoDownload";
 import { useEventVideos, VideoItem } from "@/contexts/event/EventVideosContext";
 

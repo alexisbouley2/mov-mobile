@@ -2,7 +2,6 @@ import React from "react";
 import { View, TextInput, StyleSheet } from "react-native";
 import AvatarPicker from "./AvatarPicker";
 import SubmitButton from "../ui/button/SubmitButton";
-import { typography } from "@/styles";
 
 interface ProfileFormProps {
   username: string;
@@ -41,10 +40,7 @@ export default function ProfileForm({
       />
 
       <TextInput
-        style={[
-          typography.profileTextInput,
-          { marginTop: 40, marginBottom: 60 },
-        ]}
+        style={[styles.profileTextInput, { marginTop: 40, marginBottom: 60 }]}
         placeholder="Username"
         placeholderTextColor="#666"
         value={username}
@@ -72,5 +68,15 @@ const styles = StyleSheet.create({
     paddingTop: 60,
     alignItems: "center",
     paddingHorizontal: 64,
+  },
+  profileTextInput: {
+    width: "100%",
+    backgroundColor: "#1a1a1a",
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    color: "#fff",
+    fontSize: 16,
+    textAlign: "center",
   },
 });

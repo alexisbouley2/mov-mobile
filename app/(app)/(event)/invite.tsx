@@ -1,12 +1,13 @@
 import React, { useState, useCallback, useEffect } from "react";
-import { View, Alert, Share } from "react-native";
+import { View, Alert, Share, TouchableOpacity, StyleSheet } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import { eventsApi } from "@/services/api/events";
 import { config } from "@/lib/config";
 import { useUserProfile } from "@/contexts/UserProfileContext";
 import { useEvent } from "@/contexts/event/EventContext";
 import { useEventContacts } from "@/contexts/event/EventContactsContext";
-import InviteHeader from "@/components/event/invite/InviteHeader";
+import Header from "@/components/ui/Header";
 import InviteContactList from "@/components/event/invite/InviteContactList";
 
 export default function EventInviteScreen() {
@@ -68,11 +69,19 @@ export default function EventInviteScreen() {
   }, [inviteUrl]);
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#000000", paddingTop: 40 }}>
-      <InviteHeader
+    <View style={{ flex: 1, backgroundColor: "#000000" }}>
+      <Header
+        title="Invite Friends"
         onBack={() => router.back()}
-        onShare={handleShare}
-        shareLoading={shareLoading || inviteUrlLoading}
+        rightComponent={
+          <TouchableOpacity
+            onPress={handleShare}
+            style={styles.shareButton}
+            disabled={shareLoading || inviteUrlLoading}
+          >
+            <Ionicons name="share-outline" size={30} color="#fff" />
+          </TouchableOpacity>
+        }
       />
       <InviteContactList
         contacts={contacts}
@@ -85,3 +94,11 @@ export default function EventInviteScreen() {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  shareButton: {
+    padding: 8,
+    borderRadius: 12,
+    backgroundColor: "#1C1C1E",
+  },
+});

@@ -11,7 +11,6 @@ import { useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useSelectEvents } from "@/hooks/events/useSelectEvents";
 import SelectEventCard from "@/components/events/SelectEventCard";
-import typography from "@/styles/typography";
 import SubmitButton from "@/components/ui/button/SubmitButton";
 
 export default function SelectEventsScreen() {
@@ -37,7 +36,7 @@ export default function SelectEventsScreen() {
       </TouchableOpacity>
 
       <View style={styles.titleSection}>
-        <Text style={typography.headerTitle}>Add to an Event</Text>
+        <Text style={styles.headerTitle}>Add to an Event</Text>
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
@@ -91,6 +90,11 @@ const styles = StyleSheet.create({
     position: "absolute",
     left: 20,
     top: 20,
+  },
+  headerTitle: {
+    fontSize: 26,
+    color: "#fff",
+    fontWeight: "600",
   },
   titleSection: {
     alignItems: "center",

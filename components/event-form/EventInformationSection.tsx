@@ -1,7 +1,7 @@
 // components/event-form/EventInformationSection.tsx
 import React from "react";
 import { View, Text, TextInput, StyleSheet } from "react-native";
-import { components } from "@/styles";
+import eventFormStyles from "./style";
 
 interface EventInformationSectionProps {
   information: string;
@@ -13,10 +13,10 @@ export default function EventInformationSection({
   onInformationChange,
 }: EventInformationSectionProps) {
   return (
-    <View style={components.eventFormSection}>
-      <Text style={components.eventFormSectionLabel}>Description</Text>
+    <View style={eventFormStyles.section}>
+      <Text style={eventFormStyles.sectionLabel}>Description</Text>
       <TextInput
-        style={[components.eventFormTextInput, styles.textArea]}
+        style={[eventFormStyles.textInput, styles.textArea]}
         value={information}
         onChangeText={onInformationChange}
         placeholder="What's this event about? (optional)"

@@ -13,7 +13,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { CachedImage } from "@/components/ui/CachedImage";
 import { EventWithDetails } from "@movapp/types";
 import { Ionicons } from "@expo/vector-icons";
-import ThreeDotsButton from "@/components/ui/ThreeDotsButton";
+import ThreeDotsButton from "@/components/ui/button/ThreeDotsButton";
 
 interface EventHeaderProps {
   event: EventWithDetails;

@@ -2,9 +2,8 @@ import React from "react";
 import { View, Text, TextInput, StyleSheet } from "react-native";
 import { router } from "expo-router";
 import { useProfileDelete } from "@/hooks/profile/useProfileDelete";
-import BackButton from "@/components/ui/button/BackButton";
+import Header from "@/components/ui/Header";
 import SubmitButton from "@/components/ui/button/SubmitButton";
-import { components, typography } from "@/styles";
 
 export default function DeleteProfileScreen() {
   const {
@@ -21,12 +20,11 @@ export default function DeleteProfileScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={components.header}>
-        <BackButton onPress={handleBack} />
-        <Text style={[typography.headerTitle, { color: "#ff4444" }]}>
-          {"Dangerous Zone"}
-        </Text>
-      </View>
+      <Header
+        title="Dangerous Zone"
+        onBack={handleBack}
+        titleStyle={{ color: "#ff4444" }}
+      />
 
       <View style={styles.content}>
         <Text style={styles.warningText}>
@@ -35,7 +33,7 @@ export default function DeleteProfileScreen() {
         </Text>
 
         <TextInput
-          style={[typography.profileTextInput, { marginBottom: 60 }]}
+          style={[styles.profileTextInput, { marginBottom: 60 }]}
           placeholder="Username"
           placeholderTextColor="#666"
           value={usernameInput}
@@ -60,6 +58,16 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#000",
+  },
+  profileTextInput: {
+    width: "100%",
+    backgroundColor: "#1a1a1a",
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    color: "#fff",
+    fontSize: 16,
+    textAlign: "center",
   },
   content: {
     flex: 1,
