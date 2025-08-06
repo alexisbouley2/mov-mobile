@@ -6,7 +6,7 @@ import { useEventMessages } from "@/contexts/event/EventMessagesContext";
 import { useEvent } from "@/contexts/event/EventContext";
 import { CachedImage } from "@/components/ui/CachedImage";
 import Header from "@/components/ui/Header";
-import { GiftedChatMessages } from "@/components/event/chat";
+import { ChatMessages } from "@/components/event/chat";
 
 export default function ChatScreen() {
   const router = useRouter();
@@ -40,7 +40,7 @@ export default function ChatScreen() {
         }
       />
 
-      <GiftedChatMessages
+      <ChatMessages
         messages={messages}
         messagesLoading={messagesLoading}
         loadingEarlier={loadingEarlier}

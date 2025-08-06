@@ -82,8 +82,8 @@ export function EventMessagesProvider({
         const data: EventMessagesResponse = await messagesApi.getMessages(
           eventId,
           user.id,
-          1, // Always start from page 1
-          30
+          1,
+          10
         );
 
         setMessages(data.messages);
@@ -99,12 +99,14 @@ export function EventMessagesProvider({
     [user?.id]
   );
 
-  // Load earlier messages (pagination)
+  // Load earlier messages (pagination) - now appends to the end of the array
   const loadEarlier = useCallback(async () => {
     if (!event?.id || !user?.id || !hasMore || loadingEarlier) {
+      console.log("Skipping loadEarlier - already loading or no more messages");
       return;
     }
 
+    console.log("Starting loadEarlier");
     setLoadingEarlier(true);
 
     try {
@@ -113,14 +115,17 @@ export function EventMessagesProvider({
         event.id,
         user.id,
         nextPage,
-        30
+        10
       );
 
-      // Prepend older messages to the beginning
+      // Append older messages to the end (since we're using inverted list)
       setMessages((prev) => {
         const existingIds = new Set(prev.map((m) => m.id));
         const newMessages = data.messages.filter((m) => !existingIds.has(m.id));
-        return [...newMessages, ...prev];
+        console.log(`Adding ${newMessages.length} older messages to the end`);
+
+        // For inverted list: append older messages to the end
+        return [...prev, ...newMessages];
       });
 
       setHasMore(data.hasMore);
@@ -149,8 +154,8 @@ export function EventMessagesProvider({
           type: "text",
         });
 
-        // Add message to the end of the list
-        setMessages((prev) => [...prev, newMessage]);
+        // Add new message to the beginning (for inverted list, newest go to index 0)
+        setMessages((prev) => [newMessage, ...prev]);
 
         setLastMessage(newMessage);
       } catch (err) {
@@ -205,9 +210,10 @@ export function EventMessagesProvider({
             );
 
             if (messageWithSender) {
+              // Add real-time message to the beginning (newest first for inverted list)
               setMessages((prev) => {
                 const exists = prev.some((m) => m.id === messageWithSender.id);
-                return exists ? prev : [...prev, messageWithSender];
+                return exists ? prev : [messageWithSender, ...prev];
               });
 
               // Update event's lastMessage
@@ -241,7 +247,6 @@ export function EventMessagesProvider({
     };
   }, [event?.id, user?.id, setLastMessage]);
 
-  // Inside your component
   useFocusEffect(
     useCallback(() => {
       return () => {
