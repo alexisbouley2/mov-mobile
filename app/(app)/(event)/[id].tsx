@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   View,
   Text,
@@ -15,6 +15,7 @@ import ChatPreview from "@/components/event/chat/ChatPreview";
 import EventVideoFeed from "@/components/event/gallery/EventVideoFeed";
 import { useEventDetail } from "@/hooks/event/useEventDetail";
 import { useDebugLifecycle } from "@/utils/debugLifecycle";
+import { useUserEvents } from "@/contexts/UserEventsContext";
 
 export default function EventDetailScreen() {
   const router = useRouter();
@@ -31,6 +32,14 @@ export default function EventDetailScreen() {
     handleInvite,
     handleLeave,
   } = useEventDetail();
+
+  const { refetch } = useUserEvents();
+
+  useEffect(() => {
+    if (fromExternal === "true") {
+      refetch();
+    }
+  }, [fromExternal, refetch]);
 
   const handleBack = () => {
     if (fromExternal === "true") {

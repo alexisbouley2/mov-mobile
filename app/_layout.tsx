@@ -26,6 +26,8 @@ import * as NavigationBar from "expo-navigation-bar";
 import log from "@/utils/logger";
 import { PushNotificationService } from "@/services/notifications/pushNotificationService";
 
+// @ts-ignore
+globalThis.RNFB_SILENCE_MODULAR_DEPRECATION_WARNINGS = true;
 // Initialize immediately when app starts
 PushNotificationService.getInstance();
 
@@ -112,9 +114,6 @@ function RootLayoutContent() {
 }
 
 export default function RootLayout() {
-  // @ts-ignore
-  globalThis.RNFB_SILENCE_MODULAR_DEPRECATION_WARNINGS = true;
-
   const [loaded] = useFonts({
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
   });
