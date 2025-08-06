@@ -94,6 +94,21 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
     );
   }
 
+  // Show placeholder when there are no messages
+  if (messages.length === 0) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyTitle}>No messages yet</Text>
+          <Text style={styles.emptySubtitle}>
+            Be the first to start the conversation!
+          </Text>
+        </View>
+        <MessageInput onSendMessage={handleSendMessage} sending={sending} />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <FlatList
@@ -132,6 +147,26 @@ const styles = StyleSheet.create({
     color: "#fff",
     marginTop: 10,
     fontSize: 16,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#000",
+    paddingHorizontal: 32,
+  },
+  emptyTitle: {
+    color: "#fff",
+    fontSize: 20,
+    fontWeight: "600",
+    marginBottom: 8,
+    textAlign: "center",
+  },
+  emptySubtitle: {
+    color: "#999",
+    fontSize: 16,
+    textAlign: "center",
+    lineHeight: 22,
   },
   messagesContainer: {
     paddingHorizontal: 16,

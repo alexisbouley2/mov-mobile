@@ -1,5 +1,5 @@
 // components/event/chat/MessageInput.tsx
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
   View,
   TextInput,
@@ -21,42 +21,34 @@ export const MessageInput: React.FC<MessageInputProps> = ({
   sending,
 }) => {
   const [inputText, setInputText] = useState("");
-  const [inputHeight, setInputHeight] = useState(40);
+  const textInputRef = useRef<TextInput>(null);
 
   const handleSend = () => {
     const trimmedText = inputText.trim();
     if (trimmedText && !sending) {
       onSendMessage(trimmedText);
       setInputText("");
-      setInputHeight(40);
     }
-  };
-
-  const handleContentSizeChange = (event: any) => {
-    const { height } = event.nativeEvent.contentSize;
-    const newHeight = Math.min(Math.max(height, 40), 120); // Min 40, max 120
-    setInputHeight(newHeight);
   };
 
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       style={styles.keyboardAvoidingView}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 160 : 0}
     >
       <View style={styles.container}>
         <View style={styles.inputContainer}>
           <TextInput
-            style={[styles.textInput, { height: inputHeight }]}
+            ref={textInputRef}
+            style={[styles.textInput]}
             value={inputText}
             onChangeText={setInputText}
             placeholder="Type a message..."
             placeholderTextColor="#888"
             multiline
-            onContentSizeChange={handleContentSizeChange}
-            scrollEnabled={inputHeight >= 120}
             blurOnSubmit={false}
             onSubmitEditing={handleSend}
-            returnKeyType="send"
             enablesReturnKeyAutomatically
           />
 
@@ -110,10 +102,10 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 16,
     paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingVertical: Platform.OS === "ios" ? 10 : 8,
     minHeight: 40,
     maxHeight: 120,
-    textAlignVertical: "center",
+    textAlignVertical: Platform.OS === "ios" ? "top" : "center",
   },
   sendButton: {
     width: 36,
