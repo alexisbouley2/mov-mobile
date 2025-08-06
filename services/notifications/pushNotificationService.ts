@@ -16,8 +16,12 @@ export class PushNotificationService {
   private static instance: PushNotificationService;
   private fcmToken: string | null = null;
   private currentUserId: string | null = null;
+  private currentViewingEventId: string | null = null;
   private pendingNavigation: NotificationData | null = null;
+  private notificationResponseSubscription: any = null;
+
   private constructor() {
+    this.setupLocalNotifications();
     this.setupMessageHandlers();
   }
 
@@ -26,6 +30,19 @@ export class PushNotificationService {
       PushNotificationService.instance = new PushNotificationService();
     }
     return PushNotificationService.instance;
+  }
+
+  private setupLocalNotifications() {
+    // Configure how notifications should be displayed when app is in foreground
+    Notifications.setNotificationHandler({
+      handleNotification: async () => ({
+        shouldShowAlert: true,
+        shouldPlaySound: true,
+        shouldSetBadge: true,
+        shouldShowBanner: true,
+        shouldShowList: true,
+      }),
+    });
   }
 
   async checkPermissionStatus() {
@@ -47,7 +64,6 @@ export class PushNotificationService {
 
       if (enabled) {
         await this.getFCMToken();
-        this.setupMessageHandlers();
         return true;
       } else {
         log.warn("Push notification permission denied");
@@ -114,12 +130,42 @@ export class PushNotificationService {
     }
   }
 
+  private isUserOnEventPage(eventId: string): boolean {
+    return this.currentViewingEventId === eventId;
+  }
+
+  public setCurrentViewingEventId(eventId: string | null): void {
+    this.currentViewingEventId = eventId;
+  }
+
   public setupMessageHandlers() {
-    // Message reçu quand l'app est en foreground
+    // Message received when app is in foreground
     messaging().onMessage(async (remoteMessage) => {
       log.info("Message received in foreground:", remoteMessage);
 
-      // Fetch badge count from backend instead of incrementing locally
+      const { data, notification } = remoteMessage;
+      const notificationData = data as unknown as NotificationData;
+
+      // Check if user is currently viewing the event that sent the notification
+      const isOnSameEventPage = this.isUserOnEventPage(
+        notificationData.eventId
+      );
+
+      // Only show notification if user is NOT on the same event page
+      if (!isOnSameEventPage) {
+        // Show local notification
+        await Notifications.scheduleNotificationAsync({
+          content: {
+            title: notification?.title || "New Message",
+            body: notification?.body || "",
+            data: data,
+            sound: true,
+          },
+          trigger: null, // Show immediately
+        });
+      }
+
+      // Update badge count regardless of whether we show the notification
       if (this.currentUserId) {
         try {
           const response = await pushNotificationsApi.getBadgeCount(
@@ -132,13 +178,31 @@ export class PushNotificationService {
       }
     });
 
-    // Message reçu quand l'app est en background/fermée et l'ouvre
+    // Add listener for when user taps on a local notification
+    if (this.notificationResponseSubscription) {
+      this.notificationResponseSubscription.remove();
+    }
+
+    this.notificationResponseSubscription =
+      Notifications.addNotificationResponseReceivedListener((response) => {
+        const data = response.notification.request.content
+          .data as unknown as NotificationData;
+        if (data?.eventId) {
+          log.info(
+            "Local notification tapped, navigating to event:",
+            data.eventId
+          );
+          router.push(`/(app)/(event)/${data.eventId}?fromExternal=true`);
+        }
+      });
+
+    // Message received when app is in background/closed and opens it
     messaging().onNotificationOpenedApp((remoteMessage) => {
       log.info("Notification opened app:", remoteMessage);
       this.handleNotificationNavigation(remoteMessage);
     });
 
-    // Vérifier si l'app a été ouverte depuis une notification (cold start)
+    // Check if app was opened from a notification (cold start)
     messaging()
       .getInitialNotification()
       .then((remoteMessage) => {
@@ -148,7 +212,7 @@ export class PushNotificationService {
         }
       });
 
-    // Écouter les changements de token (rare mais possible)
+    // Listen for token refresh (rare but possible)
     messaging().onTokenRefresh((newToken) => {
       this.fcmToken = newToken;
       log.info("FCM token refreshed");

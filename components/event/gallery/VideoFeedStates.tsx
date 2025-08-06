@@ -31,14 +31,6 @@ export function ErrorState({ error, onRetry }: ErrorStateProps) {
   );
 }
 
-export function EmptyState() {
-  return (
-    <View style={styles.emptyContainer}>
-      <Text style={styles.emptyText}>No videos in this event yet</Text>
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
   loadingFooter: {
     padding: 20,
@@ -67,16 +59,5 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 14,
     fontWeight: "600",
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
-  },
-  emptyText: {
-    color: "#666",
-    fontSize: 16,
-    textAlign: "center",
   },
 });

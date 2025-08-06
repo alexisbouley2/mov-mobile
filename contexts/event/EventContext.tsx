@@ -5,6 +5,7 @@ import React, {
   useState,
   useCallback,
   useMemo,
+  useEffect,
 } from "react";
 import { Alert } from "react-native";
 import { router } from "expo-router";
@@ -12,6 +13,7 @@ import log from "@/utils/logger";
 import { EventWithDetails, UpdateEventRequest, Message } from "@movapp/types";
 import { eventsApi } from "@/services/api/events";
 import { useUserProfile } from "@/contexts/UserProfileContext";
+import { PushNotificationService } from "@/services/notifications/pushNotificationService";
 
 interface EventContextType {
   event: EventWithDetails | null;
@@ -129,6 +131,16 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
     setEvent(null);
     setError(null);
   }, []);
+
+  // Track current viewing event for push notifications
+  useEffect(() => {
+    if (event?.id) {
+      PushNotificationService.getInstance().setCurrentViewingEventId(event.id);
+      return () => {
+        PushNotificationService.getInstance().setCurrentViewingEventId(null);
+      };
+    }
+  }, [event?.id]);
 
   const deleteEvent = useCallback(() => {
     if (!event) return;
