@@ -16,6 +16,9 @@ export class PushNotificationService {
   private static instance: PushNotificationService;
   private fcmToken: string | null = null;
   private currentUserId: string | null = null;
+  private constructor() {
+    this.setupMessageHandlers();
+  }
 
   static getInstance(): PushNotificationService {
     if (!PushNotificationService.instance) {
@@ -110,7 +113,7 @@ export class PushNotificationService {
     }
   }
 
-  private setupMessageHandlers() {
+  public setupMessageHandlers() {
     // Message reçu quand l'app est en foreground
     messaging().onMessage(async (remoteMessage) => {
       log.info("Message received in foreground:", remoteMessage);

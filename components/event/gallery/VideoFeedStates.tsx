@@ -7,24 +7,9 @@ import {
   TouchableOpacity,
 } from "react-native";
 
-interface LoadingStateProps {
-  text?: string;
-}
-
 interface ErrorStateProps {
   error: string;
   onRetry: () => void;
-}
-
-export function LoadingState({
-  text = "Loading videos...",
-}: LoadingStateProps) {
-  return (
-    <View style={styles.loadingContainer}>
-      <ActivityIndicator size="large" color="#666" />
-      <Text style={styles.loadingText}>{text}</Text>
-    </View>
-  );
 }
 
 export function LoadingFooter() {
@@ -55,17 +40,6 @@ export function EmptyState() {
 }
 
 const styles = StyleSheet.create({
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#000",
-  },
-  loadingText: {
-    color: "#666",
-    marginTop: 10,
-    fontSize: 14,
-  },
   loadingFooter: {
     padding: 20,
     alignItems: "center",

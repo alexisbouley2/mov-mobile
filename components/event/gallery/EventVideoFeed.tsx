@@ -2,12 +2,7 @@ import React from "react";
 import { View, FlatList, StyleSheet, Text } from "react-native";
 import { useRouter } from "expo-router";
 import VideoGridItem from "./VideoGridItem";
-import {
-  LoadingState,
-  LoadingFooter,
-  ErrorState,
-  EmptyState,
-} from "./VideoFeedStates";
+import { LoadingFooter, ErrorState, EmptyState } from "./VideoFeedStates";
 import { useEventVideos } from "@/contexts/event/EventVideosContext";
 
 interface EventVideoFeedProps {
@@ -67,7 +62,7 @@ export default function EventVideoFeed({ eventDate }: EventVideoFeedProps) {
 
   // Early returns for loading and error states
   if (loading && videos.length === 0) {
-    return <LoadingState />;
+    return <View style={styles.container} />;
   }
 
   if (error && videos.length === 0) {
