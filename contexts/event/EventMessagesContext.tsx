@@ -83,7 +83,7 @@ export function EventMessagesProvider({
           eventId,
           user.id,
           1,
-          10
+          30
         );
 
         setMessages(data.messages);
@@ -102,11 +102,8 @@ export function EventMessagesProvider({
   // Load earlier messages (pagination) - now appends to the end of the array
   const loadEarlier = useCallback(async () => {
     if (!event?.id || !user?.id || !hasMore || loadingEarlier) {
-      console.log("Skipping loadEarlier - already loading or no more messages");
       return;
     }
-
-    console.log("Starting loadEarlier");
     setLoadingEarlier(true);
 
     try {
@@ -115,14 +112,13 @@ export function EventMessagesProvider({
         event.id,
         user.id,
         nextPage,
-        10
+        30
       );
 
       // Append older messages to the end (since we're using inverted list)
       setMessages((prev) => {
         const existingIds = new Set(prev.map((m) => m.id));
         const newMessages = data.messages.filter((m) => !existingIds.has(m.id));
-        console.log(`Adding ${newMessages.length} older messages to the end`);
 
         // For inverted list: append older messages to the end
         return [...prev, ...newMessages];
