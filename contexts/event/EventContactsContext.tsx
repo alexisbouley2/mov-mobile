@@ -14,6 +14,7 @@ import { useUserProfile } from "@/contexts/UserProfileContext";
 import { useEvent } from "@/contexts/event/EventContext";
 import { usersApi } from "@/services/api/users";
 import { UserContact } from "@movapp/types";
+import log from "@/utils/logger";
 
 export interface ContactPermissionState {
   status: "undetermined" | "granted" | "denied";
@@ -77,7 +78,7 @@ export function EventContactsProvider({
       });
       return { status, canAskAgain };
     } catch (error) {
-      console.error("Error checking contact permissions:", error);
+      log.error("Error checking contact permissions:", error);
       return { status: "denied" as const, canAskAgain: false };
     }
   }, []);
@@ -111,7 +112,7 @@ export function EventContactsProvider({
 
       return { status, canAskAgain };
     } catch (error) {
-      console.error("Error requesting contact permissions:", error);
+      log.error("Error requesting contact permissions:", error);
       return { status: "denied" as const, canAskAgain: false };
     } finally {
       setLoading(false);
@@ -136,14 +137,14 @@ export function EventContactsProvider({
               allUserContacts.push(...response.contacts);
             }
           } catch (error) {
-            console.error("Error checking contacts chunk:", error);
+            log.error("Error checking contacts chunk:", error);
             // Continue with other chunks even if one fails
           }
         }
 
         return allUserContacts;
       } catch (error) {
-        console.error("Error checking contacts:", error);
+        log.error("Error checking contacts:", error);
         return [];
       }
     },
@@ -213,7 +214,7 @@ export function EventContactsProvider({
         setContacts(sortedContacts);
       }
     } catch (error) {
-      console.error("Error fetching contacts:", error);
+      log.error("Error fetching contacts:", error);
       Alert.alert("Error", "Failed to load contacts. Please try again.");
     } finally {
       setLoading(false);

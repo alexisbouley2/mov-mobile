@@ -10,6 +10,7 @@ import {
 import { useRouter } from "expo-router";
 import { useNotifications } from "@/contexts/NotificationContext";
 import messaging from "@react-native-firebase/messaging";
+import log from "@/utils/logger";
 
 export default function NotificationPermissionScreen() {
   const router = useRouter();
@@ -31,7 +32,7 @@ export default function NotificationPermissionScreen() {
       await requestPermission();
       router.replace("/(app)/(tabs)/camera");
     } catch (error) {
-      console.error("Error requesting notification permission:", error);
+      log.error("Error requesting notification permission:", error);
       router.replace("/(app)/(tabs)/camera");
     } finally {
       setIsLoading(false);

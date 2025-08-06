@@ -23,6 +23,7 @@ import {
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
 import * as NavigationBar from "expo-navigation-bar";
+import log from "@/utils/logger";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -43,7 +44,7 @@ function RootLayoutContent() {
           await NavigationBar.setButtonStyleAsync("light");
           await NavigationBar.setVisibilityAsync("visible");
         } catch (error) {
-          console.warn("Failed to configure navigation bar:", error);
+          log.error("Failed to configure navigation bar:", error);
         }
       }
     };

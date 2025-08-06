@@ -9,6 +9,7 @@ import { useEvent } from "@/contexts/event/EventContext";
 import { useEventContacts } from "@/contexts/event/EventContactsContext";
 import Header from "@/components/ui/Header";
 import InviteContactList from "@/components/event/invite/InviteContactList";
+import log from "@/utils/logger";
 
 export default function EventInviteScreen() {
   const { id: eventId } = useLocalSearchParams<{ id: string }>();
@@ -34,7 +35,7 @@ export default function EventInviteScreen() {
       const url = `${config.EXPO_PUBLIC_WEB_URL}/invite/${res.token}`;
       setInviteUrl(url);
     } catch (error) {
-      console.error("Failed to generate invite URL:", error);
+      log.error("Failed to generate invite URL:", error);
       Alert.alert(
         "Error",
         "Could not generate invite link. Please try again.",

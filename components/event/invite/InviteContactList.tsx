@@ -15,6 +15,7 @@ import { ContactPermissionState } from "@/contexts/event/EventContactsContext";
 import { useEvent } from "@/contexts/event/EventContext";
 import { useUserProfile } from "@/contexts/UserProfileContext";
 import { useEventParticipants } from "@/contexts/event/EventParticipantsContext";
+import log from "@/utils/logger";
 
 interface InviteContactListProps {
   contacts: InviteContact[];
@@ -72,7 +73,7 @@ export default function InviteContactList({
       // Update added list
       setAdded((prev) => [...prev, contact.id]);
     } catch (error) {
-      console.error("Error adding participant:", error);
+      log.error("Error adding participant:", error);
       Alert.alert("Error", "Failed to add participant. Please try again.");
     } finally {
       setAddingParticipant(null);

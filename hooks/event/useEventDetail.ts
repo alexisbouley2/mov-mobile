@@ -6,6 +6,7 @@ import { useUserProfile } from "@/contexts/UserProfileContext";
 import { useNotifications } from "@/contexts/NotificationContext";
 import { useEventParticipants } from "@/contexts/event/EventParticipantsContext";
 import { eventsApi } from "@/services/api/events";
+import log from "@/utils/logger";
 
 export const useEventDetail = () => {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -25,7 +26,7 @@ export const useEventDetail = () => {
 
         // Clear notifications for this event when user visits
         markEventNotificationsAsRead(id).catch((error) => {
-          console.warn("Failed to mark event notifications as read:", error);
+          log.error("Failed to mark event notifications as read:", error);
         });
       }
     }, [id, loadEvent, user?.id, markEventNotificationsAsRead])
@@ -59,7 +60,7 @@ export const useEventDetail = () => {
       // Navigate back to events list after leaving
       router.push("/(app)/(tabs)/events");
     } catch (error) {
-      console.error("Failed to leave event:", error);
+      log.error("Failed to leave event:", error);
 
       // Show error alert to user
       Alert.alert("Error", "Failed to leave the event. Please try again.", [
