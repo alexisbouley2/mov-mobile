@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import * as Linking from "expo-linking";
-import ContactAvatar from "../../ui/ContactAvatar";
+import ContactAvatar from "@/components/ui/ContactAvatar";
 import { UserContact } from "@movapp/types";
 
 export interface InviteContact {

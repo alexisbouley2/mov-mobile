@@ -12,7 +12,7 @@ import EventNameSection from "@/components/event-form/EventNameSection";
 import EventInformationSection from "@/components/event-form/EventInformationSection";
 import EventDateTimeSection from "@/components/event-form/EventDateTimeSection";
 import EventInfoSection from "@/components/event-form/EventInfoSection";
-import SubmitButton from "../ui/button/SubmitButton";
+import SubmitButton from "@/components/ui/button/SubmitButton";
 
 interface EventFormProps {
   formData: EventFormData;

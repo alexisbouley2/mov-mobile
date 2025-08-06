@@ -7,7 +7,7 @@ import {
   Dimensions,
 } from "react-native";
 import { IconSymbol } from "@/components/ui/IconSymbol";
-import { CachedImage } from "../ui/CachedImage";
+import { CachedImage } from "@/components/ui/CachedImage";
 
 interface EventPhotoSectionProps {
   pickImage: () => Promise<void>;

@@ -2,8 +2,8 @@
 import { useState } from "react";
 import { Alert } from "react-native";
 import { useLocalSearchParams } from "expo-router";
-import { useEventForm } from "../event/useEventForm";
-import { useEventPhoto } from "../event/useEventPhoto";
+import { useEventForm } from "@/hooks/event/useEventForm";
+import { useEventPhoto } from "@/hooks/event/useEventPhoto";
 import { mediaUploadManager } from "@/services/upload";
 import { eventsApi, videosApi } from "@/services/api";
 import log from "@/utils/logger";

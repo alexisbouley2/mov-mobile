@@ -1,7 +1,7 @@
 // components/events/EventParticipants.tsx
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
-import { CachedImage } from "../ui/CachedImage";
+import { CachedImage } from "@/components/ui/CachedImage";
 import { Participant } from "@movapp/types";
 
 interface EventParticipantsProps {

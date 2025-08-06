@@ -2,7 +2,7 @@
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Image } from "react-native";
 import EventParticipants from "@/components/events/EventParticipants";
-import { CachedImage } from "../ui/CachedImage";
+import { CachedImage } from "@/components/ui/CachedImage";
 import { User, EventForList } from "@movapp/types";
 
 interface EventCardProps {
