@@ -1,7 +1,8 @@
 // components/event/chat/MessageItem.tsx
 import React from "react";
-import { View, Text, StyleSheet, Image } from "react-native";
+import { View, Text, StyleSheet } from "react-native";
 import { Message } from "@movapp/types";
+import { CachedImage } from "@/components/ui/CachedImage";
 
 interface MessageItemProps {
   message: Message;
@@ -21,73 +22,80 @@ export const MessageItem: React.FC<MessageItemProps> = ({
   };
 
   return (
-    <View
-      style={[
-        styles.messageContainer,
-        isCurrentUser ? styles.currentUserMessage : styles.otherUserMessage,
-        isLastInGroup && styles.lastInGroup,
-      ]}
-    >
-      {/* Avatar for other users, only show on last message in group */}
-      {!isCurrentUser && isLastInGroup && (
-        <View style={styles.avatarContainer}>
-          {message.sender.profileThumbnailUrl ? (
-            <Image
-              source={{ uri: message.sender.profileThumbnailUrl }}
-              style={styles.avatar}
-            />
-          ) : (
-            <View style={styles.avatarPlaceholder}>
-              <Text style={styles.avatarText}>
-                {message.sender.username.charAt(0).toUpperCase()}
-              </Text>
-            </View>
-          )}
-        </View>
+    <View>
+      {!isCurrentUser && isFirstInGroup && (
+        <Text style={styles.userName}>{message.sender.username}</Text>
       )}
 
-      {/* Spacer for alignment when no avatar */}
-      {!isCurrentUser && !isLastInGroup && <View style={styles.avatarSpacer} />}
-
-      <View style={styles.messageContent}>
-        {/* Show username for other users, only on first message in group */}
-        {!isCurrentUser && isFirstInGroup && (
-          <Text style={styles.userName}>{message.sender.username}</Text>
+      <View
+        style={[
+          styles.messageContainer,
+          isCurrentUser ? styles.currentUserMessage : styles.otherUserMessage,
+          isLastInGroup && styles.lastInGroup,
+        ]}
+      >
+        {/* Avatar for other users, only show on last message in group */}
+        {!isCurrentUser && isLastInGroup && (
+          <View style={styles.avatarContainer}>
+            {message.sender.profileThumbnailUrl ? (
+              <CachedImage
+                uri={message.sender.profileThumbnailUrl}
+                style={styles.avatar}
+                cachePolicy="profile-thumbnail"
+                showLoading={false}
+              />
+            ) : (
+              <View style={styles.avatarPlaceholder}>
+                <Text style={styles.avatarText}>
+                  {message.sender.username.charAt(0).toUpperCase()}
+                </Text>
+              </View>
+            )}
+          </View>
         )}
 
-        <View
-          style={[
-            styles.messageBubble,
-            isCurrentUser ? styles.currentUserBubble : styles.otherUserBubble,
-            isFirstInGroup &&
-              (isCurrentUser ? styles.firstCurrentUser : styles.firstOtherUser),
-            isLastInGroup &&
-              (isCurrentUser ? styles.lastCurrentUser : styles.lastOtherUser),
-          ]}
-        >
-          <Text
+        {/* Spacer for alignment when no avatar */}
+        {!isCurrentUser && !isLastInGroup && (
+          <View style={styles.avatarSpacer} />
+        )}
+
+        <View style={styles.messageContent}>
+          <View
             style={[
-              styles.messageText,
-              isCurrentUser ? styles.currentUserText : styles.otherUserText,
+              styles.messageBubble,
+              isCurrentUser ? styles.currentUserBubble : styles.otherUserBubble,
+              isFirstInGroup &&
+                (isCurrentUser
+                  ? styles.firstCurrentUser
+                  : styles.firstOtherUser),
+              isLastInGroup &&
+                (isCurrentUser ? styles.lastCurrentUser : styles.lastOtherUser),
             ]}
           >
-            {message.content}
-          </Text>
+            <Text
+              style={[
+                styles.messageText,
+                isCurrentUser ? styles.currentUserText : styles.otherUserText,
+              ]}
+            >
+              {message.content}
+            </Text>
+          </View>
+
+          {/* Show timestamp on last message in group */}
+          {isLastInGroup && (
+            <Text
+              style={[
+                styles.timestamp,
+                isCurrentUser
+                  ? styles.currentUserTimestamp
+                  : styles.otherUserTimestamp,
+              ]}
+            >
+              {formatTime(message.createdAt)}
+            </Text>
+          )}
         </View>
-
-        {/* Show timestamp on last message in group */}
-        {isLastInGroup && (
-          <Text
-            style={[
-              styles.timestamp,
-              isCurrentUser
-                ? styles.currentUserTimestamp
-                : styles.otherUserTimestamp,
-            ]}
-          >
-            {formatTime(message.createdAt)}
-          </Text>
-        )}
       </View>
     </View>
   );
@@ -143,7 +151,7 @@ const styles = StyleSheet.create({
     color: "#888",
     fontSize: 12,
     marginBottom: 2,
-    marginLeft: 12,
+    marginLeft: 56,
   },
   messageBubble: {
     paddingHorizontal: 12,
