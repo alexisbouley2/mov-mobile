@@ -14,6 +14,7 @@ import { EventWithDetails, UpdateEventRequest, Message } from "@movapp/types";
 import { eventsApi } from "@/services/api/events";
 import { useUserProfile } from "@/contexts/UserProfileContext";
 import { PushNotificationService } from "@/services/notifications/pushNotificationService";
+import { useNotifications } from "@/contexts/NotificationContext";
 
 interface EventContextType {
   event: EventWithDetails | null;
@@ -54,33 +55,45 @@ export const useEvent = () => useContext(EventContext);
 
 export function EventProvider({ children }: { children: React.ReactNode }) {
   const { user } = useUserProfile();
+  const { clearEventNotifications } = useNotifications();
   const [event, setEvent] = useState<EventWithDetails | null>(null);
   const [eventLoading, seteventLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastMessage, setLastMessage] = useState<Message | null>(null);
 
-  const loadEvent = useCallback(async (eventId: string, userId: string) => {
-    try {
-      seteventLoading(true);
-      setError(null);
+  const loadEvent = useCallback(
+    async (eventId: string, userId: string) => {
+      try {
+        seteventLoading(true);
+        setError(null);
 
-      const response = await eventsApi.getEvent(eventId, userId);
+        const response = await eventsApi.getEvent(eventId, userId);
 
-      if (!response) {
-        throw new Error("Failed to fetch event");
+        if (!response) {
+          throw new Error("Failed to fetch event");
+        }
+
+        setEvent(response);
+        setLastMessage(response.lastMessage);
+        PushNotificationService.getInstance().setCurrentViewingEventId(
+          response.id
+        );
+
+        // Clear notifications for this event when user enters it
+        clearEventNotifications(response.id).catch((error) => {
+          log.error("Failed to clear event notifications:", error);
+        });
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : "Failed to fetch event";
+        log.error("Error fetching event:", err);
+        setError(errorMessage);
+      } finally {
+        seteventLoading(false);
       }
-
-      setEvent(response);
-      setLastMessage(response.lastMessage);
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to fetch event";
-      log.error("Error fetching event:", err);
-      setError(errorMessage);
-    } finally {
-      seteventLoading(false);
-    }
-  }, []);
+    },
+    [clearEventNotifications]
+  );
 
   const updateEvent = useCallback(
     async (

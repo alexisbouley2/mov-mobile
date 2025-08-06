@@ -20,7 +20,7 @@ interface NotificationContextType {
   checkPermissionStatus: () => Promise<number>;
   requestPermission: () => Promise<boolean>;
   syncBadgeCount: () => Promise<number>;
-  markEventNotificationsAsRead: (_eventId: string) => Promise<number>;
+  clearEventNotifications: (_eventId: string) => Promise<number>;
 }
 
 const NotificationContext = createContext<NotificationContextType>({
@@ -30,7 +30,7 @@ const NotificationContext = createContext<NotificationContextType>({
   checkPermissionStatus: async () => 0,
   requestPermission: async () => false,
   syncBadgeCount: async () => 0,
-  markEventNotificationsAsRead: async (_eventId: string) => 0,
+  clearEventNotifications: async (_eventId: string) => 0,
 });
 
 export const useNotifications = () => useContext(NotificationContext);
@@ -145,19 +145,18 @@ export function NotificationProvider({
     }
   }, [notificationService, user?.id]);
 
-  const markEventNotificationsAsRead = useCallback(
+  const clearEventNotifications = useCallback(
     async (eventId: string): Promise<number> => {
       if (!user?.id) return 0;
 
       try {
-        const markedCount =
-          await notificationService.markEventNotificationsAsRead(
-            user.id,
-            eventId
-          );
+        const markedCount = await notificationService.clearEventNotifications(
+          user.id,
+          eventId
+        );
         return markedCount;
       } catch (error) {
-        log.error("Failed to mark event notifications as read:", error);
+        log.error("Failed to clear event notifications:", error);
         return 0;
       }
     },
@@ -172,7 +171,7 @@ export function NotificationProvider({
       checkPermissionStatus,
       requestPermission,
       syncBadgeCount,
-      markEventNotificationsAsRead,
+      clearEventNotifications,
     }),
     [
       fcmToken,
@@ -181,7 +180,7 @@ export function NotificationProvider({
       checkPermissionStatus,
       requestPermission,
       syncBadgeCount,
-      markEventNotificationsAsRead,
+      clearEventNotifications,
     ]
   );
 

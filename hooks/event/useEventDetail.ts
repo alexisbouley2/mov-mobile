@@ -3,7 +3,6 @@ import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
 import { Alert } from "react-native";
 import { useEvent } from "@/contexts/event/EventContext";
 import { useUserProfile } from "@/contexts/UserProfileContext";
-import { useNotifications } from "@/contexts/NotificationContext";
 import { useEventParticipants } from "@/contexts/event/EventParticipantsContext";
 import { eventsApi } from "@/services/api/events";
 import log from "@/utils/logger";
@@ -12,7 +11,6 @@ export const useEventDetail = () => {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { user } = useUserProfile();
-  const { markEventNotificationsAsRead } = useNotifications();
   const { event, eventLoading, error, loadEvent } = useEvent();
   const { toggleParticipation } = useEventParticipants();
 
@@ -23,13 +21,8 @@ export const useEventDetail = () => {
     useCallback(() => {
       if (id && user?.id) {
         loadEvent(id, user.id);
-
-        // Clear notifications for this event when user visits
-        markEventNotificationsAsRead(id).catch((error) => {
-          log.error("Failed to mark event notifications as read:", error);
-        });
       }
-    }, [id, loadEvent, user?.id, markEventNotificationsAsRead])
+    }, [id, loadEvent, user?.id])
   );
 
   // Handler for navigating to edit screen

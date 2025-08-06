@@ -244,10 +244,6 @@ export class PushNotificationService {
     return false;
   }
 
-  public getPendingNavigation() {
-    return this.pendingNavigation;
-  }
-
   /**
    * Get current badge count from server and sync local count
    */
@@ -263,19 +259,75 @@ export class PushNotificationService {
   }
 
   /**
-   * Mark all notifications for a specific event as read
+   * Extract eventId from different notification types
+   * Handles 4 cases:
+   * 1. Android Background: eventId in identifier tag parameter
+   * 2. Android Foreground: eventId in content.data.eventId
+   * 3. iOS Background: eventId in trigger.payload.eventId
+   * 4. iOS Foreground: eventId in content.data.eventId
    */
-  async markEventNotificationsAsRead(
+  private extractEventIdFromNotification(
+    notification: any
+  ): string | undefined {
+    // Case 1: Android Background - eventId in identifier tag
+    if (notification.request.identifier?.includes("tag=")) {
+      const identifier = notification.request.identifier;
+      const tagMatch = identifier.match(/tag=([^&]+)/);
+      if (tagMatch) {
+        return tagMatch[1];
+      }
+    }
+
+    // Case 2: Android/iOS Foreground - eventId in content.data
+    if (notification.request.content?.data?.eventId) {
+      return notification.request.content.data.eventId;
+    }
+
+    // Case 3: iOS Background - eventId in trigger.payload
+    if (notification.request.trigger?.payload?.eventId) {
+      return notification.request.trigger.payload.eventId;
+    }
+
+    return undefined;
+  }
+
+  /**
+   * Clear all notifications for a specific event (both local and backend)
+   */
+  async clearEventNotifications(
     userId: string,
     eventId: string
   ): Promise<number> {
     try {
+      // 1. Get and dismiss local notifications for this event
+      const presentedNotifications =
+        await Notifications.getPresentedNotificationsAsync();
+      const eventNotifications = presentedNotifications.filter(
+        (notification) => {
+          const notificationEventId =
+            this.extractEventIdFromNotification(notification);
+          return notificationEventId === eventId;
+        }
+      );
+
+      // Dismiss all local notifications for this event
+      for (const notification of eventNotifications) {
+        await Notifications.dismissNotificationAsync(
+          notification.request.identifier
+        );
+      }
+
+      log.info(
+        `Dismissed ${eventNotifications.length} local notifications for event ${eventId}`
+      );
+
+      // 2. Call backend API to mark notifications as read
       const response = await pushNotificationsApi.markEventNotificationsAsRead(
         userId,
         eventId
       );
 
-      // Update local badge count with the new count from server
+      // 3. Update local badge count with the new count from server
       await Notifications.setBadgeCountAsync(response.newBadgeCount);
 
       log.info(
@@ -283,7 +335,7 @@ export class PushNotificationService {
       );
       return response.markedCount;
     } catch (error) {
-      log.error("Error marking event notifications as read:", error);
+      log.error("Error clearing event notifications:", error);
       return 0;
     }
   }
