@@ -31,11 +31,17 @@ export const MessageInput: React.FC<MessageInputProps> = ({
     }
   };
 
+  // Calculate dynamic keyboard offset for iOS
+  const keyboardOffset = Platform.OS === "ios" ? 135 : 0;
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       style={styles.keyboardAvoidingView}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 160 : 0}
+      keyboardVerticalOffset={keyboardOffset}
+      //keyboardVerticalOffset sjould not be used, we should wrap KeyboardAvoidingView
+      //around chatMessage Container and just trust react native however there is conflit handling with
+      //safeAreaProvider so we should reconfigure it as well
     >
       <View style={styles.container}>
         <View style={styles.inputContainer}>
