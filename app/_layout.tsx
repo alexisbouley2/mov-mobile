@@ -24,6 +24,10 @@ import {
 } from "react-native-safe-area-context";
 import * as NavigationBar from "expo-navigation-bar";
 import log from "@/utils/logger";
+import { PushNotificationService } from "@/services/notifications/pushNotificationService";
+
+// Initialize immediately when app starts
+PushNotificationService.getInstance();
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();

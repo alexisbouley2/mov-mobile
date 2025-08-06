@@ -5,11 +5,19 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/contexts/UserProfileContext";
 import { useNotifications } from "@/contexts/NotificationContext";
 import messaging from "@react-native-firebase/messaging";
+import { PushNotificationService } from "@/services/notifications/pushNotificationService";
+import { useEffect } from "react";
 
 export default function Index() {
   const { session, loading } = useAuth();
   const { user, profileLoading } = useUserProfile();
   const { permissionStatus, permissionChecked } = useNotifications();
+
+  useEffect(() => {
+    if (user && permissionChecked) {
+      PushNotificationService.getInstance().executePendingNavigation();
+    }
+  }, [user, permissionChecked]);
 
   if (loading || profileLoading || (user && !permissionChecked)) {
     return (

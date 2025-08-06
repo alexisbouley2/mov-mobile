@@ -16,6 +16,7 @@ export class PushNotificationService {
   private static instance: PushNotificationService;
   private fcmToken: string | null = null;
   private currentUserId: string | null = null;
+  private pendingNavigation: NotificationData | null = null;
   private constructor() {
     this.setupMessageHandlers();
   }
@@ -157,9 +158,30 @@ export class PushNotificationService {
   private handleNotificationNavigation(remoteMessage: any) {
     const { data } = remoteMessage;
     const notificationData = data as NotificationData;
-    router.replace(
-      `/(app)/(event)/${notificationData.eventId}?fromExternal=true`
-    );
+
+    // Store the navigation intent instead of navigating immediately
+    this.pendingNavigation = notificationData;
+
+    // Try to navigate (will work if already authenticated)
+    this.executePendingNavigation();
+  }
+
+  public executePendingNavigation() {
+    if (!this.pendingNavigation) return false;
+
+    // Only navigate if we have a current user (authenticated)
+    if (this.currentUserId) {
+      router.replace(
+        `/(app)/(event)/${this.pendingNavigation.eventId}?fromExternal=true`
+      );
+      this.pendingNavigation = null;
+      return true;
+    }
+    return false;
+  }
+
+  public getPendingNavigation() {
+    return this.pendingNavigation;
   }
 
   /**
