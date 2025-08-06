@@ -1,40 +1,108 @@
-# Welcome to your Expo app 👋
+# MOV Mobile App
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A React Native mobile app built with Expo for sharing videos and photos at events.
 
-## Get started
+## Setup
 
-1. Install dependencies
+### Prerequisites
 
-   ```bash
-   npm install
-   ```
+- Node.js and npm/yarn
+- Expo CLI (`npm install -g @expo/cli`)
+- EAS CLI (`npm install -g eas-cli`)
+- Expo account
 
-2. Start the app
+### 1. Install Dependencies
 
-   ```bash
-   npx expo start
-   ```
+```bash
+npm install
+```
 
-In the output, you'll find options to open the app in a
+### 2. EAS Build Setup
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+#### Create Environment Variables
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+Create environment profiles for each build environment:
 
-## Learn more
+```bash
+eas env:create --environment development
+eas env:create --environment preview
+eas env:create --environment production
+```
 
-To learn more about developing your project with Expo, look at the following resources:
+Each profile will have the environment variable:
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+- `EXPO_PUBLIC_ENV`: Set to the profile name (development/preview/production)
 
-## Join the community
+#### Build Commands
 
-Join our community of developers creating universal apps.
+```bash
+# Development builds
+npm run build:dev:android
+npm run build:dev:ios
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+# Preview builds
+npm run build:preview:android
+npm run build:preview:ios
+
+# Production builds
+npm run build:prod:android
+npm run build:prod:ios
+```
+
+### 3. iOS Device Setup
+
+For iOS testing, you need to register your device with EAS:
+
+```bash
+eas device:create
+```
+
+Example device UUID: `00008140-00094DC22642801C`
+
+### 4. Local Development Configuration
+
+Update `lib/config.ts` with your local IP address for the development environment:
+
+```typescript
+development: {
+  NODE_ENV: "development",
+  EXPO_PUBLIC_API_URL: "http://YOUR_LOCAL_IP:3000", // Update this
+  // ... other config
+}
+```
+
+### 5. Database Setup
+
+You'll need to set up Supabase databases for each environment:
+
+- Development database
+- Preview database
+- Production database
+
+### 6. Web Repository Setup
+
+Set up the corresponding web repository for each environment to handle invite links and web features.
+
+## Development
+
+```bash
+# Start development server
+npm start
+
+# Start with dev client
+npm run start:dev
+
+# Run on specific platform
+npm run ios
+npm run android
+```
+
+## Project Structure
+
+- `app/` - Expo Router screens and navigation
+- `components/` - Reusable React components
+- `contexts/` - React Context providers
+- `hooks/` - Custom React hooks
+- `services/` - API and external service integrations
+- `lib/` - Configuration and utilities
+- `types/` - TypeScript type definitions
