@@ -40,5 +40,8 @@
         "EXPO_PUBLIC_ENV": "production"
       }
     }
+  },
+  "cli": {
+    "appVersionSource": "remote"
   }
 }
