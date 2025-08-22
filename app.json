@@ -10,7 +10,7 @@
     "ios": {
       "icon": "./assets/images/icon/bolt-mov-icon-ios.png",
       "statusBar": "light-content",
-      "supportsTablet": true,
+      "supportsTablet": false,
       "infoPlist": {
         "NSCameraUsageDescription": "$(PRODUCT_NAME) needs access to your Camera.",
         "NSMicrophoneUsageDescription": "$(PRODUCT_NAME) needs access to your Microphone.",

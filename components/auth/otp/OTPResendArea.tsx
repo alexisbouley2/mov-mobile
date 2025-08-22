@@ -21,7 +21,7 @@ const OTPResendArea = ({
     if (hasReachedMaxResends) {
       return (
         <Text style={styles.supportText}>
-          Having trouble? Contact our support at: contact@mov.com
+          Having trouble? Contact our support at: hellomovapp@gmail.com
         </Text>
       );
     }
