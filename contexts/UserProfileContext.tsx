@@ -165,7 +165,7 @@ export function UserProfileProvider({
         setProfileLoading(true);
         setProfileError(null);
 
-        const phone = supabaseUser.phone || "";
+        const phone: string | null = supabaseUser.phone || null;
 
         const userData = {
           id: supabaseUser.id,

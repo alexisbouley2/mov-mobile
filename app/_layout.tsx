@@ -25,6 +25,15 @@ import {
 import * as NavigationBar from "expo-navigation-bar";
 import log from "@/utils/logger";
 import { PushNotificationService } from "@/services/notifications/pushNotificationService";
+import { GoogleSignin } from "@react-native-google-signin/google-signin";
+
+// Configure Google Sign-In (add this in your app initialization)
+GoogleSignin.configure({
+  webClientId:
+    "894319536992-kmak6b981hb4q96f0blm1vi4j48im0gc.apps.googleusercontent.com", // Use Android Client ID
+  iosClientId:
+    "894319536992-66f09eb8cdeljrlsd5sb3sspgth0r87q.apps.googleusercontent.com", // Use iOS Client ID
+});
 
 // @ts-ignore
 globalThis.RNFB_SILENCE_MODULAR_DEPRECATION_WARNINGS = true;

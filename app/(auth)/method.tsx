@@ -12,6 +12,8 @@ import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as AppleAuthentication from "expo-apple-authentication";
 import { supabase } from "@/lib/supabase";
+import log from "@/utils/logger";
+import { GoogleSignin } from "@react-native-google-signin/google-signin";
 
 function AuthMethodScreen() {
   const router = useRouter();
@@ -20,15 +22,43 @@ function AuthMethodScreen() {
     router.push("/(auth)/phone");
   };
 
-  const handleGoogleAuth = () => {
-    // TODO: Implement Google OAuth
-    console.log("Google auth selected");
+  const handleGoogleAuth = async () => {
+    try {
+      console.log("here 1");
+      await GoogleSignin.hasPlayServices();
+      const userInfo = await GoogleSignin.signIn();
+      console.log("here 2", userInfo);
+
+      // Access idToken from the nested structure
+      if (userInfo.data?.idToken) {
+        // Sign in with Supabase using the identity token (same as Apple)
+        console.log("here 3", userInfo.data.idToken);
+
+        const { error } = await supabase.auth.signInWithIdToken({
+          provider: "google",
+          token: userInfo.data.idToken,
+        });
+
+        console.log("here 4", error);
+
+        if (error) {
+          log.error("Supabase Google sign in error:", error);
+          Alert.alert("Error", "Failed to sign in with Google");
+        } else {
+          console.log("here 5");
+          router.replace("/");
+        }
+      } else {
+        Alert.alert("Error", "No ID token received from Google");
+      }
+    } catch (error) {
+      log.error("Google auth error:", error);
+      Alert.alert("Error", "Something went wrong with Google sign in");
+    }
   };
 
   const handleAppleAuth = async () => {
     try {
-      console.log("Apple auth selected");
-
       const credential = await AppleAuthentication.signInAsync({
         requestedScopes: [
           AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
@@ -36,31 +66,23 @@ function AuthMethodScreen() {
         ],
       });
 
-      console.log("Apple credential:", credential);
-
       if (credential.identityToken) {
         // Sign in with Supabase using the identity token
-        const { data, error } = await supabase.auth.signInWithIdToken({
+        const { error } = await supabase.auth.signInWithIdToken({
           provider: "apple",
           token: credential.identityToken,
         });
 
         if (error) {
-          console.error("Supabase Apple sign in error:", error);
+          log.error("Supabase Apple sign in error:", error);
           Alert.alert("Error", "Failed to sign in with Apple");
         } else {
-          console.log("Successfully signed in with Apple:", data);
-          // Navigation will be handled by auth state change
+          router.replace("/");
         }
       }
     } catch (error: any) {
-      if (error.code === "ERR_REQUEST_CANCELED") {
-        // User cancelled the sign-in flow
-        console.log("Apple sign in cancelled");
-      } else {
-        console.error("Apple auth error:", error);
-        Alert.alert("Error", "Something went wrong with Apple sign in");
-      }
+      log.error("Apple auth error:", error);
+      Alert.alert("Error", "Something went wrong with Apple sign in");
     }
   };
 
