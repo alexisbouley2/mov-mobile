@@ -24,28 +24,22 @@ function AuthMethodScreen() {
 
   const handleGoogleAuth = async () => {
     try {
-      console.log("here 1");
       await GoogleSignin.hasPlayServices();
       const userInfo = await GoogleSignin.signIn();
-      console.log("here 2", userInfo);
 
       // Access idToken from the nested structure
       if (userInfo.data?.idToken) {
         // Sign in with Supabase using the identity token (same as Apple)
-        console.log("here 3", userInfo.data.idToken);
 
         const { error } = await supabase.auth.signInWithIdToken({
           provider: "google",
           token: userInfo.data.idToken,
         });
 
-        console.log("here 4", error);
-
         if (error) {
           log.error("Supabase Google sign in error:", error);
           Alert.alert("Error", "Failed to sign in with Google");
         } else {
-          console.log("here 5");
           router.replace("/");
         }
       } else {
