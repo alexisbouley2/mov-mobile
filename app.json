@@ -20,7 +20,8 @@
         "ITSAppUsesNonExemptEncryption": false
       },
       "entitlements": {
-        "aps-environment": "production"
+        "aps-environment": "production",
+        "com.apple.developer.applesignin": ["Default"]
       },
       "bundleIdentifier": "com.alexisbouley2.mov",
       "googleServicesFile": "./GoogleService-Info.plist"
