@@ -6,7 +6,7 @@ function WelcomeScreen() {
   const router = useRouter();
 
   const handleGetStarted = () => {
-    router.push("/(auth)/phone");
+    router.push("/(auth)/method");
   };
 
   return (

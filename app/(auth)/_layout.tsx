@@ -4,6 +4,7 @@ export default function AuthLayout() {
   return (
     <Stack>
       <Stack.Screen name="welcome" options={{ headerShown: false }} />
+      <Stack.Screen name="method" options={{ headerShown: false }} />
       <Stack.Screen name="verify" options={{ headerShown: false }} />
       <Stack.Screen name="phone" options={{ headerShown: false }} />
     </Stack>

@@ -20,7 +20,16 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "894319536992-66f09eb8cdeljrlsd5sb3sspgth0r87q.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.alexisbouley2.mov",
+                "app_store_id": "6751237069"
+              }
+            }
+          ]
         }
       }
     }

@@ -11,6 +11,7 @@
       "icon": "./assets/images/icon/bolt-mov-icon-ios.png",
       "statusBar": "light-content",
       "supportsTablet": false,
+      "usesAppleSignIn": true,
       "infoPlist": {
         "NSCameraUsageDescription": "$(PRODUCT_NAME) needs access to your Camera.",
         "NSMicrophoneUsageDescription": "$(PRODUCT_NAME) needs access to your Microphone.",
@@ -113,6 +114,12 @@
             "channelName": "MOV Notifications",
             "channelDescription": "Notifications for MOV events and messages"
           }
+        }
+      ],
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.894319536992-66f09eb8cdeljrlsd5sb3sspgth0r87q"
         }
       ],
       [

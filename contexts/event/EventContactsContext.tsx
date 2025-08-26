@@ -163,6 +163,8 @@ export function EventContactsProvider({
         ],
       });
 
+      //TODO: check what happens when contacts have no phone number
+
       if (data.length > 0) {
         // Normalize and format contacts
         const formattedContacts: InviteContact[] = data
