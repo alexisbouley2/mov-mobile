@@ -12,7 +12,12 @@
           "package_name": "com.alexisbouley2.mov"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "894319536992-kmak6b981hb4q96f0blm1vi4j48im0gc.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyAtTUsQlYjNJjc5j3-QEXKicNYg45U_Kmo"
@@ -21,6 +26,10 @@
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
+            {
+              "client_id": "894319536992-kmak6b981hb4q96f0blm1vi4j48im0gc.apps.googleusercontent.com",
+              "client_type": 3
+            },
             {
               "client_id": "894319536992-66f09eb8cdeljrlsd5sb3sspgth0r87q.apps.googleusercontent.com",
               "client_type": 2,
