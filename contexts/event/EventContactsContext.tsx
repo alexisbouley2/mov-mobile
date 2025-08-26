@@ -163,8 +163,6 @@ export function EventContactsProvider({
         ],
       });
 
-      //TODO: check what happens when contacts have no phone number
-
       if (data.length > 0) {
         // Normalize and format contacts
         const formattedContacts: InviteContact[] = data
@@ -189,7 +187,7 @@ export function EventContactsProvider({
         // Check which contacts are MOV users with event participation
         const phoneNumbers: string[] = [];
         formattedContacts.forEach((contact) => {
-          if (contact.normalizedPhone) {
+          if (contact.normalizedPhone && contact.normalizedPhone.length > 0) {
             phoneNumbers.push(contact.normalizedPhone);
           }
         });
