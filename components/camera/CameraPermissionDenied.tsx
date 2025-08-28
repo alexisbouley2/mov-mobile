@@ -29,10 +29,10 @@ export default function CameraPermissionDenied({
 
   const getDescription = () => {
     if (canAskAgain) {
-      return `To record videos, we need access to your Camera & Microphone. This allows you to capture and share moments with your friends.`;
+      return `MOV needs camera and microphone access to let you record your videos. Access is only needed when capturing your video moments.`;
     }
 
-    return `We need access to your Camera & Microphone to record videos. Please enable it in Settings.`;
+    return `MOV needs camera and microphone access to let you record your videos. Please enable it in Settings.`;
   };
 
   return (
@@ -51,7 +51,7 @@ export default function CameraPermissionDenied({
             style={styles.button}
             onPress={handleRequestPermission}
           >
-            <Text style={styles.buttonText}>Allow Access</Text>
+            <Text style={styles.buttonText}>Continue</Text>
           </TouchableOpacity>
         ) : (
           <TouchableOpacity style={styles.button} onPress={handleOpenSettings}>

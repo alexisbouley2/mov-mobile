@@ -39,8 +39,8 @@ export default function ContactsPermissionDenied({
 
       <Text style={styles.description}>
         {isUndetermined
-          ? "To invite your friends to events, we need access to your contacts. This helps you easily find and invite people you know."
-          : "We need access to your contacts to help you invite friends to events. Please enable it in Settings."}
+          ? "MOV uses your contacts to help you invite friends to MOV events and connect with people you know in the app. Access is only requested when you want to find or invite friends."
+          : "MOV uses your contacts to help you invite friends to MOV events and connect with people you know in the app. Access is only requested when you want to find or invite friends. Please enable it in Settings."}
       </Text>
 
       <View style={styles.buttonContainer}>
@@ -49,7 +49,7 @@ export default function ContactsPermissionDenied({
             style={styles.button}
             onPress={handleRequestPermission}
           >
-            <Text style={styles.buttonText}>Allow Access</Text>
+            <Text style={styles.buttonText}>Continue</Text>
           </TouchableOpacity>
         ) : (
           <TouchableOpacity style={styles.button} onPress={handleOpenSettings}>
