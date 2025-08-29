@@ -17,6 +17,7 @@
         "NSMicrophoneUsageDescription": "$(PRODUCT_NAME) uses your microphone to record audio while shooting videos during events.",
         "NSPhotoLibraryUsageDescription": "$(PRODUCT_NAME) needs access to your photo library so you can select photos for profiles and event sharing.",
         "NSContactsUsageDescription": "$(PRODUCT_NAME) uses your contacts to help you find and invite friends to events and share your videos with them.",
+        "NSLocationWhenInUseUsageDescription": "$(PRODUCT_NAME) doesn't use your location.",
         "ITSAppUsesNonExemptEncryption": false
       },
       "entitlements": {
